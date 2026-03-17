@@ -1,4 +1,4 @@
-# Review Data Package v2
+# Review Data Package
 
 This package contains only synthetic generated-paper examples whose matching extracted-table JSON files contain at least one extracted table. The package is organized for anonymous review-time inspection in a Git repository.
 
