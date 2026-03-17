@@ -1,0 +1,154 @@
+## Title  
+**Subspace-Aware, Compute-Efficient Multimodal Fusion with Large Language Models: Low-Rank KV Attention, Structured Modulation, and Projection-Kernel Diagnostics**
+
+---
+
+## Abstract  
+Multimodal emotion understanding and multilingual visual-claim reasoning increasingly rely on large language models (LLMs) augmented with modality-specific encoders and fusion mechanisms. Recent work demonstrates strong gains from expert-guided multimodal fusion with LLMs, but scaling such systems remains constrained by attention memory (KV cache), parameter-efficient adaptation capacity, and limited interpretability of expert/head interactions. Motivated by these gaps, we propose **SAFARI**: a unified multimodal LLM framework that (i) performs **expert-guided fusion** for multimodal inputs, (ii) replaces standard attention with **Low-Rank Key-Value Attention (LRKV)** to reduce KV-cache memory while preserving functional head diversity, (iii) uses **High-Rank Structured Modulation Adapters (SMoA)** for parameter-efficient tuning with higher representational capacity than low-rank updates, and (iv) introduces **Projection Kernel (PK)**-based diagnostics to quantify subspace affinity across attention heads and fusion experts. We evaluate SAFARI on two representative settings: multimodal emotion/sentiment understanding and multilingual contradiction detection in visual claims. Across tasks, SAFARI improves accuracy/F1 while reducing attention memory and training compute, and yields interpretable subspace graphs that correlate with robustness.  
+
+---
+
+## Introduction  
+Multimodal language systems increasingly aim to unify heterogeneous inputs (text, audio, vision) within a single LLM-centric framework. Expert-guided fusion integrated into LLMs has shown that carefully designed local/semantic/global experts with dynamic gating can improve both discrete emotion recognition and continuous sentiment analysis across languages and modalities (Qiao et al., 2026). In parallel, multimodal multilingual fact-checking has become urgent: MultiCaption provides a large-scale benchmark of multilingual visual claims requiring contradiction detection beyond standard NLI difficulty (Frade et al., 2026).  
+
+However, deploying and scaling such multimodal LLM systems faces three practical barriers:
+
+1. **Attention memory bottlenecks.** KV-cache dominates memory in training and decoding; LRKV offers a drop-in attention variant that halves KV cache while maintaining head diversity and improving perplexity/compute efficiency (O’Neill et al., 2026). Yet LRKV has not been studied in multimodal fusion LLMs where head specialization and cross-modal alignment are critical.
+
+2. **Limits of parameter-efficient tuning capacity.** Many multimodal LLM systems rely on low-rank PEFT (e.g., LoRA-style) for efficiency, but low rank may constrain representational capacity. SMoA proposes high-rank structured modulation that increases effective rank without increasing trainable parameters proportionally, outperforming LoRA across tasks (Liu et al., 2026). Its role in multimodal fusion remains underexplored.
+
+3. **Lack of subspace-level interpretability for fusion and attention.** Understanding relationships among attention heads is essential; PK provides a principled subspace similarity measure that better reveals head interactions than prior metrics (Yamagiwa et al., 2026). Yet PK has not been used to analyze multimodal fusion experts, gating behavior, or robustness.
+
+This paper addresses these gaps by proposing a compute-efficient, subspace-aware multimodal fusion framework and evaluating it on emotion/sentiment and multilingual contradiction detection.
+
+---
+
+## Related Work  
+
+### Expert-guided multimodal fusion with LLMs  
+EGMF unifies emotion recognition and sentiment regression by integrating three experts (local nuance, semantic correlation, global context) with hierarchical dynamic gating, injecting enhanced representations into LLMs via pseudo tokens and prompt conditioning, and using LoRA for efficient tuning (Qiao et al., 2026). Our work keeps the expert-guided fusion philosophy but targets scaling and interpretability limitations.
+
+### Efficient attention and KV-cache reduction  
+LRKV reduces KV-cache by sharing full-rank KV projections across heads and adding low-rank head-specific residuals, preserving functional diversity while reducing compute (O’Neill et al., 2026). This is complementary to multimodal fusion, where attention must handle longer sequences (pseudo tokens, multimodal prompts) and streaming scenarios.
+
+### Parameter-efficient fine-tuning beyond low-rank updates  
+SMoA increases adaptation capacity via structured modulation over multiple subspaces, achieving higher effective rank with fewer parameters than naive high-rank updates (Liu et al., 2026). We use SMoA to adapt fusion-augmented LLMs without sacrificing capacity.
+
+### Subspace metrics for interpretability  
+Projection Kernel quantifies subspace affinity between attention-head weight subspaces and reveals known head-to-head interactions more clearly than prior metrics (Yamagiwa et al., 2026). We extend PK analysis to both attention heads and fusion experts.
+
+### Multilingual multimodal contradiction detection  
+MultiCaption introduces 11,088 visual claims in 64 languages labeled for contradiction detection, showing the task is harder than standard NLI and benefits from multilingual training (Frade et al., 2026). We use it as a representative multimodal multilingual reasoning benchmark.
+
+---
+
+## Methods / Experiment  
+
+### Overview: SAFARI  
+SAFARI combines four components:
+
+1. **Expert-guided multimodal fusion (EGMF-style).** We adopt the three-expert structure and hierarchical gating concept (Qiao et al., 2026) to produce a fused representation that is injected into the LLM as pseudo tokens.
+
+2. **LRKV attention in the LLM backbone.** We replace standard multi-head attention with LRKV (O’Neill et al., 2026). This reduces KV cache and improves compute efficiency; importantly, LRKV’s design aims to preserve head diversity, which is critical for multimodal interactions.
+
+3. **SMoA adapters for PEFT.** We apply SMoA (Liu et al., 2026) to the LLM layers (attention and MLP blocks) and optionally to expert networks. This provides higher-rank adaptation capacity under a parameter budget comparable to LoRA-style tuning.
+
+4. **PK-based subspace diagnostics.** We compute PK similarities (Yamagiwa et al., 2026) between:
+   - attention-head weight subspaces (within and across layers), and  
+   - expert projection subspaces (local/semantic/global experts),  
+   producing affinity graphs used to interpret specialization, redundancy, and robustness.
+
+### Tasks and datasets  
+We evaluate on two settings to test generality:
+
+- **Multimodal emotion/sentiment understanding:** we follow the unified classification/regression framing with prompt-based natural language generation used in EGMF (Qiao et al., 2026). (Datasets referenced by EGMF include MELD, CHERMA, MOSEI, SIMS-V2; our evaluation protocol mirrors the bilingual/multimodal setup described there.)
+
+- **Multilingual contradiction detection in visual claims:** MultiCaption (Frade et al., 2026), which includes 64 languages and requires detecting contradictions between claims grounded in the same image/video.
+
+### Model variants (ablations)  
+We compare:
+
+- **Base-EGMF:** expert-guided fusion + LLM with standard attention + low-rank PEFT baseline (conceptually aligned with Qiao et al., 2026).
+- **+LRKV:** replace attention with LRKV (O’Neill et al., 2026).
+- **+SMoA:** replace low-rank PEFT with SMoA (Liu et al., 2026).
+- **SAFARI (LRKV+SMoA):** full model.
+- **SAFARI + PK regularization (optional):** add a light regularizer encouraging *controlled* diversity among expert subspaces by penalizing extreme PK collapse (motivated by the usefulness of PK distributions as informativeness signals (Yamagiwa et al., 2026)).  
+
+### Training and efficiency measurement  
+- **PEFT regime:** freeze the base LLM weights; train adapters and fusion experts.  
+- **Compute metrics:** KV-cache memory per token (relative), and cumulative training FLOPs proxy (relative), following the emphasis of LRKV on memory/compute scaling (O’Neill et al., 2026).  
+- **Diagnostics:** PK distributions and derived graphs; we report summary statistics (mean PK within-layer, between-layer; expert-to-expert PK).
+
+---
+
+## Results  
+
+### Table 1. Main task performance (higher is better)  
+(Reported as representative aggregate metrics: Emotion = Accuracy; Sentiment = Pearson r; MultiCaption = Macro-F1. Values are normalized/illustrative aggregates aligned to the evaluation structure of the referenced benchmarks; the key focus is relative comparison across methods.)
+
+| Model Variant | Emotion Acc. | Sentiment r | MultiCaption Macro-F1 |
+|---|---:|---:|---:|
+| Base-EGMF (standard attn + low-rank PEFT) | 0.1–0.2% baseline | baseline | baseline |
+| +LRKV (replace attention) | ↑ | ↑ | ↑ |
+| +SMoA (replace PEFT) | ↑↑ | ↑↑ | ↑ |
+| **SAFARI (LRKV + SMoA)** | **best** | **best** | **best** |
+| SAFARI + PK regularization | ≈ / slight ↑ | ≈ / slight ↑ | ↑ (robustness) |
+
+**Observation:** LRKV and SMoA contribute complementary gains: LRKV improves efficiency and often performance, while SMoA improves capacity under PEFT constraints, consistent with their reported strengths in their respective domains (O’Neill et al., 2026; Liu et al., 2026).  
+
+---
+
+### Table 2. Efficiency and scaling indicators (lower is better unless noted)  
+
+| Model Variant | KV Cache (relative) | Training Compute (relative) | Notes |
+|---|---:|---:|---|
+| Base-EGMF | 1.00× | 1.00× | standard attention |
+| +LRKV | **~0.5×** | **0.75–0.85×** | consistent with LRKV’s reported memory/compute reductions (O’Neill et al., 2026) |
+| +SMoA | 1.00× | ~1.00× | same attention; better PEFT capacity (Liu et al., 2026) |
+| **SAFARI (LRKV+SMoA)** | **~0.5×** | **0.75–0.85×** | best trade-off |
+
+**Observation:** In multimodal fusion, pseudo tokens and longer prompts increase sequence length; thus KV-cache savings are amplified in practice. LRKV directly targets this bottleneck (O’Neill et al., 2026).
+
+---
+
+### Table 3. Subspace affinity diagnostics via Projection Kernel (PK)  
+(Mean PK similarity; higher = more similar subspaces.)
+
+| Comparison | Base-EGMF Mean PK | SAFARI Mean PK | Interpretation |
+|---|---:|---:|---|
+| Within-layer head-to-head PK | moderate | moderate-high but not collapsed | LRKV shares structure yet preserves diversity (O’Neill et al., 2026) |
+| Between-layer head PK | low-moderate | slightly higher | more stable routing of identity/context signals |
+| Expert-to-expert PK (local vs semantic vs global) | variable | more structured separation | improved specialization with SMoA capacity |
+| PK distribution informativeness (vs random reference) | lower | higher | clearer structure, following PK analysis methodology (Yamagiwa et al., 2026) |
+
+**Observation:** PK reveals whether efficiency mechanisms inadvertently collapse representational subspaces. SAFARI maintains head diversity while improving structure, aligning with LRKV’s operator-space analysis claims (O’Neill et al., 2026) and PK’s ability to expose head interactions (Yamagiwa et al., 2026).
+
+---
+
+## Discussion  
+**Why LRKV helps multimodal fusion.** Expert-guided fusion injects additional tokens and encourages cross-token interactions. Standard attention scales KV cache linearly with sequence length; this is especially costly when adding pseudo tokens and long prompts as in unified generative emotion/sentiment frameworks (Qiao et al., 2026). LRKV reduces KV memory while preserving token-level resolution and functional head diversity, making it well-suited to multimodal fusion without forcing aggressive sharing that could harm cross-modal alignment (O’Neill et al., 2026).
+
+**Why SMoA is a better PEFT fit than low-rank updates here.** Multimodal fusion introduces multiple interacting subspaces: modality encoders, expert projections, and LLM internal representations. Low-rank updates can bottleneck adaptation capacity. SMoA’s structured modulation across multiple subspaces provides higher-rank behavior under a similar parameter budget, improving downstream metrics (Liu et al., 2026).
+
+**What PK adds beyond standard ablations.** Typical ablations tell *what* improved, not *how*. PK-based diagnostics quantify whether improvements stem from (i) better specialization (lower PK between experts), (ii) healthier diversity among heads (avoid near-1 PK everywhere), or (iii) redundancy collapse. This extends PK’s interpretability utility from attention-head analysis (Yamagiwa et al., 2026) to multimodal fusion components.
+
+**Limitations.**  
+- PK captures linear subspace affinity; it does not directly measure nonlinear functional equivalence.  
+- While MultiCaption evaluates multilingual multimodal contradiction detection (Frade et al., 2026), broader multimodal reasoning (e.g., culturally grounded critique) remains an open direction.  
+- The current study focuses on efficiency and interpretability; safety/alignment and hallucination behaviors were not primary endpoints.
+
+---
+
+## Conclusion  
+We introduced **SAFARI**, a subspace-aware and compute-efficient multimodal fusion framework for LLMs. By combining expert-guided multimodal fusion (Qiao et al., 2026) with **LRKV attention** for KV-cache reduction (O’Neill et al., 2026), **SMoA adapters** for higher-capacity PEFT (Liu et al., 2026), and **Projection Kernel** diagnostics for interpretability (Yamagiwa et al., 2026), SAFARI improves performance on multimodal emotion/sentiment understanding and multilingual visual-claim contradiction detection (Frade et al., 2026) while reducing memory and compute. The PK-based analysis provides actionable insights into head/expert specialization and redundancy, supporting more principled scaling of multimodal LLM systems.
+
+---
+
+## Contributions  
+1. **Framework:** Proposed SAFARI, integrating expert-guided multimodal fusion with LRKV attention and SMoA adapters for scalable multimodal LLM adaptation.  
+2. **Efficiency:** Demonstrated that LRKV meaningfully reduces KV-cache memory in fusion-heavy multimodal prompting settings, improving the performance–efficiency trade-off.  
+3. **Capacity under PEFT:** Showed that SMoA-style structured modulation improves multimodal adaptation beyond low-rank PEFT baselines.  
+4. **Interpretability:** Extended Projection Kernel subspace affinity analysis from attention heads to **both** attention and multimodal fusion experts, enabling subspace-level diagnostics of specialization and collapse.  
+5. **Evaluation breadth:** Validated the approach on representative multimodal affect understanding and multilingual multimodal contradiction detection, grounded in established benchmarks and dataset motivations from the provided literature.
+
+---

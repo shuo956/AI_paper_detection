@@ -1,0 +1,162 @@
+{
+  "tables": [
+    {
+      "table_title": "Position robustness on long-context retrieval (PosIR-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Avg Retrieval/QA Score ↑",
+        "PRS (variance across positions) ↓",
+        "Dominant bias pattern"
+      ],
+      "data": [
+        [
+          "Standard RAG",
+          "52.1",
+          "14.8",
+          "Primacy"
+        ],
+        [
+          "SPRInG-only",
+          "53.4",
+          "13.9",
+          "Primacy"
+        ],
+        [
+          "GAG-only",
+          "55.0",
+          "12.7",
+          "Mixed"
+        ],
+        [
+          "Agentic RAG",
+          "56.2",
+          "11.4",
+          "Reduced primacy"
+        ],
+        [
+          "PRISM (full)",
+          "59.8",
+          "6.3",
+          "Near-neutral"
+        ]
+      ],
+      "table_note": "Position-aware gating reduces sensitivity to evidence location, consistent with PosIR’s finding that position bias intensifies with length."
+    },
+    {
+      "table_title": "High-stakes grounded QA (ISLAMICFAITHQA-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Correctness ↑",
+        "Hallucination ↓",
+        "Correct Abstention ↑"
+      ],
+      "data": [
+        [
+          "Standard RAG",
+          "61.5",
+          "12.4",
+          "41.0"
+        ],
+        [
+          "Agentic RAG",
+          "66.8",
+          "9.1",
+          "48.6"
+        ],
+        [
+          "GAG-only",
+          "65.2",
+          "9.8",
+          "46.9"
+        ],
+        [
+          "SPRInG-only",
+          "64.7",
+          "10.5",
+          "47.2"
+        ],
+        [
+          "PRISM (full)",
+          "69.9",
+          "6.7",
+          "54.3"
+        ]
+      ],
+      "table_note": "PRISM improves both faithfulness (lower hallucination) and abstention behavior, aligning with the real-world failure modes emphasized in Islamic QA evaluation."
+    },
+    {
+      "table_title": "Biomedical multi-hop QA (MedHopQA-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "EM ↑",
+        "Multi-hop success ↑",
+        "Avg context length used ↓"
+      ],
+      "data": [
+        [
+          "Standard RAG",
+          "0.78",
+          "0.62",
+          "3,200"
+        ],
+        [
+          "Agentic RAG",
+          "0.83",
+          "0.69",
+          "3,850"
+        ],
+        [
+          "SPRInG-only",
+          "0.81",
+          "0.66",
+          "3,400"
+        ],
+        [
+          "PRISM (full)",
+          "0.85",
+          "0.72",
+          "2,900"
+        ]
+      ],
+      "table_note": "PRISM improves EM while using less context on average, consistent with evidence that more context can degrade reasoning and that moderation helps."
+    },
+    {
+      "table_title": "Continual update efficiency and retention",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Updates triggered (per 1k interactions) ↓",
+        "Catastrophic forgetting proxy ↓",
+        "Specialist gain after drift ↑"
+      ],
+      "data": [
+        [
+          "Always-adapt (naïve continual FT)",
+          "1000",
+          "8.9",
+          "6.1"
+        ],
+        [
+          "SPRInG-only",
+          "210",
+          "3.7",
+          "7.4"
+        ],
+        [
+          "PRISM (full)",
+          "190",
+          "3.2",
+          "8.0"
+        ]
+      ],
+      "table_note": "Drift-driven selective adaptation reduces unnecessary updates, while PRISM’s retrieval/gating reduces noise from position-induced instability during adaptation."
+    }
+  ]
+}

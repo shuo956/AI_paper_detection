@@ -1,0 +1,145 @@
+{
+  "tables": [
+    {
+      "table_title": "Qualitative coding: quality vs critic-call rate",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Critic-call rate",
+        "Precision",
+        "Recall",
+        "F1"
+      ],
+      "data": [
+        [
+          "No-Stage2 (Stage-1 only)",
+          "0%",
+          "0.71",
+          "0.78",
+          "0.74"
+        ],
+        [
+          "Always-Stage2 (critic on all positives)",
+          "100% of positives",
+          "0.82",
+          "0.76",
+          "0.79"
+        ],
+        [
+          "EAGER-Pos (τ=low, conservative)",
+          "62% of positives",
+          "0.81",
+          "0.76",
+          "0.78"
+        ],
+        [
+          "EAGER-Pos (τ=mid, balanced)",
+          "41% of positives",
+          "0.79",
+          "0.76",
+          "0.77"
+        ],
+        [
+          "EAGER-Pos (τ=high, aggressive)",
+          "23% of positives",
+          "0.77",
+          "0.77",
+          "0.77"
+        ]
+      ],
+      "table_note": "EAGER recovers most of the critic’s F1 improvement while reducing critic usage substantially."
+    },
+    {
+      "table_title": "Constraint-set generation for clustering: performance vs additional LLM calls",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Stage-2 refinement rate",
+        "Total LLM calls (relative)",
+        "Validated constraint precision",
+        "NMI",
+        "ARI"
+      ],
+      "data": [
+        [
+          "Constraint sets only (no refinement)",
+          "0%",
+          "1.00×",
+          "0.86",
+          "0.52",
+          "0.41"
+        ],
+        [
+          "Always refine constraint sets",
+          "100%",
+          "1.85×",
+          "0.92",
+          "0.55",
+          "0.44"
+        ],
+        [
+          "EAGER refine (τ=mid)",
+          "34%",
+          "1.29×",
+          "0.91",
+          "0.55",
+          "0.44"
+        ],
+        [
+          "EAGER refine (τ=high)",
+          "18%",
+          "1.15×",
+          "0.89",
+          "0.54",
+          "0.43"
+        ]
+      ],
+      "table_note": "EAGER achieves nearly the same clustering gains as always-refine, at much lower added call volume."
+    },
+    {
+      "table_title": "End-to-end efficiency summary (normalized)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Pipeline",
+        "Method",
+        "Quality metric (F1 or NMI)",
+        "Added second-stage cost",
+        "Efficiency note"
+      ],
+      "data": [
+        [
+          "Qualitative coding",
+          "Always-Stage2",
+          "F1 = 0.79",
+          "High",
+          "Best quality, most compute"
+        ],
+        [
+          "Qualitative coding",
+          "EAGER-Pos (τ=mid)",
+          "F1 = 0.77",
+          "Medium",
+          "Near-best with fewer critiques"
+        ],
+        [
+          "Clustering constraints",
+          "Always refine",
+          "NMI = 0.55",
+          "High",
+          "More reliable constraints"
+        ],
+        [
+          "Clustering constraints",
+          "EAGER (τ=mid)",
+          "NMI = 0.55",
+          "Low–Medium",
+          "Matches quality with fewer refinements"
+        ]
+      ],
+      "table_note": "Efficiency comparison across pipelines and methods."
+    }
+  ]
+}

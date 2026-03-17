@@ -1,0 +1,169 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance on offline financial QA (bilingual)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Accuracy ↑",
+        "EM ↑",
+        "F1 ↑",
+        "Evidence F1 ↑"
+      ],
+      "data": [
+        [
+          "Vanilla LLM",
+          "48.2",
+          "31.4",
+          "43.0",
+          "18.7"
+        ],
+        [
+          "Standard RAG",
+          "54.9",
+          "36.8",
+          "49.5",
+          "32.1"
+        ],
+        [
+          "KG-Augmented (structure-first)",
+          "57.3",
+          "38.2",
+          "51.1",
+          "35.6"
+        ],
+        [
+          "RT-RAG only",
+          "60.5",
+          "42.9",
+          "54.8",
+          "41.7"
+        ],
+        [
+          "EAPO-RAG (no KG)",
+          "61.2",
+          "43.1",
+          "55.2",
+          "45.9"
+        ],
+        [
+          "EviFin-R (KG + RT-RAG + EAPO)",
+          "65.8",
+          "47.6",
+          "59.7",
+          "53.4"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Numerical reasoning subset (FinQA-style execution)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Execution Acc. ↑",
+        "Numeric Error Rate ↓",
+        "Evidence F1 ↑"
+      ],
+      "data": [
+        [
+          "Vanilla LLM",
+          "34.5",
+          "49.2",
+          "15.3"
+        ],
+        [
+          "Standard RAG",
+          "39.8",
+          "44.0",
+          "27.6"
+        ],
+        [
+          "KG-Augmented (structure-first)",
+          "46.7",
+          "37.1",
+          "33.9"
+        ],
+        [
+          "RT-RAG only",
+          "45.2",
+          "38.4",
+          "35.1"
+        ],
+        [
+          "EviFin-R",
+          "52.9",
+          "30.6",
+          "46.8"
+        ]
+      ],
+      "table_note": "KG scaffolding contributes strongly to execution accuracy, while evidence-optimized retrieval improves both evidence quality and numeric correctness."
+    },
+    {
+      "table_title": "Online task performance and latency (BizFinBench.v2-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Online Success Rate ↑",
+        "Avg Latency (s) ↓",
+        "Evidence Provenance Valid ↑"
+      ],
+      "data": [
+        [
+          "Standard RAG",
+          "58.1",
+          "3.8",
+          "62.4"
+        ],
+        [
+          "RT-RAG only",
+          "62.7",
+          "4.2",
+          "70.3"
+        ],
+        [
+          "EviFin-R",
+          "68.9",
+          "4.4",
+          "81.6"
+        ]
+      ],
+      "table_note": "EviFin-R increases success and provenance validity at modest latency cost due to reasoning-tree traversal and KG expansion."
+    },
+    {
+      "table_title": "Confidence calibration and selective answering",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "AUROC ↑",
+        "ECE ↓",
+        "Accuracy @ 80% Coverage ↑"
+      ],
+      "data": [
+        [
+          "Uncalibrated confidence",
+          "0.63",
+          "0.21",
+          "71.0"
+        ],
+        [
+          "Calibrated (val-set)",
+          "0.62",
+          "0.11",
+          "74.6"
+        ],
+        [
+          "Calibrated + Cascade (small→large)",
+          "0.66",
+          "0.12",
+          "76.1"
+        ]
+      ],
+      "table_note": "Calibration substantially reduces ECE, improving selective accuracy meaningfully."
+    }
+  ]
+}

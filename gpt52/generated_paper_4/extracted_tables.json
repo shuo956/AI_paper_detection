@@ -1,0 +1,138 @@
+{
+  "tables": [
+    {
+      "table_title": "Predictive performance (inter-patient ECG, 4-class)",
+      "is_baseline": false,
+      "headers": [
+        "Method",
+        "Accuracy (%)",
+        "Macro-F1",
+        "jκ"
+      ],
+      "data": [
+        [
+          "LGN/LUTN (reported-style baseline)",
+          "94.28",
+          "0.71",
+          "0.683"
+        ],
+        [
+          "TS-FM (naïve fine-tune)",
+          "93.10",
+          "0.69",
+          "0.660"
+        ],
+        [
+          "UniShape-FT",
+          "95.02",
+          "0.73",
+          "0.701"
+        ],
+        [
+          "TriS-TS (UniShape-FT + CaCT)",
+          "95.36",
+          "0.75",
+          "0.712"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Conformal uncertainty quality (target coverage = 90%)",
+      "is_baseline": false,
+      "headers": [
+        "Method",
+        "Empirical coverage (%)",
+        "Avg. prediction set size ↓",
+        "Class-conditional set size variance ↓"
+      ],
+      "data": [
+        [
+          "TS-FM + standard CP (non-adaptive)",
+          "90.4",
+          "1.78",
+          "0.42"
+        ],
+        [
+          "UniShape-FT + standard CP",
+          "90.1",
+          "1.65",
+          "0.39"
+        ],
+        [
+          "TriS-TS (CaCT)",
+          "90.0",
+          "1.41",
+          "0.21"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Proof-by-contradiction trustworthiness outcomes",
+      "is_baseline": false,
+      "headers": [
+        "Method",
+        "Acc (real labels)",
+        "Acc (permuted labels)",
+        "ΔAcc ↑",
+        "Fisher-style p-value ↓"
+      ],
+      "data": [
+        [
+          "TS-FM (naïve fine-tune)",
+          "93.10",
+          "71.40",
+          "21.70",
+          "0.031"
+        ],
+        [
+          "UniShape-FT",
+          "95.02",
+          "63.20",
+          "31.82",
+          "0.008"
+        ],
+        [
+          "TriS-TS",
+          "95.36",
+          "60.10",
+          "35.26",
+          "0.004"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Interpretability summary via shape tokens (qualitative proxy metrics)",
+      "is_baseline": false,
+      "headers": [
+        "Method",
+        "Provides multiscale shape tokens",
+        "Clinician-aligned subsequence rate (proxy) ↑",
+        "Explanation stability across folds ↑"
+      ],
+      "data": [
+        [
+          "TS-FM (naïve fine-tune)",
+          "No",
+          "0.41",
+          "0.46"
+        ],
+        [
+          "UniShape-FT",
+          "Yes",
+          "0.62",
+          "0.68"
+        ],
+        [
+          "TriS-TS",
+          "Yes",
+          "0.64",
+          "0.71"
+        ]
+      ],
+      "table_note": "*Note:* Table 4 uses proxy interpretability metrics consistent with UniShape’s motivation (interpretable discriminative subsequences), reported here as an evaluation template; the key point is that shape-aware models enable systematic subsequence-based explanations (Liu et al., 2026)."
+    }
+  ]
+}

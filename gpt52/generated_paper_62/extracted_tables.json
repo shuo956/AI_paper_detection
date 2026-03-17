@@ -1,0 +1,160 @@
+{
+  "tables": [
+    {
+      "table_title": "CIFAR-10 (Dirichlet non-IID, 100 clients, 10% participation/round)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Non-IID α",
+        "Final Acc (%)",
+        "Rounds to Target",
+        "Uplink to Target (MB)",
+        "Divergence Events"
+      ],
+      "data": [
+        [
+          "FedAvg (uncompressed)",
+          "0.3",
+          "83.4",
+          "420",
+          "1000",
+          "1"
+        ],
+        [
+          "Compressed-FedAvg (spatio-temporal)",
+          "0.3",
+          "82.9",
+          "430",
+          "640",
+          "2"
+        ],
+        [
+          "FedAvg + NOVAK-style optimizer",
+          "0.3",
+          "84.1",
+          "390",
+          "1000",
+          "0"
+        ],
+        [
+          "ST-GradNOVAK (ours)",
+          "0.3",
+          "84.3",
+          "380",
+          "590",
+          "0"
+        ],
+        [
+          "FedAvg (uncompressed)",
+          "0.1",
+          "77.2",
+          "650",
+          "1550",
+          "3"
+        ],
+        [
+          "Compressed-FedAvg (spatio-temporal)",
+          "0.1",
+          "76.5",
+          "670",
+          "980",
+          "5"
+        ],
+        [
+          "ST-GradNOVAK (ours)",
+          "0.1",
+          "78.0",
+          "620",
+          "910",
+          "1"
+        ],
+        [
+          "ST-GradNOVAK + DC-CFL warm-start (ours)",
+          "0.1",
+          "79.1",
+          "560",
+          "820",
+          "0"
+        ]
+      ],
+      "table_note": "Target accuracy = 80% (α=0.3) and 75% (α=0.1)."
+    },
+    {
+      "table_title": "CIFAR-100 (Dirichlet non-IID, 100 clients, 10% participation/round)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Non-IID α",
+        "Final Acc (%)",
+        "Rounds to Target",
+        "Uplink to Target (MB)"
+      ],
+      "data": [
+        [
+          "FedAvg (uncompressed)",
+          "0.3",
+          "49.8",
+          "780",
+          "1860"
+        ],
+        [
+          "Compressed-FedAvg (spatio-temporal)",
+          "0.3",
+          "49.2",
+          "810",
+          "1200"
+        ],
+        [
+          "FedAvg + NOVAK-style optimizer",
+          "0.3",
+          "50.4",
+          "740",
+          "1860"
+        ],
+        [
+          "ST-GradNOVAK (ours)",
+          "0.3",
+          "50.7",
+          "710",
+          "1120"
+        ]
+      ],
+      "table_note": "Target accuracy = 45% (α=0.3)."
+    },
+    {
+      "table_title": "Communication reduction at target accuracy (relative to uncompressed FedAvg)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "Method",
+        "Uplink Reduction"
+      ],
+      "data": [
+        [
+          "CIFAR-10, α=0.3",
+          "Compressed-FedAvg",
+          "36.0%"
+        ],
+        [
+          "CIFAR-10, α=0.3",
+          "ST-GradNOVAK",
+          "41.0%"
+        ],
+        [
+          "CIFAR-10, α=0.1",
+          "ST-GradNOVAK + DC-CFL",
+          "47.1%"
+        ],
+        [
+          "CIFAR-100, α=0.3",
+          "ST-GradNOVAK",
+          "39.8%"
+        ]
+      ],
+      "table_note": "Relative uplink reduction compared to uncompressed FedAvg."
+    }
+  ]
+}

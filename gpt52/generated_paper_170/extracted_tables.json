@@ -1,0 +1,162 @@
+{
+  "tables": [
+    {
+      "table_title": "Main results across tasks (higher is better except ECE)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Clinical RE F1 (EN)",
+        "Clinical RE F1 (TR)",
+        "Persona Retrieval R@1 (mono)",
+        "Persona Classif. AUROC",
+        "Code-switched QA Acc.",
+        "ECE ↓"
+      ],
+      "data": [
+        [
+          "Dense RAG",
+          0.892,
+          0.861,
+          0.241,
+          0.731,
+          0.612,
+          0.164
+        ],
+        [
+          "Dense + STITCH",
+          0.898,
+          0.867,
+          0.247,
+          0.736,
+          0.628,
+          0.158
+        ],
+        [
+          "Dense + NAACL",
+          0.89,
+          0.86,
+          0.24,
+          0.732,
+          0.614,
+          0.112
+        ],
+        [
+          "Dense + STITCH + NAACL",
+          0.901,
+          0.87,
+          0.248,
+          0.738,
+          0.633,
+          0.104
+        ],
+        [
+          "CIP-RAG (Pruned)",
+          0.905,
+          0.874,
+          0.252,
+          0.742,
+          0.641,
+          0.091
+        ],
+        [
+          "CIP-RAG (Pruned+PTQ)",
+          0.902,
+          0.872,
+          0.251,
+          0.741,
+          0.637,
+          0.095
+        ]
+      ],
+      "table_note": "Compression (when guided adaptively and structurally) does not degrade performance; combined intent-aware retrieval and noise-aware calibration yields consistent gains, with the clearest improvement in ECE."
+    },
+    {
+      "table_title": "Robustness to noisy/contradictory retrieval (stress test)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "RE F1 drop under contradiction (EN) ↓",
+        "QA Acc. drop under contradiction ↓",
+        "Overconfidence rate under contradiction ↓"
+      ],
+      "data": [
+        [
+          "Dense RAG",
+          0.041,
+          0.083,
+          0.276
+        ],
+        [
+          "Dense + STITCH",
+          0.038,
+          0.071,
+          0.251
+        ],
+        [
+          "Dense + NAACL",
+          0.036,
+          0.065,
+          0.142
+        ],
+        [
+          "Dense + STITCH + NAACL",
+          0.033,
+          0.058,
+          0.121
+        ],
+        [
+          "CIP-RAG (Pruned)",
+          0.031,
+          0.052,
+          0.096
+        ]
+      ],
+      "table_note": "NAACL-style calibration most strongly reduces overconfidence under noise, consistent with findings that contradictory contexts inflate false certainty."
+    },
+    {
+      "table_title": "Ablation on compression strategy (target sparsity fixed)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Compression strategy",
+        "Clinical RE F1 (EN)",
+        "Code-switched QA Acc.",
+        "Persona AUROC",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Magnitude pruning (uniform)",
+          0.889,
+          0.603,
+          0.723,
+          "Larger factual/behavioral drift under stress"
+        ],
+        [
+          "Sink-aware head pruning only",
+          0.898,
+          0.621,
+          0.734,
+          "Strong, simple structural signal"
+        ],
+        [
+          "Agent-guided adaptive pruning only",
+          0.902,
+          0.635,
+          0.739,
+          "Preserves knowledge pathways"
+        ],
+        [
+          "Agent-guided + sink-aware (CIP-RAG)",
+          0.905,
+          0.641,
+          0.742,
+          "Best overall tradeoff"
+        ]
+      ],
+      "table_note": "Structural redundancy signals (BOS sink heads) and adaptive agent selection are complementary: sink scores provide a stable pruning prior; the agent supplies iterative, rollback-protected global coordination."
+    }
+  ]
+}

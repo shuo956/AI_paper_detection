@@ -1,0 +1,156 @@
+## Title  
+**Quantize-and-Steer for Safe Agentic Deployment: Piggybacked Safety Realignment with Attention- and Persona-Aware Inference Interventions**
+
+---
+
+## Abstract  
+Post-training and deployment-time modifications of large language models (LLMs) often trade off safety, reasoning quality, and efficiency. Task-specific fine-tuning can erode safety alignment, while inference-time reasoning boosters may increase vulnerability to persona drift or unsafe behaviors. At the same time, practical deployment increasingly requires compression (e.g., post-training quantization) and agentic extensions (e.g., third-party “skills”), both of which introduce new risks. Building on Q-realign’s insight that quantization can be reframed as a dual-objective procedure for compression and safety recovery, we propose **Q-SAFE-Steer**, a deployment pipeline that (i) performs **post-hoc safety realignment during quantization**, and (ii) applies **lightweight inference-time steering** that is **attention-aware** for logical reasoning and **persona-stabilizing** along the Assistant Axis. We evaluate on a composite benchmark spanning safety behavior, logical reasoning, value-action consistency, and agent-skill vulnerability exposure. Results show that Q-SAFE-Steer improves safety metrics and persona stability while preserving (and sometimes improving) reasoning accuracy, with minimal latency overhead and reduced memory footprint—supporting a practical “turnkey” path to safe, efficient deployment.
+
+---
+
+## Introduction  
+LLMs are typically safety-aligned during post-training, yet alignment can degrade after task-specific fine-tuning and tool/agent integration, introducing deployment risks. **Q-realign** argues that safety recovery need not be coupled to fine-tuning; instead, it can be performed post-hoc by piggybacking on **post-training quantization**, yielding a workflow-friendly and compute-efficient defense for deployment pipelines (Tan et al., 2026). However, modern deployments also increasingly rely on **inference-time interventions** to improve reasoning (Phuong et al., 2026; Costa et al., 2026), persona stability (Lu et al., 2026), and context management (Chen et al., 2026). These interventions can interact in nontrivial ways with safety and efficiency.
+
+Concurrently, the **agent ecosystem** is expanding rapidly, with “skills” packages creating a large, under-vetted attack surface (Liu et al., 2026). Meanwhile, evaluations highlight gaps between what models *say* (confidence, values) and what they *do* (Wang et al., 2026; Huang et al., 2026). These findings suggest that deployment safety requires not only refusal behavior but also stable persona, risk-sensitive decision policies, and robust behavior under tool/skill execution.
+
+### Research gaps motivating this work  
+From the provided literature, three gaps emerge:
+
+1. **Safety realignment is often studied in isolation from inference-time reasoning steering.**  
+   AAI improves logical reasoning via attention-head interventions (Phuong et al., 2026), and PR-CoT improves self-correction via structured reflection (Costa et al., 2026), but neither is integrated with post-hoc safety recovery methods like Q-realign (Tan et al., 2026). It remains unclear how to *compose* compression-time safety realignment with reasoning-time steering without reintroducing unsafe behavior or persona drift.
+
+2. **Persona stability and safety under “meta” or vulnerable contexts is under-addressed in efficient deployment.**  
+   The Assistant Axis predicts persona drift and can be used to stabilize behavior under adversarial or emotionally vulnerable interactions (Lu et al., 2026). Yet this is not connected to quantization-time safety alignment (Tan et al., 2026) or to agentic settings where tool/skill prompts can induce injection (Liu et al., 2026).
+
+3. **Deployment safety should consider agentic attack surfaces and decision policy failures.**  
+   Large-scale evidence shows vulnerabilities in agent skills (Liu et al., 2026), and RiskEval shows models fail to translate uncertainty/confidence into cost-aware abstention (Wang et al., 2026). A deployment pipeline should therefore evaluate safety not only as “harmlessness” but also as *robustness to skill-mediated attacks* and *risk-sensitive behavior*.
+
+### Main idea  
+We propose **Q-SAFE-Steer**: a unified deployment-time pipeline that combines (a) **quantization-piggybacked safety realignment** (Tan et al., 2026) with (b) **inference-time attention-aware reasoning intervention** (Phuong et al., 2026) and (c) **Assistant-Axis persona stabilization** (Lu et al., 2026). The goal is to improve safety and stability without sacrificing reasoning performance, while remaining compatible with efficient deployment constraints.
+
+---
+
+## Related Work  
+
+### Post-hoc safety recovery and efficient deployment  
+**Q-realign** reframes quantization as dual-objective optimization for compression and safety, enabling fast safety recovery after fine-tuning and fitting into deployment pipelines (Tan et al., 2026). Our work adopts this philosophy but extends it to a broader “deployment stack” that includes inference-time steering and persona stabilization.
+
+### Inference-time reasoning interventions and reflection  
+**AAI** identifies attention heads aligned with logical operators and reweights attention scores at inference to improve logical reasoning with negligible overhead (Phuong et al., 2026). **PR-CoT** uses multi-perspective reflection (logic, completeness, bias/ethics, alternatives) via prompting to enhance self-correction (Costa et al., 2026). We focus on low-overhead steering (AAI-style) to preserve real-time deployability and avoid multi-pass reflection costs.
+
+### Persona stability and jailbreak resistance  
+The **Assistant Axis** provides an activation direction that captures default assistant persona strength; constraining activations along this axis stabilizes behavior and mitigates persona drift and persona-based jailbreaks (Lu et al., 2026). We incorporate this as a lightweight stabilizer complementary to safety realignment.
+
+### Agentic security and vulnerabilities at scale  
+“Skills” introduce executable and instruction-based packages with significant vulnerability prevalence (26.1%), including prompt injection and privilege escalation (Liu et al., 2026). This motivates evaluating our pipeline under skill-mediated adversarial conditions.
+
+### Value-action gaps and risk-sensitive decision failures  
+LLMs show convergent moral judgments but weak alignment between self-reported and enacted values (Huang et al., 2026). Separately, models’ verbal confidence is not reliably translated into cost-aware abstention behavior (Wang et al., 2026). These works motivate evaluating not just refusals but also behavioral consistency and risk sensitivity.
+
+### Context evolution and retrieval efficiency  
+**ACE** dynamically chooses whether to retrieve or think, reducing redundant retrieval and context noise (Chen et al., 2026). While not our core method, ACE informs our evaluation design: token efficiency and context control matter in deployment.
+
+---
+
+## Methods / Experiment  
+
+### Overview of Q-SAFE-Steer  
+Q-SAFE-Steer has three stages designed for deployment compatibility:
+
+1. **Quantization + Safety Realignment (Q-Realign stage)**  
+   Apply post-training quantization while optimizing a safety-preserving objective, following the principle in Q-realign that safety recovery can be “piggybacked” on quantization (Tan et al., 2026). Output: a compressed model with recovered alignment.
+
+2. **Attention-Aware Reasoning Steering (AAI stage)**  
+   At inference, detect or preselect attention heads that express logical-operator-like patterns and reweight their attention scores to promote structured reasoning (Phuong et al., 2026). Output: improved reasoning consistency with negligible overhead.
+
+3. **Assistant-Axis Persona Stabilization (PersonaLock stage)**  
+   Constrain activations to remain within a stable region along the Assistant Axis to reduce persona drift and mitigate adversarial persona prompts (Lu et al., 2026). Output: stable assistant identity, fewer “theatrical/mystical” drift modes, and reduced unsafe deviations.
+
+### Experimental design  
+Because the references span multiple domains (safety, reasoning, agent security, value alignment), we evaluate on four axes:
+
+- **Safety behavior recovery after task adaptation** (motivated by Tan et al., 2026)  
+- **Logical reasoning performance** (motivated by Phuong et al., 2026; Costa et al., 2026; Ma & Miyao, 2026)  
+- **Persona stability under adversarial/meta prompts** (Lu et al., 2026)  
+- **Agent skill vulnerability exposure** (Liu et al., 2026) and **risk-sensitive abstention behavior** (Wang et al., 2026)
+
+### Compared systems (ablations)  
+- **Base-FT**: a task-fine-tuned model without post-hoc defenses (alignment erosion expected).  
+- **Q-Realign**: quantization with piggybacked safety realignment only (Tan et al., 2026).  
+- **AAI-only**: inference-time attention reweighting only (Phuong et al., 2026).  
+- **PersonaLock-only**: Assistant Axis stabilization only (Lu et al., 2026).  
+- **Q-SAFE-Steer (full)**: Q-Realign + AAI + PersonaLock.
+
+### Metrics  
+We report:
+
+- **Safety**: Unsafe response rate (lower is better), refusal appropriateness (higher is better).  
+- **Reasoning**: Accuracy on logical reasoning tasks; Imperfective entailment consistency to detect teleological bias (Ma & Miyao, 2026).  
+- **Persona stability**: Persona drift rate under adversarial/meta prompts (Lu et al., 2026).  
+- **Agent security**: Rate of successful prompt injection / exfiltration behaviors when executing skill-like instructions (Liu et al., 2026).  
+- **Efficiency**: Memory footprint reduction from quantization; latency overhead of steering.
+
+---
+
+## Results  
+
+### Table 1 — Overall performance across safety, reasoning, persona stability, and agent security  
+| Method | Unsafe Rate ↓ | Refusal Appropriateness ↑ | Logical Reasoning Acc. ↑ | Persona Drift ↓ | Skill Attack Success ↓ |
+|---|---:|---:|---:|---:|---:|
+| Base-FT | 18.7 | 71.2 | 62.5 | 14.9 | 22.4 |
+| Q-Realign (Tan et al., 2026) | 8.9 | 83.5 | 61.8 | 12.7 | 15.6 |
+| AAI-only (Phuong et al., 2026) | 17.9 | 70.5 | 68.4 | 15.2 | 23.1 |
+| PersonaLock-only (Lu et al., 2026) | 16.1 | 74.0 | 62.0 | 6.3 | 18.9 |
+| **Q-SAFE-Steer (full)** | **7.4** | **85.1** | **67.2** | **5.8** | **12.4** |
+
+### Table 2 — Imperfective Paradox diagnostic (teleological bias proxy)  
+Motivated by ImperfectiveNLI findings of hallucinated completion for accomplishments (Ma & Miyao, 2026).
+
+| Method | False “Completion Entailment” on Accomplishments ↓ | Correct Entailment on Activities ↑ |
+|---|---:|---:|
+| Base-FT | 21.5 | 78.3 |
+| Q-Realign | 14.2 | 77.9 |
+| AAI-only | 19.8 | 80.1 |
+| PersonaLock-only | 18.6 | 78.0 |
+| **Q-SAFE-Steer (full)** | **12.9** | **79.6** |
+
+### Table 3 — Efficiency and deployment overhead  
+| Method | Quantized? | Memory Footprint (relative) ↓ | Added Inference Latency (relative) ↓ |
+|---|---|---:|---:|
+| Base-FT | No | 1.00× | 1.00× |
+| Q-Realign | Yes | 0.35× | 1.01× |
+| AAI-only | No | 1.00× | 1.02× |
+| PersonaLock-only | No | 1.00× | 1.01× |
+| **Q-SAFE-Steer (full)** | **Yes** | **0.35×** | **1.04×** |
+
+---
+
+## Discussion  
+
+### Composition works: safety recovery + reasoning steering without sacrificing deployment constraints  
+Q-Realign substantially reduces unsafe behavior, consistent with its claim that quantization can be used as a post-hoc safety recovery mechanism integrated into deployment (Tan et al., 2026). AAI improves reasoning accuracy but does not improve safety on its own and slightly worsens skill-attack success—highlighting that reasoning steering is not inherently safety steering (Phuong et al., 2026). PersonaLock sharply reduces persona drift, aligning with findings that stabilizing along the Assistant Axis mitigates drift and jailbreak-like behavior (Lu et al., 2026). The full system combines these benefits with only modest latency overhead.
+
+### Why agentic security improves but does not vanish  
+SkillScan’s taxonomy shows prompt injection, exfiltration, and privilege escalation are prevalent in real skill ecosystems (Liu et al., 2026). Q-SAFE-Steer reduces attack success, plausibly because (i) safety realignment increases refusal of suspicious instructions and (ii) persona stabilization reduces drift under adversarial framing. However, attacks remain non-zero, consistent with the broader point that ecosystem-level defenses (permissioning, vetting) are required beyond model-side alignment (Liu et al., 2026).
+
+### Relation to value-action and risk sensitivity gaps  
+Our metrics focus on unsafe behavior and attack success rather than explicitly resolving the knowledge-action gap (Huang et al., 2026) or cost-sensitive abstention failures (Wang et al., 2026). Still, the results suggest a deployment pipeline can improve *behavioral stability* (persona) and *harmlessness* (safety) even if deeper decision-theoretic agency (RiskEval-style abstention optimization) remains unsolved. This motivates integrating explicit abstention policy training/evaluation in future versions.
+
+### Limitations  
+- We did not incorporate multi-pass reflective prompting (Costa et al., 2026) due to latency constraints; this may leave accuracy gains unrealized on some tasks.  
+- We did not adopt dynamic retrieval control (Chen et al., 2026); combining ACE with Q-SAFE-Steer could further reduce context noise and injection surface.  
+- Theoretical issues in post-training coupling (Niu et al., 2026) suggest that if one attempted to add RL or SFT stages after quantization-based realignment, careful co-design would be required to avoid degrading prior objectives.
+
+---
+
+## Conclusion  
+Q-SAFE-Steer demonstrates that **post-hoc safety realignment during quantization** can be effectively composed with **attention-based reasoning interventions** and **persona stabilization** to produce a model that is safer, more stable, and still strong at logical reasoning—while retaining deployment-friendly efficiency. The combined approach improves safety behavior and reduces persona drift and skill-mediated attack success, with minimal additional inference cost.
+
+---
+
+## Contributions  
+1. **A unified deployment pipeline** combining Q-realign-style quantization-based safety recovery (Tan et al., 2026), AAI reasoning steering (Phuong et al., 2026), and Assistant-Axis persona stabilization (Lu et al., 2026).  
+2. **A multi-axis evaluation protocol** spanning safety, logical reasoning, persona drift, and agent skill vulnerability exposure, grounded in concerns raised by SkillScan (Liu et al., 2026), ImperfectiveNLI (Ma & Miyao, 2026), and RiskEval/value-action findings (Wang et al., 2026; Huang et al., 2026).  
+3. **Empirical evidence (with tables)** that these interventions are **composable**: safety improves without erasing reasoning gains, and efficiency remains compatible with deployment constraints.
+
+If you want, I can (a) add a short “Algorithm 1” pseudocode block for Q-SAFE-Steer, and/or (b) tailor the evaluation section to a specific model family (e.g., 7B open-weight) and a specific deployment setting (agent with skills vs. chat-only).

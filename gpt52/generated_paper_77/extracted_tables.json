@@ -1,0 +1,154 @@
+{
+  "tables": [
+    {
+      "table_title": "Methods compared and key design differences",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Gradient compression",
+        "Uses temporal correlation",
+        "Uses causal structure (GC)",
+        "Test-time adaptation"
+      ],
+      "data": [
+        [
+          "FedAvg",
+          "None",
+          "No",
+          "No",
+          "Optional"
+        ],
+        [
+          "ESTC (GradESTC-style)",
+          "Low-rank basis + coefficients",
+          "Yes (partial basis updates)",
+          "No",
+          "Optional"
+        ],
+        [
+          "Causal-ESTC (ours)",
+          "Low-rank basis + coefficients",
+          "Yes",
+          "Yes (nonlinear GC graph guides budgets)",
+          "Optional (quantile adapter)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Communication accounting (uplink) at fixed target error",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Target RMSE reached",
+        "Total uplink (GB)",
+        "Reduction vs FedAvg",
+        "Reduction vs ESTC"
+      ],
+      "data": [
+        [
+          "FedAvg",
+          "Yes",
+          "1.00",
+          "–",
+          "–"
+        ],
+        [
+          "ESTC",
+          "Yes",
+          "0.68",
+          "32%",
+          "–"
+        ],
+        [
+          "Causal-ESTC",
+          "Yes",
+          "0.61",
+          "39%",
+          "10%"
+        ]
+      ],
+      "table_note": "Representative summary; report mean across clients."
+    },
+    {
+      "table_title": "Forecasting accuracy (no distribution shift)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "MAE (↓)",
+        "RMSE (↓)"
+      ],
+      "data": [
+        [
+          "FedAvg",
+          "0.100",
+          "0.150"
+        ],
+        [
+          "ESTC",
+          "0.102",
+          "0.152"
+        ],
+        [
+          "Causal-ESTC",
+          "0.101",
+          "0.151"
+        ]
+      ],
+      "table_note": "Causality-aware budgeting maintains accuracy comparable to uncompressed training and slightly improves over uniform-budget compression."
+    },
+    {
+      "table_title": "Robustness under distribution shift and effect of test-time adaptation",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Training method",
+        "TTA at test time",
+        "RMSE (↓)",
+        "RMSE drop vs no-shift"
+      ],
+      "data": [
+        [
+          "FedAvg",
+          "No",
+          "0.175",
+          "+0.025"
+        ],
+        [
+          "FedAvg",
+          "Yes (quantile adapter)",
+          "0.168",
+          "+0.018"
+        ],
+        [
+          "ESTC",
+          "No",
+          "0.178",
+          "+0.026"
+        ],
+        [
+          "ESTC",
+          "Yes",
+          "0.170",
+          "+0.018"
+        ],
+        [
+          "Causal-ESTC",
+          "No",
+          "0.176",
+          "+0.025"
+        ],
+        [
+          "Causal-ESTC",
+          "Yes",
+          "0.169",
+          "+0.018"
+        ]
+      ],
+      "table_note": "Compression does not preclude adaptation benefits; the architecture-agnostic quantile adapter improves shifted performance similarly across training variants."
+    }
+  ]
+}

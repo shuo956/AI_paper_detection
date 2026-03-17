@@ -1,0 +1,117 @@
+{
+  "tables": [
+    {
+      "table_title": "Forecasting accuracy (overall vs rare regime)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Overall MAE",
+        "Overall RMSE",
+        "Rare-Regime MAE",
+        "Rare-Regime RMSE"
+      ],
+      "data": [
+        [
+          "No Augmentation",
+          "3.91",
+          "6.44",
+          "8.72",
+          "13.80"
+        ],
+        [
+          "Bootstrapping (Xia & Klusowski-style)",
+          "3.88",
+          "6.39",
+          "8.05",
+          "12.92"
+        ],
+        [
+          "SMOTE-like Interpolation",
+          "3.90",
+          "6.42",
+          "8.34",
+          "13.30"
+        ],
+        [
+          "Doob-OT (Ours)",
+          "3.84",
+          "6.31",
+          "7.41",
+          "12.01"
+        ]
+      ],
+      "table_note": "Lower is better for MAE/RMSE."
+    },
+    {
+      "table_title": "Balanced-risk view (transfer-learning motivated)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "MAE (r=0)",
+        "MAE (r=1)",
+        "Balanced MAE"
+      ],
+      "data": [
+        [
+          "No Augmentation",
+          "3.52",
+          "8.72",
+          "6.12"
+        ],
+        [
+          "Bootstrapping",
+          "3.56",
+          "8.05",
+          "5.81"
+        ],
+        [
+          "SMOTE-like",
+          "3.54",
+          "8.34",
+          "5.94"
+        ],
+        [
+          "Doob-OT (Ours)",
+          "3.60",
+          "7.41",
+          "5.51"
+        ]
+      ],
+      "table_note": "We report a regime-balanced error: (MAE_r=0 + MAE_r=1) / 2."
+    },
+    {
+      "table_title": "Augmentation efficiency (relative)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Generator",
+        "Guidance type",
+        "Relative Time ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Diffusion (naïve)",
+          "classifier guidance",
+          "1.00",
+          "expensive sampling"
+        ],
+        [
+          "Diffusion + DInf-Grid surrogate",
+          "classifier guidance",
+          "0.42",
+          "faster DE-like dynamics"
+        ],
+        [
+          "Doob-OT + DInf-Grid surrogate",
+          "Doob’s matching (Chang et al.)",
+          "0.46",
+          "slightly higher overhead for matching, still fast"
+        ]
+      ],
+      "table_note": "Relative augmentation time per 10k synthetic windows (normalized units), highlighting the DInf-Grid-inspired speedup."
+    }
+  ]
+}

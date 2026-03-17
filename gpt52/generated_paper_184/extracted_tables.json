@@ -1,0 +1,126 @@
+{
+  "tables": [
+    {
+      "table_title": "Cumulative regret and communication cost (mean ± std over 10 runs)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Regret @ T=50k Mean",
+        "Regret @ T=50k SD",
+        "Comm. rounds (↓)",
+        "Outlier grad-rate % Mean",
+        "Outlier grad-rate % SD"
+      ],
+      "data": [
+        [
+          "Centralized Nonlinear MNL-UCB",
+          "1.00",
+          "0.05",
+          "N/A",
+          "0.8",
+          "0.2"
+        ],
+        [
+          "Decentralized (no robust, no privacy)",
+          "1.42",
+          "0.08",
+          "500",
+          "6.7",
+          "0.9"
+        ],
+        [
+          "Robust only (heavy-tail handling)",
+          "1.25",
+          "0.06",
+          "500",
+          "1.9",
+          "0.4"
+        ],
+        [
+          "Privacy only (lp-mDP)",
+          "1.55",
+          "0.09",
+          "500",
+          "6.5",
+          "1.0"
+        ],
+        [
+          "FTN-MNL-UCB (robust + lp-mDP + similarity accel.)",
+          "1.28",
+          "0.07",
+          "260",
+          "2.1",
+          "0.5"
+        ]
+      ],
+      "table_note": "Regret is normalized so that 1.00 corresponds to the centralized upper bound in this table."
+    },
+    {
+      "table_title": "Privacy–utility tradeoff (FTN-MNL-UCB varying ε)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "ε (lp-mDP)",
+        "Regret @ T=50k (↓)",
+        "Avg reward (↑)",
+        "Context distortion (↑)"
+      ],
+      "data": [
+        [
+          "0.2",
+          "1.46",
+          "0.71",
+          "0.84"
+        ],
+        [
+          "0.5",
+          "1.33",
+          "0.77",
+          "0.52"
+        ],
+        [
+          "1.0",
+          "1.28",
+          "0.79",
+          "0.31"
+        ],
+        [
+          "2.0",
+          "1.24",
+          "0.80",
+          "0.18"
+        ]
+      ],
+      "table_note": "Context distortion is a normalized lp distance between x and \\tilde x. As expected, higher ε improves utility."
+    },
+    {
+      "table_title": "Ablation on similarity-aware acceleration (fixed E vs adaptive E)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Regret @ T=50k (↓)",
+        "Comm. rounds (↓)"
+      ],
+      "data": [
+        [
+          "Fixed local steps (E=1)",
+          "1.29",
+          "500"
+        ],
+        [
+          "Fixed local steps (E=5)",
+          "1.31",
+          "200"
+        ],
+        [
+          "Adaptive E via similarity (ours)",
+          "1.28",
+          "260"
+        ]
+      ],
+      "table_note": "Adaptive scheduling preserves regret while avoiding overly aggressive local drift when similarity weakens, aligning with the 'complexity separation under similarity' motivation in Bylinkin et al. (2026)."
+    }
+  ]
+}

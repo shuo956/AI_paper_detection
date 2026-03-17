@@ -1,0 +1,166 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall QA performance and hallucination reduction",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "EM (%) ↑",
+        "F1 (%) ↑",
+        "Hallucination Rate (%) ↓"
+      ],
+      "data": [
+        [
+          "Vanilla RAG (concat)",
+          "41.2",
+          "54.8",
+          "18.6"
+        ],
+        [
+          "GraphRAG-static",
+          "43.5",
+          "56.1",
+          "16.9"
+        ],
+        [
+          "Pced-only",
+          "45.0",
+          "57.4",
+          "15.8"
+        ],
+        [
+          "Majority Vote Ensemble",
+          "46.1",
+          "58.0",
+          "14.7"
+        ],
+        [
+          "CoPoRAG (ours)",
+          "49.8",
+          "61.2",
+          "10.9"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Calibration and evaluation stability (RULERS-style rubric locking)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Brier Score ↓",
+        "ECE (%) ↓",
+        "STB (ΔEM under rubric paraphrase) ↓"
+      ],
+      "data": [
+        [
+          "Vanilla RAG (concat)",
+          "0.214",
+          "9.8",
+          "3.6"
+        ],
+        [
+          "Pced-only",
+          "0.201",
+          "8.9",
+          "3.2"
+        ],
+        [
+          "Majority Vote Ensemble",
+          "0.193",
+          "8.4",
+          "3.1"
+        ],
+        [
+          "CoPoRAG (ours)",
+          "0.164",
+          "6.7",
+          "1.9"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation: contribution of each component",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "EM (%) ↑",
+        "Hallucination Rate (%) ↓",
+        "Brier Score ↓"
+      ],
+      "data": [
+        [
+          "CoPoRAG full",
+          "49.8",
+          "10.9",
+          "0.164"
+        ],
+        [
+          "– CCAS (no consensus; pick highest-likelihood)",
+          "47.2",
+          "12.8",
+          "0.187"
+        ],
+        [
+          "– PCED (concat evidence instead)",
+          "48.0",
+          "12.1",
+          "0.176"
+        ],
+        [
+          "– QEGC (no dynamic evidence graph)",
+          "46.8",
+          "13.5",
+          "0.182"
+        ],
+        [
+          "– PARD (no position diagnostics)",
+          "47.5",
+          "12.9",
+          "0.179"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Position robustness stress test (PosIR-inspired)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Early EM ↑",
+        "Middle EM ↑",
+        "Late EM ↑",
+        "Position Gap (max-min) ↓"
+      ],
+      "data": [
+        [
+          "Vanilla RAG (concat)",
+          "44.0",
+          "40.7",
+          "36.9",
+          "7.1"
+        ],
+        [
+          "Pced-only",
+          "46.2",
+          "44.8",
+          "42.0",
+          "4.2"
+        ],
+        [
+          "CoPoRAG (ours)",
+          "50.5",
+          "49.3",
+          "48.1",
+          "2.4"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

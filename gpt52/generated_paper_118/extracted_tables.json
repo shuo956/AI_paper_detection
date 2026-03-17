@@ -1,0 +1,146 @@
+{
+  "tables": [
+    {
+      "table_title": "CoDAC-Rad components and their literature grounding",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Component",
+        "Purpose",
+        "Key mechanism",
+        "Reference inspiration"
+      ],
+      "data": [
+        [
+          "Contextual discrepancy estimator (CDE)",
+          "Identify informative “abnormal”/shifted contexts",
+          "Autoencoder-based discrepancy score",
+          "Tanaka et al. (2026)"
+        ],
+        [
+          "Dynamic multi-view contrastive framework (DMCF)",
+          "Weight contrastive pairs/views by discrepancy",
+          "View weighting based on discrepancy",
+          "Tanaka et al. (2026)"
+        ],
+        [
+          "AutoML stage (accessible)",
+          "Lower engineering burden, optimize models",
+          "Standardized CV search over models",
+          "Lozano-Montoya et al. (2026)"
+        ],
+        [
+          "Noise-aware evaluation option",
+          "Stress-test robustness to corrupted labels",
+          "Confidence-based attenuation (optional)",
+          "Burgert et al. (2026)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Mean test AUC and runtime (across tasks; higher AUC is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Representation",
+        "Model selection",
+        "Mean AUC (%)",
+        "Mean runtime (min)"
+      ],
+      "data": [
+        [
+          "AutoML-only",
+          "Original radiomics",
+          "AutoML",
+          "78.6",
+          "8"
+        ],
+        [
+          "Contrastive + LR",
+          "Rad-CoDAC",
+          "Fixed LR",
+          "79.4",
+          "18"
+        ],
+        [
+          "CoDAC-Rad (ours)",
+          "Rad-CoDAC",
+          "AutoML",
+          "82.1",
+          "24"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Robustness: AUC (%) under increasing symmetric label noise",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "0% noise",
+        "10% noise",
+        "20% noise",
+        "AUC drop (0%→20%)"
+      ],
+      "data": [
+        [
+          "AutoML-only",
+          "78.6",
+          "75.9",
+          "72.8",
+          "-5.8"
+        ],
+        [
+          "Contrastive + LR",
+          "79.4",
+          "77.1",
+          "74.5",
+          "-4.9"
+        ],
+        [
+          "CoDAC-Rad (ours)",
+          "82.1",
+          "80.0",
+          "77.6",
+          "-4.5"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation on Rad-CoDAC components (mean AUC %)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "CDE discrepancy scoring",
+        "Dynamic view weighting",
+        "Mean AUC (%)"
+      ],
+      "data": [
+        [
+          "No contrastive pretraining",
+          "–",
+          "–",
+          "78.6"
+        ],
+        [
+          "Contrastive (uniform weights)",
+          "No",
+          "No",
+          "80.3"
+        ],
+        [
+          "Rad-CoDAC full",
+          "Yes",
+          "Yes",
+          "82.1"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

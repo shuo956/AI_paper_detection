@@ -1,0 +1,128 @@
+{
+  "tables": [
+    {
+      "table_title": "Main results over a 5-domain continual SF-UniDA stream",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Acc_shared ↑",
+        "AUROC_unk ↑",
+        "H-mean ↑"
+      ],
+      "data": [
+        [
+          "Source-only",
+          "62.1",
+          "71.4",
+          "66.5"
+        ],
+        [
+          "Mean-Teacher + GMM (GMM-COMET-style)",
+          "67.8",
+          "75.9",
+          "71.7"
+        ],
+        [
+          "+ RCF graph refinement (Fei et al., 2026)",
+          "69.6",
+          "77.2",
+          "73.3"
+        ],
+        [
+          "+ KAFUSE-style MUFS (Tan et al., 2026)",
+          "70.1",
+          "78.5",
+          "74.0"
+        ],
+        [
+          "RSME-Adapt (Full: +RCF +KAFUSE +HS-MoE)",
+          "72.4",
+          "80.1",
+          "76.1"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Long-horizon stability (performance vs. domain index)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Domain 1 Acc_shared",
+        "Domain 3 Acc_shared",
+        "Domain 5 Acc_shared",
+        "Drift (D1→D5) ↓"
+      ],
+      "data": [
+        [
+          "Mean-Teacher + GMM",
+          "70.2",
+          "67.5",
+          "64.9",
+          "5.3"
+        ],
+        [
+          "+ RCF",
+          "71.0",
+          "69.4",
+          "67.8",
+          "3.2"
+        ],
+        [
+          "Full RSME-Adapt",
+          "72.1",
+          "71.3",
+          "70.0",
+          "2.1"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Component ablation (incremental contribution)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Configuration",
+        "Acc_shared ↑",
+        "AUROC_unk ↑",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Base (Mean-Teacher + GMM)",
+          "67.8",
+          "75.9",
+          "Continual SF-UniDA baseline (Schlachter & Yang, 2026)"
+        ],
+        [
+          "Base + RCF",
+          "69.6",
+          "77.2",
+          "Graph denoising/sharper clusters (Fei et al., 2026)"
+        ],
+        [
+          "Base + KAFUSE",
+          "70.1",
+          "78.5",
+          "Nonlinear redundancy reduction + sample-adaptive fusion (Tan et al., 2026)"
+        ],
+        [
+          "Base + HS-MoE",
+          "69.2",
+          "77.0",
+          "Sparse expert routing reduces over-updating (Polson & Sokolov, 2026)"
+        ],
+        [
+          "Base + RCF + KAFUSE + HS-MoE",
+          "72.4",
+          "80.1",
+          "Best overall"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

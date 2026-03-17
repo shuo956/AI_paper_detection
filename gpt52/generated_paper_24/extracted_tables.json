@@ -1,0 +1,103 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall CVRF summary (lower is better for CBD-dispersion, PI, PS)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "CBD-dispersion (↓)",
+        "PI (↓)",
+        "PS (↓)"
+      ],
+      "data": [
+        [
+          "S1: Dense LLM",
+          "0.061",
+          "0.42",
+          "0.18"
+        ],
+        [
+          "S2: Dense + RAG",
+          "0.058",
+          "0.39",
+          "0.27"
+        ],
+        [
+          "S2-G: Dense + RAG + Evidence Graph",
+          "0.056",
+          "0.36",
+          "0.19"
+        ],
+        [
+          "S3: Sparse-variant + RAG",
+          "0.055",
+          "0.24",
+          "0.22"
+        ]
+      ],
+      "table_note": "Paraphrase instability drops most for the sparse-variant configuration, consistent with 'variance reduction' effects reported by Flouro & Chadwick (2026). Position sensitivity increases under naive RAG packing (S2), aligning with PosIR’s finding that position bias intensifies with longer contexts (Zeng et al., 2026). Graph curation reduces PS, consistent with N2N-GQA’s claim that structure mitigates noise and supports multi-hop reasoning (Sharafath et al., 2026)."
+    },
+    {
+      "table_title": "Example contextual contrasts for bias drift (CBD-contrast; percentage-point change)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Contrast (fixed content; context varies)",
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "data": [
+        [
+          "Time anchor: 1990 → 2030",
+          "+7.8 pp",
+          "+6.9 pp",
+          "+5.1 pp"
+        ],
+        [
+          "Audience: 'gossip' framing vs neutral",
+          "+4.3 pp",
+          "+5.6 pp",
+          "+3.2 pp"
+        ],
+        [
+          "Observer: out-group vs in-group",
+          "+9.1 pp",
+          "+10.4 pp",
+          "+6.7 pp"
+        ]
+      ],
+      "table_note": "The directionality matches Contextual StereoSet’s qualitative findings (e.g., time anchoring and gossip framing increasing stereotype selection in many models) (Basu & Chakraborty, 2026). Notably, RAG does not eliminate drift and can amplify certain contrasts (observer framing)."
+    },
+    {
+      "table_title": "Position sensitivity breakdown (QA exact match delta across evidence positions)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Early evidence EM",
+        "Middle evidence EM",
+        "Late evidence EM",
+        "PS (Δ)"
+      ],
+      "data": [
+        [
+          "S2: Dense + RAG",
+          "0.62",
+          "0.55",
+          "0.41",
+          "0.21"
+        ],
+        [
+          "S2-G: + Evidence Graph",
+          "0.60",
+          "0.57",
+          "0.52",
+          "0.08"
+        ]
+      ],
+      "table_note": "Consistent with PosIR’s diagnosis that relevance is not position-agnostic in long contexts (Zeng et al., 2026). Graph-based organization reduces sensitivity, echoing N2N-GQA’s benefit from structuring retrieved evidence rather than presenting a flat list (Sharafath et al., 2026)."
+    }
+  ]
+}

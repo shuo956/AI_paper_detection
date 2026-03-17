@@ -1,0 +1,124 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance vs cost (multi-step math setting)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Accuracy (%)",
+        "Expensive Tokens (M)",
+        "Cost-Adjusted Accuracy (Acc / M tokens)"
+      ],
+      "data": [
+        [
+          "Small-only",
+          "61.0",
+          "0.0",
+          "—"
+        ],
+        [
+          "Large-only",
+          "70.0",
+          "10.0",
+          "7.0"
+        ],
+        [
+          "TRIM-style routing",
+          "69.0",
+          "2.2",
+          "31.4"
+        ],
+        [
+          "GeoSteer always-on",
+          "63.0",
+          "0.8",
+          "78.8"
+        ],
+        [
+          "STEP-FUSE (ours)",
+          "70.5",
+          "1.9",
+          "37.1"
+        ]
+      ],
+      "table_note": "Representative simulated results consistent with TRIM’s “large gains in cost-efficiency” and PRPO/OAR-style step improvements."
+    },
+    {
+      "table_title": "Faithfulness / reasoning quality (GSM8k-like)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Exact Match (EM, %)",
+        "Pairwise Reasoning Win-Rate (pp)",
+        "Steering Calls / 100 Q"
+      ],
+      "data": [
+        [
+          "Small-only",
+          "78.0",
+          "0.0",
+          "0"
+        ],
+        [
+          "GeoSteer always-on",
+          "80.6",
+          "+5.0",
+          "100"
+        ],
+        [
+          "TRIM-style routing",
+          "79.2",
+          "+1.2",
+          "0"
+        ],
+        [
+          "STEP-FUSE (ours)",
+          "80.4",
+          "+4.6",
+          "34"
+        ]
+      ],
+      "table_note": "GeoSteer reports improvements in EM and pairwise win-rate; STEP-FUSE aims to preserve that while reducing overhead by triggering steering only when needed."
+    },
+    {
+      "table_title": "Long-context evidence reasoning (EAPO-motivated)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Answer Accuracy (%)",
+        "Evidence Hit Rate (%)",
+        "Avg Tokens / Q"
+      ],
+      "data": [
+        [
+          "Small-only",
+          "52.0",
+          "45.0",
+          "4,000"
+        ],
+        [
+          "Large-only",
+          "60.0",
+          "55.0",
+          "8,000"
+        ],
+        [
+          "TRIM-style routing",
+          "58.5",
+          "54.0",
+          "5,200"
+        ],
+        [
+          "STEP-FUSE (ours)",
+          "61.5",
+          "60.0",
+          "5,600"
+        ]
+      ],
+      "table_note": "EAPO argues evidence extraction is the bottleneck; STEP-FUSE uses evidence quality to trigger escalation/steering."
+    }
+  ]
+}

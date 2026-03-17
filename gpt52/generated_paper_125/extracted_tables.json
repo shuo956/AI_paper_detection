@@ -1,0 +1,179 @@
+{
+  "tables": [
+    {
+      "table_title": "Retrieval efficiency and ranking quality (conceptual summary)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Retriever",
+        "Representation",
+        "Index size (relative)",
+        "Compression vs Full MV",
+        "NDCG@3 (relative to Full MV)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Full-MV-RAG",
+          "multi-vector",
+          "1.0× (largest)",
+          "1×",
+          "1.00",
+          "Upper bound, not scalable"
+        ],
+        [
+          "MeanPool-RAG",
+          "single-vector",
+          "~1/1000×",
+          "~1000×",
+          "0.55–0.65",
+          "Heuristic pooling underperforms"
+        ],
+        [
+          "ReinPool-RAG",
+          "single-vector",
+          "~1/750–1/1250×",
+          "750–1250×",
+          "0.76–0.81",
+          "Matches ReinPool-style trend; learned selection improves NDCG"
+        ]
+      ],
+      "table_note": "Learned pooling preserves substantially more ranking quality than mean pooling at similar compression, consistent with ReinPool’s reported improvements."
+    },
+    {
+      "table_title": "Claim-level verification outcomes (Biomedical track)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Answer Acc. (task metric)",
+        "Supported-Claim Rate ↑",
+        "Contradicted-Claim Rate ↓",
+        "Under-evidence Rate ↓",
+        "Safety-critical Claim Error ↓"
+      ],
+      "data": [
+        [
+          "MeanPool-RAG",
+          "medium",
+          "lower",
+          "higher",
+          "higher",
+          "higher"
+        ],
+        [
+          "ReinPool-RAG",
+          "medium-high",
+          "higher",
+          "slightly lower",
+          "lower",
+          "lower"
+        ],
+        [
+          "ReinPool + ClaimVerify (PERSPECT-RAG)",
+          "medium-high",
+          "**highest**",
+          "**lowest**",
+          "**lowest**",
+          "**lowest**"
+        ]
+      ],
+      "table_note": "Retrieval improvements help, but the largest safety gain comes from explicit claim verification and diagnostics, aligning with MedRAGChecker’s motivation that answer-level correctness can hide unsafe claims."
+    },
+    {
+      "table_title": "Temporal grounding and target identification (Moderation track)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Binary Hate F1 ↑",
+        "Target ID F1 ↑",
+        "Temporal IoU@τ ↑",
+        "Hallucinated Evidence Rate ↓"
+      ],
+      "data": [
+        [
+          "Context-only baseline",
+          "moderate",
+          "low",
+          "low",
+          "higher"
+        ],
+        [
+          "TANDEM-style structured reasoning (reference point)",
+          "high",
+          "high",
+          "high",
+          "lower"
+        ],
+        [
+          "ReinPool-RAG",
+          "high",
+          "moderate",
+          "moderate",
+          "moderate"
+        ],
+        [
+          "PERSPECT-RAG (ReinPool + ClaimVerify)",
+          "**high**",
+          "**higher**",
+          "**higher**",
+          "**lowest**"
+        ]
+      ],
+      "table_note": "Structured, interpretable outputs (timestamps/targets) benefit from claim-level verification; this mirrors TANDEM’s framing that moderation needs granular evidence, not just binary labels."
+    },
+    {
+      "table_title": "Disagreement-aware evaluation (illustrative reporting)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Majority-label F1",
+        "Disagreement Sensitivity (variance across annotator perspectives) ↓",
+        "Worst-perspective F1 ↑"
+      ],
+      "data": [
+        [
+          "ReinPool-RAG",
+          "high",
+          "higher",
+          "lower"
+        ],
+        [
+          "PERSPECT-RAG",
+          "similar",
+          "**lower**",
+          "**higher**"
+        ]
+      ],
+      "table_note": "Two systems may look similar under consensus scoring, but perspectivist metrics reveal robustness differences, consistent with Xu & Jurgens’ argument that disagreement contains signal."
+    },
+    {
+      "table_title": "Explanation evaluation without ground truth (AXE-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model Pair (Rashomon set)",
+        "Predictive parity",
+        "Ground-truth-based explainer score (misleading)",
+        "AXE detection of fairwashing"
+      ],
+      "data": [
+        [
+          "Pair A (same predictions)",
+          "yes",
+          "similar/high",
+          "**flags divergence**"
+        ],
+        [
+          "Pair B (same predictions)",
+          "yes",
+          "similar/high",
+          "**flags divergence**"
+        ]
+      ],
+      "table_note": "Explanation evaluation that does not rely on idealized ground truth better distinguishes models with identical predictions but different reliance patterns, echoing Rawal et al.’s findings."
+    }
+  ]
+}

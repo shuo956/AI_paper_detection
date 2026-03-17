@@ -1,0 +1,175 @@
+## Title  
+**Toward Pragmatic Understanding in High-Stakes Long-Context LLM Systems: Evidence-Centric Training, Interpretable Probabilities, and Robust Evaluation Under Judge Vulnerabilities**
+
+---
+
+## Abstract  
+Large language models (LLMs) are increasingly deployed in long-context, retrieval-augmented, and high-stakes settings (e.g., clinical messaging, decision support). Yet current progress often optimizes for prediction and benchmark scores rather than *scientific and operational understanding*, leaving gaps in evidence use, interpretability, and evaluation validity. Motivated by calls for “pragmatic understanding” in AI-mediated scientific practice (Ting et al., 2026), we propose an integrated study of (i) evidence-centric reinforcement learning for long-context reasoning (Guan et al., 2026), (ii) interpretable probability estimation via Shapley reconstruction (Nan et al., 2026), and (iii) evaluation protocols that explicitly account for divergence between human judgment and LLM-as-a-judge (Yang et al., 2026) and adversarial manipulation of automated review (Kaneko, 2026). We introduce **EviPRaG** (Evidence- and Probability-grounded RAG), a training-and-evaluation framework combining retrieval with parallel decoding for efficiency and cross-document reasoning (Corallo & Papotti, 2026), dense evidence rewards (Guan et al., 2026), and transparent factor attribution for probabilistic outputs (Nan et al., 2026). We design experiments on two representative high-stakes tasks: (1) long-context question answering with multi-document evidence, and (2) clinician-aligned patient message drafting where editing load is the operational metric (Seegmiller et al., 2026). Results (simulated in this paper as a research plan with expected measurable outcomes) indicate that evidence-shaped optimization improves faithfulness and reduces “lucky guess” behavior; Shapley-based reconstruction improves calibration and transparency; and adversarially-aware evaluation reduces overestimation by judge models. We conclude with recommendations for evaluation order, human-in-the-loop validation, and robustness checks aligned with pragmatic understanding.
+
+---
+
+## Introduction  
+LLMs are now commonly embedded in systems that must (a) retrieve and integrate evidence across long contexts, (b) provide actionable judgments under uncertainty, and (c) be evaluated reliably despite known metric pathologies. However, as argued in AI-laden astronomy, scientific understanding is not equivalent to predictive success; it also requires narrative construction, contextual judgment, and communicative achievement—capacities that current AI systems only partially realize (Ting et al., 2026). This tension generalizes beyond astronomy to any domain where LLM outputs shape decisions.
+
+Three practical failures recur in long-context deployments:
+
+1. **Evidence sparsity and “lucky guesses.”** Outcome-only rewards can fail to penalize unsupported answers; evidence retrieval becomes a bottleneck (Guan et al., 2026).  
+2. **Opacity in probability and decision support.** Direct prompting for probabilities is noisy and hard to audit; interpretable decomposition is needed (Nan et al., 2026).  
+3. **Evaluation fragility.** NLG evaluation shows inertia toward weak metrics and a growing reliance on LLM-as-a-judge (LaaJ) despite limited validation and human divergence (Yang et al., 2026). Worse, judge models can be manipulated via meaning-preserving paraphrases that raise scores without improving substance (Kaneko, 2026).
+
+This paper proposes a unified research direction: **optimize and evaluate LLM systems around evidence quality and interpretability, while treating evaluation itself as an adversarially vulnerable component**.
+
+---
+
+## Related Work  
+
+### Epistemic framing: pragmatic understanding  
+Ting et al. (2026) argue that AI integration should be treated as an epistemological challenge, introducing “pragmatic understanding” to emphasize validation norms, narrative coherence, and human judgment rather than prediction alone. This motivates our focus on evidence, interpretability, and evaluation robustness.
+
+### Evidence-centric long-context RL  
+Guan et al. (2026) introduce Evidence-Augmented Policy Optimization (EAPO), addressing sparse rewards by adding group-relative evidence rewards and co-evolving reward/policy to maintain supervision quality. We adopt this principle to explicitly train for evidence quality in RAG settings.
+
+### Efficient multi-document reasoning in RAG  
+Corallo & Papotti (2026) propose Parallel Context-of-Experts Decoding (Pced), a training-free approach that keeps retrieved documents isolated while synchronizing predictions via retrieval-aware contrastive decoding, mitigating long-prompt prefill costs while preserving cross-document interaction.
+
+### Interpretable probability estimation  
+Nan et al. (2026) propose PRISM, reconstructing probability estimates from Shapley-value contributions of input factors, improving calibration and transparency over direct prompting. We extend this idea to evidence-grounded probability outputs in RAG.
+
+### Human-aligned drafting evaluation in healthcare  
+Seegmiller et al. (2026) introduce a clinician editing-load framework and taxonomy of thematic elements for patient portal response drafting, highlighting uncertainty in aligning LLM drafts with individual clinicians and weaknesses in question-asking themes. This provides a concrete high-stakes evaluation target.
+
+### Evaluation trends and judge divergence  
+Yang et al. (2026) analyze 14,171 papers and show task-dependent divergence, metric inertia, and low validation rates between LaaJ and humans—warning against uncritical judge-based evaluation.
+
+### Judge vulnerabilities  
+Kaneko (2026) presents Paraphrasing Adversarial Attack (PAA), demonstrating black-box paraphrases can systematically increase LLM-reviewer scores while preserving meaning, implying judge-based evaluation must include robustness checks.
+
+### Complementary controllability/interpretability tools  
+We draw conceptual inspiration from controllable internal interventions such as function vectors for relational knowledge (Kang et al., 2026) and activation-based stable trait evaluation (Ma et al., 2026), though our proposed method focuses on evidence/probability rather than relations/personality.
+
+---
+
+## Methods / Experiment  
+
+### Overview: EviPRaG  
+We propose **EviPRaG**, an evidence- and probability-grounded RAG framework with three coupled components:
+
+1. **Retrieval + Parallel decoding for multi-document reasoning** using Pced (Corallo & Papotti, 2026).  
+2. **Evidence-augmented RL training** inspired by EAPO (Guan et al., 2026), providing dense process supervision on evidence selection/usage.  
+3. **Interpretable probability reconstruction** using PRISM-style Shapley decomposition (Nan et al., 2026) over *explicit factors* (retrieved passages, patient attributes, or structured fields), producing calibrated probabilities and explanations.
+
+### Tasks  
+We design experiments for two settings:
+
+**Task A: Long-context multi-document QA (RAG).**  
+- Input: query + K retrieved documents.  
+- Output: answer + cited evidence spans + optional probability of correctness.  
+- Key risk: correct answers without supporting evidence (“lucky guesses”).
+
+**Task B: Patient portal response drafting.**  
+- Input: patient message + context (history snippets, meds, labs).  
+- Output: draft response aligned to clinician style.  
+- Evaluation: clinician editing load and theme-level coverage (Seegmiller et al., 2026), with emphasis on question-asking and safety-critical themes.
+
+### Training variants (ablations)  
+We compare:
+
+1. **Base-RAG**: standard RAG with concatenated context.  
+2. **Pced-RAG**: Base-RAG + Pced decoding (Corallo & Papotti, 2026).  
+3. **Evi-RAG**: Pced-RAG + evidence-augmented RL (Guan et al., 2026).  
+4. **EviPRaG**: Evi-RAG + PRISM-style probability reconstruction (Nan et al., 2026).  
+
+### Evidence reward design (EAPO-inspired)  
+For each generated response, we compute an **Evidence Quality Score** based on:
+- overlap between cited spans and gold/annotated evidence (Task A),  
+- presence/appropriateness of referenced patient facts and safe follow-up questions (Task B, aligned with Seegmiller et al.’s taxonomy).  
+
+We then compute a **Group-Relative Evidence Reward** (Guan et al., 2026) among multiple rollouts per prompt, encouraging policies that consistently extract/use better evidence rather than occasionally guessing.
+
+### Probability reconstruction factors (PRISM-inspired)  
+For probabilistic outputs (e.g., “probability this answer is correct” or “probability patient needs urgent care”), we define factors such as:
+- retrieved passage i (Task A),  
+- structured patient features (Task B),  
+- model-generated intermediate evidence summary.
+
+We estimate Shapley contributions per factor and reconstruct a calibrated probability, yielding an audit trail (Nan et al., 2026).
+
+### Evaluation protocol: beyond single judges  
+Given concerns about LaaJ/human divergence (Yang et al., 2026) and paraphrase attacks (Kaneko, 2026), we evaluate with:
+
+- **Human evaluation** (gold standard) on a stratified subset.  
+- **LaaJ evaluation** with explicit validation against humans (report correlation).  
+- **Adversarial robustness check**: apply paraphrase-based perturbations (PAA-style) to see whether judge scores inflate without evidence improvement (Kaneko, 2026).  
+- **Order-aware reporting**: metrics reported *after* establishing judge-human agreement for the specific task slice (aligned with recommendations implied by Yang et al., 2026).
+
+---
+
+## Results (with Tables)  
+
+### Table 1. Experimental matrix (models × components)
+| Variant | Retrieval | Multi-doc decoding | Evidence-centric RL (EAPO-like) | Interpretable probabilities (PRISM-like) | Primary goal |
+|---|---|---|---|---|---|
+| Base-RAG | Yes | Concatenate | No | No | Baseline accuracy |
+| Pced-RAG | Yes | Pced (Corallo & Papotti, 2026) | No | No | Efficiency + cross-doc reasoning |
+| Evi-RAG | Yes | Pced | Yes (Guan et al., 2026) | No | Faithfulness / evidence quality |
+| EviPRaG | Yes | Pced | Yes | Yes (Nan et al., 2026) | Faithfulness + calibrated uncertainty |
+
+### Table 2. Metrics aligned to “pragmatic understanding”
+| Dimension | Operational metric | Why it matters | Reference motivation |
+|---|---|---|---|
+| Evidence use | Evidence F1 / citation correctness | Distinguishes reasoning from guessing | Guan et al. (2026) |
+| Uncertainty quality | ECE / Brier score + explanation fidelity | Supports decision-making and auditability | Nan et al. (2026) |
+| Human alignment | Editing load; theme coverage | Measures real workflow benefit | Seegmiller et al. (2026) |
+| Evaluation validity | Human–judge correlation; attack sensitivity | Prevents misleading progress claims | Yang et al. (2026); Kaneko (2026) |
+| Epistemic adequacy | Narrative coherence + contextual judgment rubric | Goes beyond prediction | Ting et al. (2026) |
+
+### Table 3. Expected outcome patterns (hypotheses to be tested)
+| Comparison | Expected change | Rationale grounded in literature |
+|---|---|---|
+| Pced-RAG vs Base-RAG | Similar accuracy, lower latency/cost | Pced avoids long prefill while preserving cross-doc interaction (Corallo & Papotti, 2026) |
+| Evi-RAG vs Pced-RAG | Higher evidence quality; fewer unsupported correct answers | Dense evidence reward targets retrieval bottleneck and “lucky guesses” (Guan et al., 2026) |
+| EviPRaG vs Evi-RAG | Better calibration + interpretable factor contributions | Shapley reconstruction improves probability estimation transparency (Nan et al., 2026) |
+| LaaJ-only vs human eval | Potential divergence; requires validation | Observed human–LaaJ signal differences and scarce validation (Yang et al., 2026) |
+| Judge scores under paraphrase attack | Inflated scores without substantive improvement | PAA increases review scores while preserving meaning (Kaneko, 2026) |
+
+### Table 4. Adversarially-aware evaluation checklist (reporting standard)
+| Step | Check | Pass criterion |
+|---|---|---|
+| 1 | Judge–human correlation measured on same subset | Report Pearson/Spearman + CI; must exceed pre-set threshold |
+| 2 | Evidence faithfulness audited | Evidence metrics stable across paraphrases |
+| 3 | PAA-style paraphrase stress test | Judge score inflation bounded; otherwise discount judge metric |
+| 4 | Human editing-load measured (Task B) | Demonstrated reduction vs baseline |
+| 5 | “Pragmatic understanding” narrative rubric | Human panel agreement reported |
+
+---
+
+## Discussion  
+This proposed study addresses a gap left by much current LLM development: optimizing for outputs without ensuring that the system’s *process* (evidence retrieval and use) and *claims about quality* (evaluation) are trustworthy.
+
+1. **From prediction to pragmatic understanding.** Ting et al. (2026) argue that understanding requires communicative achievement and contextual judgment. Evidence-centric optimization and interpretable probabilities operationalize parts of this: they make reasoning inspectable, uncertainty explicit, and narratives tethered to sources.
+
+2. **Why evidence rewards matter in long context.** Guan et al. (2026) show that evidence extraction is the bottleneck and that dense evidence rewards outperform outcome-only training. In RAG, this directly targets hallucination-like failure modes where answers are correct for the wrong reasons.
+
+3. **Interpretable probabilities as decision-support infrastructure.** PRISM (Nan et al., 2026) provides a mechanism to move from opaque confidence statements to factor-level accountability. In clinical drafting, such decomposition can clarify which patient facts drove urgency judgments, potentially reducing unsafe overconfidence.
+
+4. **Evaluation is part of the system—and it is attackable.** Yang et al. (2026) demonstrate that LaaJ is not a drop-in proxy for humans, while Kaneko (2026) shows judge scores can be manipulated without changing claims. Therefore, any rigorous pipeline must treat judge-based evaluation as requiring validation and stress testing, not as ground truth.
+
+5. **Clinical workflow grounding.** Seegmiller et al. (2026) emphasize clinician editing load and theme-level gaps (notably question-asking). Evidence-centric training can be adapted to reward appropriate follow-up questions grounded in missing information, directly targeting that weakness.
+
+Limitations of this paper: it is presented as a research blueprint with expected measurable outcomes rather than executed experiments; implementing the full pipeline requires careful dataset curation, human annotation for evidence and themes, and IRB/ethics processes for clinical data.
+
+---
+
+## Conclusion  
+We propose **EviPRaG**, a unified framework for building and evaluating long-context LLM systems that prioritizes evidence quality, interpretable uncertainty, and evaluation robustness. By combining parallel context-of-experts decoding for efficient multi-document reasoning (Corallo & Papotti, 2026), evidence-augmented policy optimization for dense process supervision (Guan et al., 2026), and Shapley-based probability reconstruction for transparent decision support (Nan et al., 2026), EviPRaG aims to move LLM practice toward the “pragmatic understanding” standard advocated by Ting et al. (2026). We further argue that credible progress requires adversarially-aware evaluation protocols due to documented judge-human divergence (Yang et al., 2026) and paraphrase-based judge manipulation (Kaneko, 2026), and we ground real-world utility in clinician editing-load evaluation (Seegmiller et al., 2026).
+
+---
+
+## Contributions  
+1. **Research gap synthesis:** Connects epistemic concerns about “understanding” (Ting et al., 2026) to concrete technical levers—evidence rewards, interpretable probabilities, and robust evaluation.  
+2. **Unified framework proposal (EviPRaG):** Integrates Pced-style decoding (Corallo & Papotti, 2026), EAPO-style evidence-centric RL (Guan et al., 2026), and PRISM-style Shapley probability reconstruction (Nan et al., 2026).  
+3. **High-stakes evaluation design:** Adopts clinician editing-load and theme taxonomy as primary metrics for patient messaging (Seegmiller et al., 2026), rather than generic NLG scores.  
+4. **Evaluation robustness protocol:** Introduces a reporting checklist that requires judge-human validation (Yang et al., 2026) and paraphrase-attack stress testing (Kaneko, 2026).  
+5. **Operationalization of pragmatic understanding:** Provides measurable proxies (evidence faithfulness, calibration, editing load, narrative rubrics) that align system development with epistemic and workflow goals.
+
+---

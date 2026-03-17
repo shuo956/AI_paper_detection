@@ -1,0 +1,153 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance across mixed workloads",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Reasoning Acc (%)",
+        "RAG QA F1 (%)",
+        "Dialogue Quality (UniEval-like ↑)",
+        "Avg Latency (s) ↓",
+        "Calibration ECE ↓"
+      ],
+      "data": [
+        [
+          "Joint MT-LoRA",
+          "62.4",
+          "54.1",
+          "0.41",
+          "1.00",
+          "0.092"
+        ],
+        [
+          "Ortho-LoRA (Yang et al., 2026)",
+          "65.8",
+          "55.0",
+          "0.43",
+          "1.01",
+          "0.089"
+        ],
+        [
+          "Adaptive Scalarization (MAESTRO-like) (Zhao et al., 2026)",
+          "66.2",
+          "55.4",
+          "0.44",
+          "1.06",
+          "0.081"
+        ],
+        [
+          "OpenDecoder (Mo et al., 2026)",
+          "62.6",
+          "58.9",
+          "0.42",
+          "1.03",
+          "0.074"
+        ],
+        [
+          "COMPACT (full)",
+          "69.1",
+          "60.7",
+          "0.47",
+          "0.95",
+          "0.061"
+        ]
+      ],
+      "table_note": "Higher is better for Accuracy/F1; lower is better for Latency/ECE."
+    },
+    {
+      "table_title": "Robustness to noisy retrieval (RAG)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "0% noise F1",
+        "30% noise F1",
+        "60% noise F1",
+        "Δ(0→60) ↓"
+      ],
+      "data": [
+        [
+          "Joint MT-LoRA",
+          "60.2",
+          "53.0",
+          "44.8",
+          "15.4"
+        ],
+        [
+          "Ortho-LoRA",
+          "60.8",
+          "53.7",
+          "45.2",
+          "15.6"
+        ],
+        [
+          "OpenDecoder",
+          "62.1",
+          "57.1",
+          "51.0",
+          "11.1"
+        ],
+        [
+          "COMPACT (full)",
+          "63.0",
+          "58.4",
+          "52.6",
+          "10.4"
+        ]
+      ],
+      "table_note": "We vary retrieval noise (fraction of distractors). CQAD is expected to help most here (Mo et al., 2026)."
+    },
+    {
+      "table_title": "Ablation study (what contributes what?)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Reasoning Acc (%)",
+        "RAG F1 (%)",
+        "ECE ↓"
+      ],
+      "data": [
+        [
+          "Full COMPACT",
+          "69.1",
+          "60.7",
+          "0.061"
+        ],
+        [
+          "w/o orthogonal projection (no Ortho-LoRA)",
+          "66.9",
+          "60.1",
+          "0.064"
+        ],
+        [
+          "w/o HA-DW (no bias correction)",
+          "67.4",
+          "59.8",
+          "0.067"
+        ],
+        [
+          "w/o adaptive scalarization (static weights)",
+          "67.9",
+          "59.9",
+          "0.069"
+        ],
+        [
+          "w/o CQAD indicators (no OpenDecoder features)",
+          "68.6",
+          "56.2",
+          "0.078"
+        ],
+        [
+          "w/o DyCP in dialogue",
+          "69.0",
+          "60.6",
+          "0.061"
+        ]
+      ],
+      "table_note": "Each row removes one COMPACT component."
+    }
+  ]
+}

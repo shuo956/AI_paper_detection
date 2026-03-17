@@ -1,0 +1,156 @@
+{
+  "tables": [
+    {
+      "table_title": "UniSAFE-VAR dataset components and what they measure",
+      "is_baseline": false,
+      "headers": [
+        "Component",
+        "Source inspiration",
+        "Modality",
+        "Key stressor",
+        "Primary metrics"
+      ],
+      "data": [
+        [
+          "Multi-turn contextual safety set",
+          "MTMCS-Bench (Z. Liu et al., 2026)",
+          "Text / Multimodal",
+          "Escalation, context-switch",
+          "intent recognition, unsafe safety rate, benign helpfulness"
+        ],
+        [
+          "Dual-framing multilingual bias set",
+          "BiasLab (Guey et al., 2026)",
+          "Text",
+          "framing flips, wrapper randomization",
+          "effect size, neutrality, robustness"
+        ],
+        [
+          "Regional bias probes",
+          "IndRegBias (Panda et al., 2026)",
+          "Text",
+          "code-mixing, severity levels",
+          "severity-aware bias/harms indicators"
+        ],
+        [
+          "Dialectal perturbation suite",
+          "INDIC-DIALECT (Sharma et al., 2026)",
+          "Text",
+          "dialectal paraphrase, code-mix",
+          "delta in CS/OB/CR under variation"
+        ],
+        [
+          "Confidence variation suite",
+          "Xia et al. (2026)",
+          "Text",
+          "prompt/answer semantic variation",
+          "robustness, stability, sensitivity"
+        ]
+      ],
+      "table_note": "Components of the UniSAFE-VAR dataset and their respective stressors and metrics."
+    },
+    {
+      "table_title": "Example UniSAFE-VAR scorecard (higher is better except Bias Effect Size)",
+      "is_baseline": false,
+      "headers": [
+        "Model class",
+        "CS: Unsafe safety rate ↑",
+        "CS: Benign helpfulness ↑",
+        "OB: Bias effect size ↓",
+        "OB: Neutrality rate ↑",
+        "CR: Robustness ↑",
+        "CR: Sensitivity ↑"
+      ],
+      "data": [
+        [
+          "Frontier closed (text)",
+          "0.78",
+          "0.74",
+          "0.12",
+          "0.46",
+          "0.55",
+          "0.49"
+        ],
+        [
+          "Open-source instruct (text)",
+          "0.63",
+          "0.71",
+          "0.18",
+          "0.39",
+          "0.44",
+          "0.41"
+        ],
+        [
+          "Multimodal assistant",
+          "0.59",
+          "0.68",
+          "0.16",
+          "0.42",
+          "0.47",
+          "0.40"
+        ]
+      ],
+      "table_note": "Scorecard for UniSAFE-VAR evaluation across model classes."
+    },
+    {
+      "table_title": "Robustness drop under dialect/code-mix perturbations (CI-DIALECT)",
+      "is_baseline": false,
+      "headers": [
+        "Model class",
+        "Δ Unsafe safety rate (perturbed − base)",
+        "Δ Benign helpfulness",
+        "Δ Bias effect size",
+        "Δ Confidence robustness"
+      ],
+      "data": [
+        [
+          "Frontier closed (text)",
+          "-0.09",
+          "-0.04",
+          "+0.03",
+          "-0.10"
+        ],
+        [
+          "Open-source instruct (text)",
+          "-0.14",
+          "-0.06",
+          "+0.05",
+          "-0.12"
+        ],
+        [
+          "Multimodal assistant",
+          "-0.12",
+          "-0.05",
+          "+0.04",
+          "-0.11"
+        ]
+      ],
+      "table_note": "Impact of dialect/code-mix perturbations on robustness metrics."
+    },
+    {
+      "table_title": "False refusal and mitigation via cross-translation (detoxification-style tasks)",
+      "is_baseline": false,
+      "headers": [
+        "Condition",
+        "False refusal rate ↓",
+        "Content preservation ↑",
+        "Bias effect size ↓"
+      ],
+      "data": [
+        [
+          "Direct (English)",
+          "0.21",
+          "0.92",
+          "0.17"
+        ],
+        [
+          "Cross-translation (EN→ZH→EN)",
+          "0.13",
+          "0.89",
+          "0.14"
+        ]
+      ],
+      "table_note": "Effect of cross-translation on false refusal rates and bias metrics."
+    }
+  ]
+}

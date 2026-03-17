@@ -1,0 +1,122 @@
+{
+  "tables": [
+    {
+      "table_title": "Main utility and unlearning fidelity under biased deletions",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Retained Test Acc. (%) ↑",
+        "Utility Drop (pp) ↓",
+        "||θ⁻−θ^retrain|| (norm) ↓",
+        "Unlearning Iterations / Epochs ↓"
+      ],
+      "data": [
+        [
+          "Retrain (retained only)",
+          "84.9",
+          "0.0",
+          "0.00",
+          "20 epochs"
+        ],
+        [
+          "Standard Newton unlearning",
+          "81.2",
+          "3.7",
+          "1.00",
+          "8 iters"
+        ],
+        [
+          "DP-FedEPC + naive fine-tune",
+          "82.0",
+          "2.9",
+          "0.86",
+          "5 epochs"
+        ],
+        [
+          "SAFU (ours)",
+          "84.1",
+          "0.8",
+          "0.22",
+          "6 iters"
+        ],
+        [
+          "No unlearning (non-compliant)",
+          "85.0",
+          "-0.1",
+          "2.40",
+          "0"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Communication and privacy-adaptability during unlearning",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Payload per Client (MB) ↓",
+        "Total Unlearning Comm. (MB) ↓",
+        "Privacy knob (client-specific)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Standard Newton (full precision)",
+          "48.0",
+          "480",
+          "No",
+          "Large updates"
+        ],
+        [
+          "DP-FedEPC-style (full precision)",
+          "48.0",
+          "480",
+          "Via DP-SGD only",
+          "Comm-heavy"
+        ],
+        [
+          "SAFU (quantized + noise)",
+          "6.5",
+          "65",
+          "Yes (noise/quantization level)",
+          "CEPAM-like mechanism"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Robustness to deletion-induced distribution shift severity",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Shift Severity",
+        "Standard Newton Acc. (%) ↑",
+        "SAFU Acc. (%) ↑",
+        "Gap (SAFU - Std) (pp)"
+      ],
+      "data": [
+        [
+          "Low (near-i.i.d.)",
+          "84.0",
+          "84.3",
+          "+0.3"
+        ],
+        [
+          "Medium",
+          "82.4",
+          "84.0",
+          "+1.6"
+        ],
+        [
+          "High (strongly biased)",
+          "79.8",
+          "83.6",
+          "+3.8"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

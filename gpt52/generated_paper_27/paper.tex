@@ -1,0 +1,176 @@
+## Title  
+**Cross-Lingual Figurative Language Understanding Under Resource Constraints: A Small-Open, Geometry-Aware, Reference-Faith Evaluation Framework**
+
+---
+
+## Abstract  
+Recent work shows that instruction-tuned LLMs often match humans on *surface-level* ratings of figurative language yet diverge in *representational similarity*, especially for idioms and socio-pragmatic expressions such as slang and sarcasm (Bollepally et al., 2026). At the same time, multilingual adaptation remains uneven for underrepresented languages (e.g., Urdu) even when general multilingual competence is strong (Hassan et al., 2026), and evaluation pipelines increasingly rely on LLM-as-a-judge despite documented failures when a judge’s parametric beliefs conflict with provided references (Lee et al., 2026). Motivated by these gaps, we propose a new study: a **cross-lingual figurative understanding benchmark and evaluation protocol** that (i) separates surface agreement from representational alignment, (ii) tests robustness under paraphrase and language variation (Xia et al., 2026), and (iii) enforces **reference faithfulness** to mitigate judge belief leakage (Lee et al., 2026). We further explore **resource-efficient adaptation** using geometric parameter-efficient fine-tuning (OrthoGeoLoRA; Wang et al., 2026) and compare to continued pretraining for a low-resource language case study (Qalb; Hassan et al., 2026). We report results (simulated experimental design and expected outcomes) showing that small open models can become competitive when (a) adapted with geometry-aware PEFT and (b) evaluated with reference-faith protocols that reduce spurious judge agreement. The paper contributes a reproducible evaluation blueprint aligned with “start small, start open, and validate” guidance for social-science-facing NLP (Stoltz et al., 2026).
+
+---
+
+## Introduction  
+Figurative and socially grounded language (idioms, sarcasm, slang) remains a persistent weak point for LLMs. Bollepally et al. (2026) demonstrate a key phenomenon: LLMs can appear human-aligned on rating scales (surface-level) while encoding meaning differently (representational mismatch), particularly for idioms and Gen Z slang. This creates a measurement problem: standard accuracy-like metrics can overstate competence.
+
+Two additional trends intensify the problem:
+
+1. **Cross-lingual expansion and low-resource adaptation.** Urdu is still underrepresented, and targeted continued pretraining plus instruction tuning yields large gains (Qalb; Hassan et al., 2026). Yet figurative competence in low-resource settings is rarely evaluated with representational alignment metrics.  
+2. **Evaluator reliability.** LLM-as-a-judge is widely used, but reference-conditioned judging can fail when the reference conflicts with the judge’s parametric knowledge (Lee et al., 2026). Figurative language is exactly where “common knowledge” priors can dominate, making evaluation fragile. Meanwhile, confidence estimation can be poorly behaved under language variation and paraphrase (Xia et al., 2026), further complicating reliability.
+
+This paper proposes a new study that unifies these concerns: **cross-lingual figurative language understanding evaluated with representational metrics, robustness tests, and reference-faith judging**, while investigating **resource-constrained adaptation** strategies suitable for smaller institutions (Stoltz et al., 2026).
+
+---
+
+## Related Work  
+
+### Figurative understanding and representational misalignment  
+Bollepally et al. (2026) provide evidence that LLMs diverge from humans at the representational level even when surface judgments align, with the largest gaps for idiomacy and slang.
+
+### Multilingual/low-resource specialization  
+Qalb (Hassan et al., 2026) shows that continued pretraining on diverse Urdu corpora plus instruction tuning can dramatically improve Urdu task performance. However, figurative and socio-pragmatic evaluation is not the central focus.
+
+### Multimodal and parallel idiomaticity resources  
+XMPIE (Torunoğlu-Selamet et al., 2026) offers a parallel cross-lingual multimodal benchmark for potentially idiomatic expressions, enabling controlled comparison across languages and modalities.
+
+### Evaluation reliability: judges and confidence under variation  
+LLM judges can ignore provided references under belief conflict (Lee et al., 2026). Confidence estimation should be robust to paraphrase and sensitive to semantic changes, but common methods fail (Xia et al., 2026).
+
+### Resource-efficient adaptation and geometry  
+OrthoGeoLoRA (Wang et al., 2026) improves parameter-efficient adaptation by addressing LoRA’s geometric issues (rank collapse, scale ambiguity), showing gains in multilingual concept retrieval. Med-MoE-LoRA (Yang et al., 2026) highlights interference and preservation issues in multi-task adaptation; HS-MoE (Polson & Sokolov, 2026) offers a Bayesian view of sparse expert selection relevant to MoE-style specialization.
+
+### Model selection and reproducibility in social science settings  
+Stoltz et al. (2026) argue for small, open models and ex-post validation of the full pipeline, emphasizing replicability.
+
+---
+
+## Methods / Experiment  
+
+### Research Questions (RQs)  
+- **RQ1:** Do models that perform well on surface-level figurative judgments also align with humans in representational structure across languages? (Bollepally et al., 2026)  
+- **RQ2:** How does paraphrase/language variation affect both answers and confidence signals in figurative tasks? (Xia et al., 2026)  
+- **RQ3:** Can reference-faith evaluation reduce judge failures in figurative settings where parametric beliefs are strong? (Lee et al., 2026)  
+- **RQ4:** Under fixed compute, can geometry-aware PEFT (OrthoGeoLoRA) close cross-lingual figurative gaps comparably to heavier adaptation (continued pretraining), especially for low-resource languages (Urdu case study inspired by Qalb)? (Wang et al., 2026; Hassan et al., 2026)
+
+### Task Suite and Data  
+We propose **CL-FigAlign**, a benchmark assembled from two sources/pillars:
+
+1. **Dialogue-based trait ratings** following Bollepally et al. (2026): sentences annotated along traits (conventionality, sarcasm, funny, emotional, idiomacy, slang) with multiple interpretive questions per item.  
+2. **Parallel idiomatic expressions** drawn from XMPIE (Torunoğlu-Selamet et al., 2026) to ensure cross-lingual comparability and to test transfer across languages; optionally include multimodal variants (text-only in this study; images reserved for follow-up).
+
+**Languages.** English + Urdu (low-resource focus; Hassan et al., 2026) + two additional typologically distinct languages sampled from XMPIE’s coverage (e.g., Turkish, Greek) to stress-test portability.
+
+### Models Compared  
+Following “start small, start open” (Stoltz et al., 2026), we center open models and include a strong proprietary baseline when possible.
+
+- **Open base:** Llama-family 8B-scale instruct model (as in Hassan et al., 2026 starting point).  
+- **Urdu-specialized:** Qalb-style adapted model (continued pretraining + SFT) (Hassan et al., 2026).  
+- **PEFT variants:** Standard LoRA vs **OrthoGeoLoRA** (Wang et al., 2026) applied to figurative tasks.  
+- **Optional judge models:** multiple judge LLMs to test judge fragility (Lee et al., 2026).
+
+### Evaluation Metrics  
+We explicitly separate *surface* and *representational* alignment:
+
+1. **Surface agreement:** correlation / MAE between model ratings and human ratings on Likert scales (Bollepally et al., 2026).  
+2. **Representational similarity:** representational dissimilarity matrices (RDMs) over items/questions; compare human vs model RDMs (Spearman correlation), mirroring the “representational level” analysis in Bollepally et al. (2026).  
+3. **Robustness under paraphrase/variation:** for semantically equivalent prompt variants, measure confidence stability and prediction invariance (Xia et al., 2026).  
+4. **Reference-faith judge fidelity:** adopt a **swapped-reference** protocol (Lee et al., 2026) for figurative interpretations: provide a reference explanation/interpretation, then swap key elements to induce reference-belief conflict; quantify judge adherence drop.
+
+### Reference-Faith Evaluation Protocol (proposed)  
+To mitigate Lee et al. (2026)’s “judging against the reference” failure, we propose **Dual-Channel Reference Enforcement (DCRE):**
+- **Channel A:** Judge must *extract* minimal supporting spans from the provided reference (not from world knowledge).  
+- **Channel B:** Judge must *score* candidate answers **only** if they are entailed by extracted spans; otherwise mark “non-compliant.”  
+This is conceptually aligned with grounded verification ideas used for citation-based summarization (Droste et al., 2026), but applied to evaluation rather than generation.
+
+### Compute Budget and Experimental Conditions  
+We define two realistic regimes:
+
+- **Fixed compute PEFT:** same GPU-hours for LoRA vs OrthoGeoLoRA adaptation.  
+- **Heavy adaptation baseline:** continued pretraining + instruction tuning for Urdu (Qalb-like) (Hassan et al., 2026).  
+
+---
+
+## Results (with tables)  
+
+> Note: As this is a proposed new study grounded in the cited literature, the tables below specify **expected/target outcomes and reporting format** consistent with observed patterns in prior work (Bollepally et al., 2026; Lee et al., 2026; Wang et al., 2026; Hassan et al., 2026; Xia et al., 2026). They are presented as the results section template the study would populate.
+
+### Table 1. Surface vs Representational Alignment by Trait (English)  
+| Trait | Surface Corr. (Human vs Model Ratings) | Representational RDM Corr. | Largest Error Mode (qual.) |
+|---|---:|---:|---|
+| Conventionality | High | Medium | Over-smoothing nuance |
+| Emotional | High | Medium | Valence conflation |
+| Funny | Medium | Low–Medium | Humor context gaps |
+| Sarcasm | Medium | Low | Pragmatic inversion failures |
+| Idiomacy | Medium | Low | Literal bias / cultural mismatch |
+| Slang | Medium | Low | Sociolect misinterpretation |
+
+**Expected pattern:** high surface alignment but lower representational alignment, especially for idiomacy and slang, consistent with Bollepally et al. (2026).
+
+### Table 2. Cross-Lingual Figurative Understanding (English vs Urdu)  
+| Model | Lang | Surface Corr. (avg) | RDM Corr. (avg) | Robustness to Paraphrase (Δ score ↓ better) |
+|---|---|---:|---:|---:|
+| Base open instruct | EN | Medium–High | Medium | Medium |
+| Base open instruct | UR | Low–Medium | Low | Low |
+| Qalb-style (continued PT + SFT) | UR | Medium–High | Medium | Medium |
+| LoRA-adapted | UR | Medium | Low–Medium | Medium |
+| **OrthoGeoLoRA-adapted** | UR | **Medium–High** | **Medium** | **Medium–High** |
+
+**Expected pattern:** Urdu improves substantially with continued pretraining (Hassan et al., 2026). OrthoGeoLoRA narrows the gap under tight budgets (Wang et al., 2026).
+
+### Table 3. Judge Reliability Under Swapped References (Figurative Interpretation Scoring)  
+| Judge Model | Normal Reference: Agreement w/ Gold | Swapped Reference: Agreement w/ Gold | Drop (↓) |
+|---|---:|---:|---:|
+| Judge A (open) | High | Medium–Low | Large |
+| Judge B (open) | High | Medium | Moderate–Large |
+| Judge C (proprietary) | Very High | Medium | Large |
+
+**Expected pattern:** sharp reliability drop under reference-belief conflict, mirroring Lee et al. (2026).
+
+### Table 4. Effect of Dual-Channel Reference Enforcement (DCRE)  
+| Evaluation Protocol | Swapped-Ref Fidelity (↑) | False Acceptance Rate (↓) | Cost (tokens / item) |
+|---|---:|---:|---:|
+| Standard LLM judge | Low | High | Low |
+| + Prompt reminders | Low–Medium | Medium–High | Low |
+| **DCRE (proposed)** | **Medium–High** | **Medium–Low** | Medium |
+
+**Expected pattern:** DCRE improves reference adherence at moderate additional cost; it does not fully solve the problem but measurably reduces parametric-knowledge override (Lee et al., 2026).
+
+### Table 5. Confidence Quality Under Language Variations (Xia et al., 2026-inspired)  
+| Model | Calibration (ECE ↓) | Robustness (equivalent prompts) | Sensitivity (meaning-changed answers) |
+|---|---:|---:|---:|
+| Base open instruct | Medium | Low | Medium |
+| Qalb-style | Medium | Medium | Medium |
+| OrthoGeoLoRA-adapted | Medium | **Medium–High** | Medium |
+| Proprietary baseline | Low | Medium | Medium |
+
+**Expected pattern:** good calibration does not imply robustness/sensitivity; robustness remains a distinct challenge (Xia et al., 2026).
+
+---
+
+## Discussion  
+
+### Representational alignment is the missing axis in cross-lingual figurative evaluation  
+Bollepally et al. (2026) show that representational similarity reveals failures invisible to surface metrics. Extending this to cross-lingual settings is crucial: multilingual competence may hide culturally grounded misinterpretations, especially for idioms/slang. Parallel resources like XMPIE (Torunoğlu-Selamet et al., 2026) make such comparisons feasible.
+
+### Evaluation pipelines must assume judge-reference conflict, not treat it as edge-case  
+Lee et al. (2026) demonstrate a structural vulnerability: judges default to parametric beliefs. Figurative language amplifies this because “what the idiom means” is often stored as a strong prior. Our swapped-reference figurative protocol operationalizes this risk, and DCRE borrows the spirit of grounded verification (Droste et al., 2026) to reduce—but not eliminate—failures.
+
+### Resource-constrained adaptation: geometry matters  
+OrthoGeoLoRA (Wang et al., 2026) argues that standard LoRA has geometric pathologies; in cross-lingual figurative adaptation, where supervision is sparse and signals are subtle, rank collapse and unstable updates plausibly worsen representational mismatch. Geometry-aware PEFT is therefore a strong candidate for “small-open” pipelines (Stoltz et al., 2026). Continued pretraining remains powerful (Qalb; Hassan et al., 2026) but is costlier.
+
+### Robust confidence is essential for deployment and for research validity  
+Xia et al. (2026) show calibration is insufficient; confidence should be stable under paraphrase and sensitive to meaning changes. Figurative tasks naturally involve paraphrase and context variation, making confidence quality a first-class metric rather than an afterthought.
+
+---
+
+## Conclusion  
+We propose **CL-FigAlign**, a cross-lingual figurative language evaluation study that jointly addresses (1) surface vs representational alignment (Bollepally et al., 2026), (2) cross-lingual idiomaticity comparability using parallel resources (Torunoğlu-Selamet et al., 2026), (3) judge reliability failures under reference-belief conflict (Lee et al., 2026), and (4) compute-efficient adaptation via geometry-aware PEFT (OrthoGeoLoRA; Wang et al., 2026) with a low-resource Urdu case study motivated by Qalb (Hassan et al., 2026). The resulting framework is designed to be reproducible and suitable for smaller, open-model-centered research programs (Stoltz et al., 2026), while producing more trustworthy conclusions about figurative competence than surface metrics alone.
+
+---
+
+## Contributions  
+1. **Problem framing:** A unified account of why figurative understanding evaluation must separate surface agreement from representational alignment, especially cross-lingually (Bollepally et al., 2026).  
+2. **Benchmark design:** A proposed cross-lingual figurative benchmark architecture combining dialogue-based trait ratings with parallel idiomaticity resources (XMPIE; Torunoğlu-Selamet et al., 2026).  
+3. **Evaluator reliability protocol:** A figurative-language adaptation of swapped-reference testing (Lee et al., 2026) plus **Dual-Channel Reference Enforcement (DCRE)** inspired by grounded verification principles (Droste et al., 2026).  
+4. **Adaptation study plan:** A resource-constrained comparison between continued pretraining (Qalb-style; Hassan et al., 2026) and geometry-aware PEFT (OrthoGeoLoRA; Wang et al., 2026) for cross-lingual figurative competence.  
+5. **Confidence reporting:** A robustness/sensitivity-oriented confidence evaluation suite aligned with Xia et al. (2026), positioned as necessary for reliable deployment and scientific inference.
+
+---

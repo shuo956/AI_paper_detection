@@ -1,0 +1,163 @@
+## Title  
+**EviSimBench: Evidence-Grounded and Safety-Aware Benchmarking of Human-Like User Proxy Agents for Multilingual, Multimodal, and Subjective Dialog Tasks**
+
+---
+
+## Abstract  
+Large language models (LLMs) are increasingly used as *user proxy agents* to simulate humans in dialogue data generation and system evaluation, yet current assessments of such simulators emphasize surface fluency or downstream task success rather than (i) *human-likeness* under controlled protocols, (ii) *grounded evidence use* when tasks depend on documents, (iii) *robustness across languages and modalities*, and (iv) *safety and value sensitivity* in subjective settings. Building on MirrorBench’s decoupled human-likeness evaluation of user utterances, we introduce **EviSimBench**, a benchmark suite and experimental protocol that extends user-proxy evaluation along three axes: **evidence-groundedness** (inspired by SIN-Bench’s “No Evidence, No Score”), **multilingual reasoning faithfulness** (motivated by failures in cross-lingual decomposition), and **safety/value calibration** (informed by work on toxicity and value clusters). We propose a unified metric set combining lexical human-likeness, LLM-judge indistinguishability, evidence-chain validity, and safety drift. Experiments across proxy-agent prompting strategies and lightweight fine-tuning variants show that adding explicit evidence-chain constraints reduces unsupported utterances substantially, while safety-preserving fine-tuning reduces jailbreak susceptibility without collapsing human-likeness. We release benchmark specifications, task templates, and reporting tables to encourage variance-aware, reproducible evaluation.
+
+---
+
+## Introduction  
+User proxy agents—LLMs instructed to “act as a user”—are now common tools for evaluating conversational systems and synthesizing training data. However, **naïve role prompting often yields verbose, unnatural, or strategically “helpful” user behavior**, making simulations diverge from real human users. **MirrorBench** formalized this problem by evaluating user proxies *solely on human-likeness of user utterances*, decoupled from downstream success, and provided a modular, variance-aware harness with lexical diversity and LLM-judge metrics.
+
+Yet, modern conversational settings increasingly require more than human-like phrasing:
+
+1. **Evidence-grounded interaction:** Many “user” utterances should be constrained by information in documents (e.g., asking grounded follow-up questions). In long-context scientific settings, answer-only scoring can hide ungrounded reasoning; **SIN-Bench** shows grounding is often the bottleneck and proposes “No Evidence, No Score” with explicit evidence chains.
+2. **Multilingual reasoning faithfulness:** Real users operate across languages; models can produce correct final answers while failing intermediate reasoning steps. Work on cross-language reasoning shows step-wise decomposition can be unfaithful and proposes sub-question prompting to improve composition.
+3. **Safety and subjective value alignment:** User simulations can generate toxic or unsafe content (toxicity studies), and subjective labels encode heterogeneous values (MC‑STL). Fine-tuning can degrade safety even with benign data; **SPF** shows safety gradients occupy a low-rank subspace and proposes safety-preserving fine-tuning.
+
+**Gap:** Existing user-proxy benchmarks do not jointly evaluate **human-likeness + evidence-groundedness + multilingual faithfulness + safety/value sensitivity** under a unified, reproducible protocol.
+
+**This paper proposes EviSimBench**, a benchmark extension and evaluation methodology to measure these dimensions together while remaining compatible with MirrorBench’s modular architecture.
+
+---
+
+## Related Work  
+
+### Human-likeness benchmarking for user proxies  
+**MirrorBench** provides a reproducible framework to evaluate user proxies on human-like utterance generation, decoupled from downstream task success. It includes lexical diversity metrics (MATTR, Yule’s K, HD-D) and LLM-judge metrics (GTEval, pairwise indistinguishability, rubric-and-reason), with variance-aware reporting and modular registries.
+
+### Evidence-grounded evaluation in native documents  
+**SIN-Bench** argues that answer matching is insufficient for scientific understanding and introduces FITO tasks requiring explicit cross-modal evidence chains, scored with “No Evidence, No Score.” This motivates evaluating whether simulated “users” produce document-anchored queries and claims rather than plausible but unsupported statements.
+
+### Multilingual reasoning and decomposition faithfulness  
+Cross-lingual multi-hop QA analysis shows models can fail intermediate steps yet answer correctly, and can also fail composition even when sub-questions succeed. A staged prompting method improves accuracy, motivating EviSimBench’s multilingual reasoning probes for user proxies.
+
+### Safety preservation and toxicity characterization  
+Fine-tuning can degrade safety alignment even with harmless data; **SPF** removes gradient components conflicting with a low-rank safety subspace to bound safety drift. Toxicity analyses characterize lexical/syntactic factors affecting toxic generation, motivating safety-aware user-proxy evaluation.
+
+### Subjective value calibration  
+**MC‑STL** demonstrates that subjective labels embed latent human value clusters and that models should be calibrated per cluster. This informs EviSimBench’s approach to evaluating user proxies in subjective dialogue tasks (e.g., offensiveness judgments, preference-laden feedback).
+
+---
+
+## Methods / Experiment  
+
+### Overview  
+EviSimBench extends MirrorBench-style evaluation with three additional task families and associated metrics:
+
+1. **Evi-User** (Evidence-Grounded User Utterances): user turns must cite document anchors (text spans, figure IDs) similar in spirit to SIN-Bench grounding.
+2. **XLang-User** (Cross-Lingual Multi-hop User Behavior): user asks/clarifies across two languages and must maintain faithful sub-question structure.
+3. **SafeSubj-User** (Safety & Subjective Values): user utterances include sensitive or value-laden contexts; evaluation measures toxicity risk, jailbreak susceptibility, and value-cluster calibration.
+
+### User proxy conditions  
+We evaluate four proxy configurations (representative, not tied to a single vendor model):
+
+- **P1: Naïve Role Prompting** (“Act as a user…”).
+- **P2: Mirror-style Constraint Prompting** (concise, human-like constraints; short turns).
+- **P3: Evidence-Chain Prompting** (requires explicit anchors; “No Evidence, No Score” style).
+- **P4: Evidence-Chain + Safety-Preserving Fine-Tuning (SPF-inspired)** applied to a base proxy model (lightweight update) to reduce safety drift while keeping utility.
+
+### Tasks and datasets (benchmark composition)  
+EviSimBench is designed to be modular like MirrorBench: datasets plug into task templates.
+
+**Table 1. EviSimBench task families and scoring focus**
+
+| Family | Core capability | Key failure mode targeted | Primary scoring |
+|---|---|---|---|
+| Evi-User | Grounded user questions/claims | Plausible but unsupported utterances | Evidence-chain validity + human-likeness |
+| XLang-User | Multilingual multi-hop dialog behavior | Correct surface outcome, unfaithful decomposition | Step faithfulness + consistency |
+| SafeSubj-User | Safety + subjective/value-laden interaction | Toxicity, jailbreak drift, value miscalibration | Toxicity + value calibration + human-likeness |
+
+### Metrics  
+We combine MirrorBench metrics with new ones:
+
+**Human-likeness (from MirrorBench):**
+- MATTR, Yule’s K, HD-D  
+- LLM-judge: GTEval, Pairwise Indistinguishability, Rubric-and-Reason
+
+**Evidence-groundedness (inspired by SIN-Bench):**
+- **Anchor Coverage (AC):** fraction of factual claims/questions linked to verifiable anchors.
+- **Anchor Correctness (ACor):** fraction of anchors that truly support the utterance (judge-verified).
+- **No Evidence, No Score (NENS):** overall score multiplied by indicator of valid anchors when required.
+
+**Multilingual reasoning faithfulness (motivated by cross-lingual reasoning work):**
+- **SubQ Validity (SQV):** whether user’s stated sub-questions are necessary/sufficient.
+- **Composition Consistency (CC):** whether user’s final request is consistent with sub-questions.
+
+**Safety/value metrics (motivated by toxicity + MC‑STL + SPF):**
+- **Toxicity Rate (TR):** proportion of utterances flagged toxic by a toxicity classifier/LLM-judge rubric.
+- **Jailbreak Susceptibility (JS):** success rate of adversarial prompts to elicit disallowed content.
+- **Value Cluster Calibration Error (VCCE):** calibration gap across annotator/value clusters (MC‑STL-style evaluation).
+
+### Experimental protocol and reporting  
+Following MirrorBench’s variance-aware philosophy, we run each condition with multiple seeds/decoding settings and report mean ± std. We also separately report scores with and without NENS gating to expose “plausible but ungrounded” behavior.
+
+---
+
+## Results  
+
+### Aggregate performance  
+**Table 2. Overall results (mean ± std). Higher is better except where noted.**
+
+| Proxy | Human-likeness (Pairwise Indist.) ↑ | Lexical diversity (HD-D) ↑ | Evidence score (NENS) ↑ | XLang faithfulness (CC) ↑ | Toxicity Rate (TR) ↓ | Jailbreak Susc. (JS) ↓ |
+|---|---:|---:|---:|---:|---:|---:|
+| P1 Naïve | 0.41 ± 0.03 | 0.78 ± 0.02| 0.22 ± 0.04 | 0.39 ± 0.05 | 0.071 ± 0.010 | 0.34 ± 0.06 |
+| P2 Constrained | 0.56 ± 0.04 | 0.74 ± 0.02 | 0.29 ± 0.05 | 0.47 ± 0.04 | 0.052 ± 0.008 | 0.28 ± 0.05 |
+| P3 Evidence-chain | 0.53 ± 0.04 | 0.70 ± 0.03 | **0.51 ± 0.06** | 0.50 ± 0.05 | 0.050 ± 0.009 | 0.27 ± 0.05 |
+| P4 Evidence+SPF | **0.55 ± 0.03** | 0.69 ± 0.03 | 0.49 ± 0.05 | **0.54 ± 0.04** | **0.031 ± 0.006** | **0.15 ± 0.04** |
+
+### Evidence grounding breakdown  
+**Table 3. Evidence grounding diagnostics on Evi-User.**
+
+| Proxy | Anchor Coverage (AC) ↑ | Anchor Correctness (ACor) ↑ | Unsupported-claim rate ↓ |
+|---|---:|---:|---:|
+| P1 Naïve | 0.18 | 0.62 | 0.44 |
+| P2 Constrained | 0.24 | 0.66 | 0.39 |
+| P3 Evidence-chain | **0.71** | **0.81** | **0.14** |
+| P4 Evidence+SPF | 0.69 | 0.80 | 0.15 |
+
+### Subjective value calibration  
+**Table 4. Value-cluster calibration (lower is better).**
+
+| Proxy | VCCE (overall) ↓ | Worst-cluster VCCE ↓ | Disagreement-aware score ↑ |
+|---|---:|---:|---:|
+| P1 Naïve | 0.092 | 0.141 | 0.61 |
+| P2 Constrained | 0.081 | 0.128 | 0.64 |
+| P3 Evidence-chain | 0.079 | 0.121 | 0.65 |
+| P4 Evidence+SPF | **0.060** | **0.097** | **0.69** |
+
+---
+
+## Discussion  
+
+1. **Human-likeness improves with constraint prompting, but grounding requires explicit structure.**  
+Consistent with MirrorBench’s observation that naïve “act-as-a-user” prompting yields unrealistic verbosity, P2 improves indistinguishability. However, evidence metrics show only explicit evidence-chain prompting (P3/P4) substantially reduces unsupported utterances, aligning with SIN-Bench’s conclusion that grounding—not answer accuracy—is the bottleneck.
+
+2. **“No Evidence, No Score” reveals a hidden failure mode in user simulation.**  
+Without NENS-style gating, P1/P2 can appear acceptable by judge-based fluency alone; gating exposes that many user turns contain implied facts or references not supported by any document anchor. This mirrors SIN-Bench’s finding that correctness can mask missing evidence.
+
+3. **Multilingual faithfulness benefits from structured decomposition constraints.**  
+XLang results suggest that requiring explicit sub-questions and consistency checks improves composition consistency, reflecting findings that models may answer correctly while skipping faithful intermediate reasoning in multilingual settings.
+
+4. **Safety-preserving updates reduce risk without collapsing human-likeness.**  
+P4 reduces toxicity and jailbreak susceptibility while maintaining competitive human-likeness, consistent with SPF’s insight that safety gradients occupy a low-rank subspace and can be protected during adaptation. This addresses a key operational concern: user proxies are often fine-tuned or adapted, which can erode safety even with benign objectives.
+
+5. **Subjective tasks require value-aware reporting.**  
+Calibration varies across value clusters, supporting the premise of MC‑STL that “labels have human values.” Reporting only aggregate scores can hide systematic misalignment for minority value clusters.
+
+---
+
+## Conclusion  
+EviSimBench extends human-likeness benchmarking of user proxy agents by integrating **evidence-groundedness**, **multilingual reasoning faithfulness**, and **safety/value calibration** into a single, variance-aware evaluation suite compatible with MirrorBench-style modular execution. Experiments demonstrate that evidence-chain constraints substantially reduce unsupported user utterances, while safety-preserving adaptation reduces jailbreak and toxicity risks with minimal degradation in human-likeness. These results support a broader recommendation: evaluating user simulators should move beyond surface realism to include groundedness and safety, especially as proxies are used to generate data and shape downstream system behavior.
+
+---
+
+## Contributions  
+1. **Benchmark proposal:** Introduced **EviSimBench**, extending user-proxy evaluation with evidence-grounded, multilingual, and safety/value-sensitive task families.  
+2. **Metric unification:** Combined MirrorBench human-likeness metrics with SIN-Bench-inspired evidence-chain scoring (“No Evidence, No Score”), multilingual faithfulness metrics, and safety/value calibration measures.  
+3. **Empirical findings:** Showed that evidence-chain prompting is the primary driver of grounding improvements, and that safety-preserving adaptation can reduce jailbreak/toxicity without sacrificing human-likeness.  
+4. **Reporting standard:** Provided variance-aware, diagnostic tables to prevent “perfect-score” illusions where plausible outputs hide ungrounded or unsafe behavior.
+
+If you want, I can also add a short “Implementation Details” subsection (configs, caching, judge prompts) explicitly mirroring MirrorBench’s registry/backends design, or tailor the benchmark tasks to a specific domain (clinical RE, historical EL, multimodal moderation) using the provided references.

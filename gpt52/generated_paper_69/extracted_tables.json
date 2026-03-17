@@ -1,0 +1,150 @@
+{
+  "tables": [
+    {
+      "table_title": "Main detection performance (binary manipulation)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Modality",
+        "Precision",
+        "Recall",
+        "F1",
+        "Specificity"
+      ],
+      "data": [
+        [
+          "T-Base",
+          "Text",
+          "0.81",
+          "0.66",
+          "0.73",
+          "0.90"
+        ],
+        [
+          "A-Base",
+          "Audio",
+          "0.78",
+          "0.41",
+          "0.54",
+          "0.92"
+        ],
+        [
+          "AT-Hier",
+          "Audio+Text",
+          "0.80",
+          "0.58",
+          "0.67",
+          "0.91"
+        ],
+        [
+          "AT-Hier+MC",
+          "Audio+Text",
+          "0.79",
+          "0.63",
+          "0.70",
+          "0.90"
+        ]
+      ],
+      "table_note": "Consistent with Chen et al. (2026), audio-only shows a recall drop; adding prosody+structure recovers recall; disagreement-aware calibration improves recall without collapsing specificity."
+    },
+    {
+      "table_title": "Disagreement-aware evaluation across value clusters",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Mean F1 across clusters",
+        "F1 variance (↓)",
+        "Worst-cluster F1"
+      ],
+      "data": [
+        [
+          "AT-Hier",
+          "0.65",
+          "0.021",
+          "0.57"
+        ],
+        [
+          "AT-Hier+MC",
+          "0.69",
+          "0.012",
+          "0.63"
+        ]
+      ],
+      "table_note": "Modeling value clusters improves both average and worst-case performance and reduces perspectival instability."
+    },
+    {
+      "table_title": "Calibration and cascading outcomes",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "AUROC (↑)",
+        "ECE (↓)",
+        "Coverage (no abstain)",
+        "Accuracy at 100% coverage",
+        "Accuracy with cascade"
+      ],
+      "data": [
+        [
+          "AT-Hier",
+          "0.71",
+          "0.094",
+          "1.00",
+          "0.74",
+          "—"
+        ],
+        [
+          "AT-Hier+MC",
+          "0.72",
+          "0.081",
+          "1.00",
+          "0.75",
+          "—"
+        ],
+        [
+          "AT-Hier+MC+CalCascade",
+          "0.72",
+          "0.079",
+          "0.86",
+          "0.75",
+          "0.79"
+        ]
+      ],
+      "table_note": "Calibrated confidence enables safer routing/cascading with improved effective accuracy."
+    },
+    {
+      "table_title": "Robustness to instruction framing (F1 std across wrappers)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Wrappers tested",
+        "Mean F1",
+        "F1 Std (↓)"
+      ],
+      "data": [
+        [
+          "A-Base (few-shot)",
+          "6",
+          "0.54",
+          "0.060"
+        ],
+        [
+          "AT-Hier",
+          "6",
+          "0.67",
+          "0.034"
+        ],
+        [
+          "AT-Hier+MC",
+          "6",
+          "0.70",
+          "0.028"
+        ]
+      ],
+      "table_note": "Lower standard deviation indicates reduced sensitivity to prompt wording."
+    }
+  ]
+}

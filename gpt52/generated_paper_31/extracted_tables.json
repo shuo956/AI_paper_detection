@@ -1,0 +1,140 @@
+{
+  "tables": [
+    {
+      "table_title": "Main results across tasks (mean over tasks; higher is better except tokens and failure rate)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "DS-Tabular Score (↑)",
+        "ProjectQA F1 (↑)",
+        "Tokens / Task (↓)",
+        "Cascade Failure % (↓)"
+      ],
+      "data": [
+        [
+          "RAG-every-step",
+          "0.71",
+          "0.62",
+          "18,400",
+          "21.5"
+        ],
+        [
+          "ACE-only",
+          "0.74",
+          "0.67",
+          "12,900",
+          "16.2"
+        ],
+        [
+          "CEDAR-only",
+          "0.76",
+          "0.65",
+          "11,800",
+          "15.9"
+        ],
+        [
+          "RACER-DS (full)",
+          "0.80",
+          "0.72",
+          "9,600",
+          "9.8"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Risk-sensitive decision behavior under increasing error penalty (λ)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "λ=1 Utility",
+        "λ=5 Utility",
+        "λ=20 Utility",
+        "Abstain % at λ=20"
+      ],
+      "data": [
+        [
+          "RAG-every-step",
+          "0.66",
+          "0.41",
+          "0.08",
+          "1.2"
+        ],
+        [
+          "CEDAR-only",
+          "0.69",
+          "0.46",
+          "0.12",
+          "2.0"
+        ],
+        [
+          "ACE-only",
+          "0.71",
+          "0.50",
+          "0.18",
+          "3.5"
+        ],
+        [
+          "RACER-DS (full)",
+          "0.74",
+          "0.61",
+          "0.44",
+          "18.7"
+        ]
+      ],
+      "table_note": "Utility is normalized to [0,1]. Higher is better. Abstention rate shown to illustrate policy shifts."
+    },
+    {
+      "table_title": "Ablation study (RACER-DS components)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "DS-Tabular Score (↑)",
+        "ProjectQA F1 (↑)",
+        "Tokens / Task (↓)",
+        "Cascade Failure % (↓)"
+      ],
+      "data": [
+        [
+          "Full RACER-DS",
+          "0.80",
+          "0.72",
+          "9,600",
+          "9.8"
+        ],
+        [
+          "– Risk module (no abstain/verify gating)",
+          "0.79",
+          "0.71",
+          "9,300",
+          "12.6"
+        ],
+        [
+          "– ActiShade (no overshadow activation)",
+          "0.78",
+          "0.69",
+          "9,500",
+          "14.1"
+        ],
+        [
+          "– ACE policy (retrieve fixed schedule)",
+          "0.77",
+          "0.68",
+          "12,200",
+          "13.7"
+        ],
+        [
+          "– CEDAR structuring (unstructured context)",
+          "0.75",
+          "0.66",
+          "13,800",
+          "17.9"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

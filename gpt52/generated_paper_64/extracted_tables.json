@@ -1,0 +1,127 @@
+{
+  "tables": [
+    {
+      "table_title": "Main detection performance (illustrative benchmark summary)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Uses known attacks in training?",
+        "Bias suppression?",
+        "Quantized?",
+        "Known AUROC ↑",
+        "Zero-day AUROC ↑",
+        "OpenAUC ↑"
+      ],
+      "data": [
+        [
+          "One-class anomaly detector",
+          "No",
+          "No",
+          "No",
+          "0.93",
+          "0.88",
+          "0.61"
+        ],
+        [
+          "Wilkie-style contrastive",
+          "Yes",
+          "No",
+          "No",
+          "0.97",
+          "0.92",
+          "0.70"
+        ],
+        [
+          "BACRL (ours)",
+          "Yes",
+          "Yes",
+          "No",
+          "0.97",
+          "0.95",
+          "0.76"
+        ],
+        [
+          "BACRL + soft-edge quant. (ours)",
+          "Yes",
+          "Yes",
+          "Yes",
+          "0.97",
+          "0.94",
+          "0.75"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "False positives and calibration (benign-heavy operating regime)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "FPR @ TPR=0.95 ↓",
+        "ECE ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "One-class anomaly detector",
+          "0.12",
+          "0.081",
+          "High false positives typical of benign-only training"
+        ],
+        [
+          "Wilkie-style contrastive",
+          "0.07",
+          "0.054",
+          "Better separation using benign+known malign"
+        ],
+        [
+          "BACRL (ours)",
+          "0.05",
+          "0.041",
+          "Bias suppression reduces spurious benign alarms"
+        ],
+        [
+          "BACRL + quant. (ours)",
+          "0.05",
+          "0.045",
+          "Small calibration loss due to quantization"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Edge efficiency (deployment-oriented)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model Variant",
+        "Activation format",
+        "Peak model memory (MB) ↓",
+        "Relative latency ↓"
+      ],
+      "data": [
+        [
+          "BACRL (FP32)",
+          "FP32",
+          "1.00×",
+          "1.00×"
+        ],
+        [
+          "BACRL (INT8 naive clip)",
+          "INT8",
+          "0.35×",
+          "0.55×"
+        ],
+        [
+          "BACRL (soft-edge quant.)",
+          "INT8-like (soft-edge)",
+          "0.35×",
+          "0.55×"
+        ]
+      ],
+      "table_note": "*Interpretation:* soft-edge quantization retains the efficiency of INT8 while avoiding the larger accuracy degradation typically induced by hard clipping of outliers, consistent with the motivation of Quamba-SE (Chen & Hemani, 2026)."
+    }
+  ]
+}

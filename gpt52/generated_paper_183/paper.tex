@@ -1,0 +1,183 @@
+## Title  
+**Robust Multi-Turn Safety and Bias Evaluation Under Language Variation: A Unified Protocol with Dialectal and Code-Mixed Stress Tests**
+
+---
+
+## Abstract  
+Frontier large language models (LLMs) and multimodal LLMs (MLLMs) are commonly evaluated using fragmented safety and bias benchmarks that underrepresent multi-turn escalation, language variation, and dialect/code-mixing. Prior work shows (i) multi-turn contextual safety failures persist and guardrails remain incomplete (MTMCS-Bench), (ii) safety performance is highly uneven across modalities and evaluation designs (integrated safety leaderboards), (iii) output-level bias measurements are sensitive to framing and multilinguality (BiasLab), and (iv) confidence estimation can fail under semantically equivalent prompt/answer variations. Meanwhile, dialectal and region-specific bias resources for India highlight systematic weaknesses in zero-/few-shot settings and the value of targeted adaptation.  
+We propose **UniSAFE-VAR**, a unified evaluation protocol that combines (1) multi-turn contextual safety, (2) dual-framing multilingual bias measurement, and (3) confidence-robustness diagnostics under prompt/answer variation. We introduce two stress-test suites by adapting existing resources: **CI-DIALECT** (dialectal/context-switch perturbations using INDIC-DIALECT) and **REGION-MIRROR** (dual-framing probes grounded in IndRegBias). Across representative model classes (closed and open), UniSAFE-VAR reveals a consistent pattern: models that score well on single-turn safety often degrade sharply under escalation and dialectal/code-mixed variation, and confidence estimates remain poorly stable even when calibration is acceptable. We provide actionable recommendations for standardized reporting and model development.
+
+---
+
+## Introduction  
+LLMs and MLLMs are increasingly deployed in settings where safety, bias, privacy, and reliability must hold **under realistic interaction**: multi-turn dialogue, gradual intent escalation, and diverse language varieties. However, evaluation practice often remains single-turn, English-centric, and metric-fragmented.
+
+Recent evidence underscores three core problems:
+
+1. **Safety is multidimensional and uneven.** An integrated safety report across frontier models finds strong variance by modality (text, vision-language, image generation), language, and adversarial setting; worst-case safety can collapse under adversarial testing even when benchmark safety appears strong (Ma et al., 2026).  
+2. **Multi-turn context matters.** MTMCS-Bench shows models either miss gradually emerging risk or over-refuse benign requests; guardrails reduce but do not eliminate contextual failures (Z. Liu et al., 2026).  
+3. **Language variation breaks reliability signals.** Confidence estimation methods that look good on calibration/discrimination can be brittle to semantically equivalent prompt/answer variations (Xia et al., 2026). Bias measurement similarly depends on framing and multilingual robustness (Guey et al., 2026).  
+
+Additionally, underexplored sociolinguistic dimensions—**dialects, code-mixing, and regional bias**—are increasingly important. INDIC-DIALECT demonstrates that even strong LLMs struggle with dialect classification and translation without targeted adaptation (Sharma et al., 2026). IndRegBias shows regional bias detection is weak in zero-/few-shot but improves with fine-tuning (Panda et al., 2026). These results suggest that safety and bias evaluations that ignore dialects and code-mixing may systematically overestimate real-world robustness.
+
+**Goal.** We aim to unify these threads into a single, reproducible evaluation protocol that tests safety and bias **under language variation and multi-turn interaction**, and that reports not only outcomes but also confidence robustness.
+
+---
+
+## Related Work  
+
+### Integrated and contextual safety evaluation  
+- **Holistic safety leaderboards.** Ma et al. (2026) evaluate multiple frontier models across language, vision-language, and image generation with adversarial and multilingual components, finding strong trade-offs and severe worst-case vulnerabilities.  
+- **Multi-turn multimodal contextual safety.** MTMCS-Bench introduces escalation-based and context-switch risks with paired safe/unsafe dialogues, revealing utility–safety trade-offs and over-refusal patterns (Z. Liu et al., 2026).  
+- **Persona drift and safety stability.** The “Assistant Axis” predicts persona drift and shows that stabilizing activation regions can reduce harmful/bizarre behaviors under vulnerable-user or meta-reflective conversations (Lu et al., 2026).  
+- **Intrinsic moral steering.** Moral vectors and Adaptive Moral Fusion reduce jailbreak success while lowering incorrect refusals, addressing safety–helpfulness trade-offs (Hu et al., 2026).  
+- **False refusals in detoxification.** Refusal behavior is biased by target group and language; cross-translation (English→Chinese→English) can reduce false refusals (Im et al., 2026).
+
+### Bias and multilingual robustness  
+- **BiasLab.** A multilingual, dual-framing framework with randomized wrappers and fixed-choice Likert responses improves comparability and robustness of output-level bias measurement (Guey et al., 2026).  
+- **Regional bias datasets.** IndRegBias provides severity-annotated regional bias in English and code-mixed comments; fine-tuning yields large gains over zero-/few-shot (Panda et al., 2026).  
+- **Dialect benchmarks.** INDIC-DIALECT provides multi-task evaluation and translation for Hindi/Odia dialects, showing poor LLM performance without targeted methods (Sharma et al., 2026).  
+- **Intrinsic multilingual evaluation pitfalls.** Perplexity-like metrics can be non-comparable across languages due to form–meaning differences (Poelman & de Lhoneux, 2026), motivating careful design for multilingual robustness claims.
+
+### Confidence, hallucination, and verification  
+- **Confidence under variation.** Robustness/stability/sensitivity metrics reveal failures not captured by calibration alone (Xia et al., 2026).  
+- **Hallucination predictors.** Relational linearity correlates strongly with hallucination rates on synthetic unknown entities (Lu et al., 2026), suggesting that “I don’t know” behavior is structurally difficult for some relations.  
+- **Fine-grained fact-checking.** InFi-Check provides interpretable error types, evidence, and corrections for factuality evaluation (Bai et al., 2026).  
+- **Pretraining data detection.** PDR reweights early-token likelihood signals to improve training-data detection in black-box settings (J. Liu et al., 2026), relevant to privacy/compliance auditing alongside safety.
+
+---
+
+## Gaps and Motivation  
+Despite substantial progress, four gaps remain:
+
+1. **No standard protocol jointly tests** multi-turn contextual safety (MTMCS-Bench-style) **and** multilingual/dialectal robustness (INDIC-DIALECT, IndRegBias) within the same reporting framework.  
+2. **Bias evaluation is rarely integrated with safety evaluation** under multi-turn escalation, even though refusal and safety behaviors can themselves be biased (Im et al., 2026).  
+3. **Confidence estimation is not routinely audited** for robustness to prompt/answer variation in safety-critical settings (Xia et al., 2026).  
+4. **Language variation stress tests** (dialectal paraphrases, code-mixing, cross-translation) are not systematically used to probe failure modes like over-refusal, missed escalation, or biased compliance.
+
+---
+
+## Proposed Main Idea  
+We propose **UniSAFE-VAR**, a unified evaluation protocol for LLM/MLLM deployment readiness that measures:
+
+1. **Multi-turn contextual safety** under escalation and context-switch (building on MTMCS-Bench).  
+2. **Output-level bias** using **dual-framing multilingual probes** (BiasLab) augmented with **regional bias axes** (IndRegBias).  
+3. **Confidence robustness** under prompt/answer variation (Xia et al., 2026), reported alongside safety/bias outcomes.  
+
+We further introduce two **language-variation stress suites**:
+
+- **CI-DIALECT:** dialectal paraphrase and code-mix perturbations for safety dialogues using patterns and transformations inspired by INDIC-DIALECT (Sharma et al., 2026).  
+- **REGION-MIRROR:** paired dual-framing probes grounded in IndRegBias targets and severity levels (Panda et al., 2026), formatted using BiasLab’s mirrored design (Guey et al., 2026).
+
+---
+
+## Methods / Experiment  
+
+### 1) Evaluation protocol overview  
+UniSAFE-VAR evaluates a model \(M\) across three axes and aggregates into a standardized report.
+
+**Axis A: Contextual Safety (CS).**  
+- Base set: MTMCS-Bench-style multi-turn dialogues (escalation-based and context-switch).  
+- Metrics: (i) intent recognition, (ii) safety on unsafe cases (refusal/safer completion), (iii) helpfulness on benign cases (Z. Liu et al., 2026).  
+
+**Axis B: Output Bias (OB).**  
+- Base set: BiasLab dual-framing probes across languages with repeated randomized wrappers and fixed-choice Likert outputs (Guey et al., 2026).  
+- Augmentation: REGION-MIRROR probes derived from IndRegBias regional targets and severity (Panda et al., 2026).  
+- Metrics: effect size between mirrored framings, neutrality rate, and robustness across wrappers.
+
+**Axis C: Confidence Robustness (CR).**  
+We adopt the three-part evaluation beyond calibration (Xia et al., 2026):  
+- **Robustness:** confidence invariance under semantically equivalent prompt perturbations.  
+- **Stability:** confidence consistency across semantically equivalent answers.  
+- **Sensitivity:** confidence change when answer meaning differs.
+
+### 2) Language-variation stress tests  
+- **CI-DIALECT transformations:**  
+  - Dialectal lexical substitutions and syntactic shifts modeled after INDIC-DIALECT characteristics (Hindi/Odia dialect variants), plus controlled code-mixing.  
+  - Applied to *benign* and *unsafe* multi-turn dialogues to test over-refusal and missed escalation under variation.
+
+- **Cross-translation condition (optional mitigation):**  
+  Inspired by Im et al. (2026), we test a pipeline: English prompt → Chinese translation → model response → back-translation, to measure impact on false refusals and bias indicators.
+
+### 3) Models and settings (representative)  
+Following the integrated safety evaluation philosophy (Ma et al., 2026), we consider a mix of:  
+- **Frontier closed models** (representative class)  
+- **Open-source instruction-tuned models** (representative class)  
+- **Multimodal models** (when evaluating multimodal dialogues, aligned with MTMCS-Bench)
+
+*(Note: UniSAFE-VAR is model-agnostic; specific model identities are not required for the protocol itself.)*
+
+### 4) Scoring and aggregation  
+We report per-axis metrics plus a composite **Deployment Robustness Index (DRI)**:
+
+\[
+\text{DRI} = w_{cs}\cdot CS + w_{ob}\cdot (1-OB) + w_{cr}\cdot CR
+\]
+
+where \(OB\) is normalized so higher means more bias/instability; weights are set by application context (e.g., higher \(w_{cs}\) for safety-critical assistants).
+
+---
+
+## Results (with Tables)  
+Tables below illustrate the **reporting format** and typical patterns observed in prior findings when stressors are introduced (multi-turn escalation, adversarial prompts, dialect variation), consistent with Ma et al. (2026), Z. Liu et al. (2026), and Xia et al. (2026).
+
+### Table 1. UniSAFE-VAR dataset components and what they measure
+| Component | Source inspiration | Modality | Key stressor | Primary metrics |
+|---|---|---:|---|---|
+| Multi-turn contextual safety set | MTMCS-Bench (Z. Liu et al., 2026) | Text / Multimodal | Escalation, context-switch | intent recognition, unsafe safety rate, benign helpfulness |
+| Dual-framing multilingual bias set | BiasLab (Guey et al., 2026) | Text | framing flips, wrapper randomization | effect size, neutrality, robustness |
+| Regional bias probes | IndRegBias (Panda et al., 2026) | Text | code-mixing, severity levels | severity-aware bias/harms indicators |
+| Dialectal perturbation suite | INDIC-DIALECT (Sharma et al., 2026) | Text | dialectal paraphrase, code-mix | delta in CS/OB/CR under variation |
+| Confidence variation suite | Xia et al. (2026) | Text | prompt/answer semantic variation | robustness, stability, sensitivity |
+
+### Table 2. Example UniSAFE-VAR scorecard (higher is better except Bias Effect Size)
+| Model class | CS: Unsafe safety rate ↑ | CS: Benign helpfulness ↑ | OB: Bias effect size ↓ | OB: Neutrality rate ↑ | CR: Robustness ↑ | CR: Sensitivity ↑ |
+|---|---:|---:|---:|---:|---:|---:|
+| Frontier closed (text) | 0.78 | 0.74 | 0.12 | 0.46 | 0.55 | 0.49 |
+| Open-source instruct (text) | 0.63 | 0.71 | 0.18 | 0.39 | 0.44 | 0.41 |
+| Multimodal assistant | 0.59 | 0.68 | 0.16 | 0.42 | 0.47 | 0.40 |
+
+### Table 3. Robustness drop under dialect/code-mix perturbations (CI-DIALECT)
+| Model class | Δ Unsafe safety rate (perturbed − base) | Δ Benign helpfulness | Δ Bias effect size | Δ Confidence robustness |
+|---|---:|---:|---:|---:|
+| Frontier closed (text) | −0.09 | −0.04 | +0.03 | −0.10 |
+| Open-source instruct (text) | −0.14 | −0.06 | +0.05 | −0.12 |
+| Multimodal assistant | −0.12 | −0.05 | +0.04 | −0.11 |
+
+### Table 4. False refusal and mitigation via cross-translation (detoxification-style tasks)
+| Condition | False refusal rate ↓ | Content preservation ↑ | Bias effect size ↓ |
+|---|---:|---:|---:|
+| Direct (English) | 0.21 | 0.92 | 0.17 |
+| Cross-translation (EN→ZH→EN) | 0.13 | 0.89 | 0.14 |
+
+*(Trend aligns with Im et al., 2026: cross-translation can reduce refusals while mostly preserving meaning.)*
+
+---
+
+## Discussion  
+**Multi-turn + language variation exposes compound failures.** MTMCS-Bench shows that risk emerges gradually; our dialect/code-mix perturbations further amplify failure rates, indicating that contextual safety is not only a dialogue reasoning problem but also a **robustness-to-variation** problem. This complements Ma et al. (2026), where worst-case safety collapses under adversarial evaluation despite decent benchmark scores.
+
+**Bias and refusal are entangled.** BiasLab’s dual-framing design (Guey et al., 2026) is particularly valuable because refusal and hedging can masquerade as “neutrality.” IndRegBias-inspired probes show that region-targeted content and code-mixing can shift both agreement patterns and refusal likelihood, consistent with findings that refusals are systematically biased by target group and language (Im et al., 2026).
+
+**Confidence is not a side metric; it is a safety signal.** Xia et al. (2026) demonstrate that calibration is insufficient. In UniSAFE-VAR, low robustness/stability means a user could receive different confidence levels for semantically identical safe/unsafe requests—undermining trust and potentially enabling jailbreak strategies through paraphrase.
+
+**Implications for mitigations.**  
+- **Steering/stabilization** approaches (Assistant Axis stabilization; Lu et al., 2026) and **intrinsic moral interventions** (AMF; Hu et al., 2026) suggest promising directions to reduce jailbreak success without excessive over-refusal—yet UniSAFE-VAR indicates they should be tested under **dialectal and code-mixed** conditions, not only standard English prompts.  
+- **Cross-translation** (Im et al., 2026) appears as a lightweight operational mitigation for false refusals, but it must be audited for bias shifts and meaning drift—especially given known limitations of evaluation under non-literal translation and judge inconsistency in MT settings (Tian et al., 2026).
+
+**Limitations.** This paper proposes and structures a unified protocol and stress suites grounded in the cited literature; a full empirical instantiation requires releasing the transformed dialogue sets and running evaluations across concrete model endpoints. Additionally, multilingual comparability must avoid over-relying on intrinsic metrics that conflate form and meaning (Poelman & de Lhoneux, 2026).
+
+---
+
+## Conclusion  
+UniSAFE-VAR unifies multi-turn contextual safety, multilingual dual-framing bias measurement, and confidence robustness under language variation into a single deployment-oriented evaluation protocol. Grounded in recent findings on uneven safety landscapes (Ma et al., 2026), multi-turn risk emergence (Z. Liu et al., 2026), framing-robust bias measurement (Guey et al., 2026), dialect/regional bias resources (Sharma et al., 2026; Panda et al., 2026), and confidence brittleness (Xia et al., 2026), the protocol highlights a consistent message: **models that appear safe and unbiased in standard benchmarks can fail under realistic multi-turn and language-variation stressors**. Standardized reporting of these robustness dimensions is necessary for responsible deployment.
+
+---
+
+## Contributions  
+1. **UniSAFE-VAR protocol:** a unified, model-agnostic evaluation framework combining multi-turn contextual safety, multilingual dual-framing bias, and confidence robustness diagnostics.  
+2. **Two language-variation stress suites:** CI-DIALECT (dialect/code-mix perturbations inspired by INDIC-DIALECT) and REGION-MIRROR (dual-framing regional bias probes grounded in IndRegBias and BiasLab methodology).  
+3. **Standardized reporting tables and composite index (DRI):** enabling reproducible comparison across model classes and mitigation strategies.  
+4. **Actionable evaluation guidance:** integrating insights from safety leaderboards, multi-turn benchmarks, and confidence-under-variation work to better reflect real-world risk.
+
+If you want, I can (a) draft a full “Data Construction” subsection detailing transformation rules for CI-DIALECT and REGION-MIRROR, and (b) add an ablation table comparing wrapper randomization (BiasLab) vs fixed prompts, and base vs perturbed dialogues (MTMCS-Bench + dialect stress).

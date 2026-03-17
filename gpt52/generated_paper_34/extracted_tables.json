@@ -1,0 +1,212 @@
+{
+  "tables": [
+    {
+      "table_title": "System variants evaluated",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "ID",
+        "Backbone",
+        "Retrieval",
+        "Evidence fusion",
+        "Memory",
+        "Agentic iteration"
+      ],
+      "data": [
+        [
+          "B1",
+          "Single expert",
+          "Unstructured RAG",
+          "None",
+          "None",
+          "Fixed (1)"
+        ],
+        [
+          "B2",
+          "Single expert",
+          "Hybrid (SQL+vector)",
+          "None",
+          "None",
+          "Fixed (1)"
+        ],
+        [
+          "B3",
+          "Single expert",
+          "Hybrid",
+          "Corroboration (Bayes-inspired)",
+          "None",
+          "Fixed (1)"
+        ],
+        [
+          "B4",
+          "Single expert",
+          "Hybrid",
+          "Corroboration",
+          "MemoBrain",
+          "Adaptive"
+        ],
+        [
+          "B5",
+          "**ARM merged**",
+          "Hybrid",
+          "Corroboration",
+          "None",
+          "Adaptive"
+        ],
+        [
+          "**Ours**",
+          "**ARM merged**",
+          "**Hybrid**",
+          "**Corroboration**",
+          "**MemoBrain + evidence anchoring**",
+          "**Adaptive**"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Hybrid scientific QA results (battery-science style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "SQL correctness (%)",
+        "Groundedness (%)",
+        "Expert-rated quality (1–5)",
+        "Avg. tool calls"
+      ],
+      "data": [
+        [
+          "B1: Unstructured RAG",
+          null,
+          "84.1",
+          "3.7",
+          "1.0"
+        ],
+        [
+          "B2: Hybrid, no fusion",
+          "77.6",
+          "90.2",
+          "4.0",
+          "1.2"
+        ],
+        [
+          "B3: Hybrid + corroboration",
+          "78.4",
+          "93.5",
+          "4.3",
+          "1.2"
+        ],
+        [
+          "B5: ARM + corroboration",
+          "78.9",
+          "94.1",
+          "4.4",
+          "1.1"
+        ],
+        [
+          "**Ours**",
+          "**79.3**",
+          "**95.0**",
+          "**4.5**",
+          "**1.1**"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Multi-hop QA (retrieval-heavy)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Exact match (%)",
+        "Groundedness (%)",
+        "Avg. retrieval iterations",
+        "Failure: irrelevant retrieval (%)"
+      ],
+      "data": [
+        [
+          "B1",
+          "41.8",
+          "80.5",
+          "1.0",
+          "18.2"
+        ],
+        [
+          "Agentic RAG (naïve)",
+          "46.9",
+          "83.0",
+          "3.4",
+          "16.5"
+        ],
+        [
+          "Hybrid (B2)",
+          "45.7",
+          "86.2",
+          "1.3",
+          "14.1"
+        ],
+        [
+          "Hybrid + corroboration (B3)",
+          "48.8",
+          "89.4",
+          "1.6",
+          "10.7"
+        ],
+        [
+          "**Ours**",
+          "**52.1**",
+          "**91.2**",
+          "**1.7**",
+          "**8.9**"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Long-horizon tool/browsing tasks",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Success rate (%)",
+        "Context overflow errors (%)",
+        "Avg. steps to completion"
+      ],
+      "data": [
+        [
+          "B1 (no memory)",
+          "28.4",
+          "21.6",
+          "19.3"
+        ],
+        [
+          "B3 (fusion, no memory)",
+          "31.0",
+          "20.1",
+          "18.7"
+        ],
+        [
+          "B4 (MemoBrain, single expert)",
+          "38.9",
+          "11.4",
+          "17.9"
+        ],
+        [
+          "B5 (ARM, no memory)",
+          "36.7",
+          "16.2",
+          "18.1"
+        ],
+        [
+          "**Ours**",
+          "**44.6**",
+          "**9.8**",
+          "**17.2**"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

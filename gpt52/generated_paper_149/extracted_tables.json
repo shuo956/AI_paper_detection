@@ -1,0 +1,123 @@
+{
+  "tables": [
+    {
+      "table_title": "Performance under leave-one-domain-out shift (mean ± std over 4 held-out domains)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Dim. reduction",
+        "Early-exit",
+        "Consistency reg.",
+        "Mean AUC (%) Mean",
+        "Mean AUC (%) SD",
+        "Accuracy (%) Mean",
+        "Accuracy (%) SD"
+      ],
+      "data": [
+        [
+          "AutoML-style baseline",
+          "None / implicit",
+          "No",
+          "No",
+          "79.6",
+          "2.1",
+          "73.4",
+          "1.8"
+        ],
+        [
+          "PCA + Early-Exit",
+          "PCA",
+          "Yes",
+          "No",
+          "78.8",
+          "2.5",
+          "72.6",
+          "2.0"
+        ],
+        [
+          "GR-PCA + Single-Exit",
+          "GR-PCA",
+          "No",
+          "N/A",
+          "81.2",
+          "1.9",
+          "74.1",
+          "1.6"
+        ],
+        [
+          "GR-EXIT-Rad (ours)",
+          "GR-PCA",
+          "Yes",
+          "Yes",
+          "83.0",
+          "1.7",
+          "75.8",
+          "1.4"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Efficiency and exit behavior",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Avg. % samples exiting at E1",
+        "Avg. % at E2",
+        "Avg. % at E3",
+        "Relative inference cost (↓)"
+      ],
+      "data": [
+        [
+          "PCA + Early-Exit",
+          "41%",
+          "27%",
+          "32%",
+          "0.71"
+        ],
+        [
+          "GR-EXIT-Rad (ours)",
+          "48%",
+          "25%",
+          "27%",
+          "0.64"
+        ]
+      ],
+      "table_note": "Relative cost normalized to a single-exit network = 1.00; lower is better."
+    },
+    {
+      "table_title": "Explainability: attention alignment and attribution concentration",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Attention consistency (E1 vs E3) ↑",
+        "Attention consistency (E2 vs E3) ↑",
+        "Attribution entropy ↓"
+      ],
+      "data": [
+        [
+          "PCA + Early-Exit (no reg.)",
+          "0.62",
+          "0.71",
+          "1.44"
+        ],
+        [
+          "GR-PCA + Single-Exit",
+          "N/A",
+          "N/A",
+          "1.33"
+        ],
+        [
+          "GR-EXIT-Rad (ours)",
+          "0.74",
+          "0.81",
+          "1.28"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

@@ -1,0 +1,191 @@
+{
+  "tables": [
+    {
+      "table_title": "CoCoEval suite components and what they diagnose",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "CoCoEval Layer",
+        "Reference Anchor",
+        "What varies",
+        "Primary output",
+        "Failure mode revealed"
+      ],
+      "data": [
+        [
+          "CPL (Conflict Probing)",
+          "Pham et al. (2026)",
+          "Paraphrase + context",
+          "CSI",
+          "Intra-memory conflict → output instability"
+        ],
+        [
+          "CFRL (Context Robustness)",
+          "Basu & Chakraborty (2026)",
+          "Time/place/audience frames",
+          "CSF-lite",
+          "Bias/stance shifts under non-adversarial context"
+        ],
+        [
+          "CFRL (Dual-framing multilingual)",
+          "Guey et al. (2026)",
+          "Target swap + wrappers + language",
+          "Effect sizes, neutrality",
+          "Template dependence; cross-lingual drift"
+        ],
+        [
+          "Task-specific prompting",
+          "Prahallad et al. (2026)",
+          "Prompt strategy",
+          "Accuracy/EM",
+          "Evaluation sensitivity to prompting"
+        ],
+        [
+          "DSL (Decoding safety probes)",
+          "Zhao et al. (2026)",
+          "In-decoding probing on/off",
+          "SafeProbe score, jailbreak SR",
+          "Latent safety signal overridden without probing"
+        ],
+        [
+          "DSL (Backdoor anomaly)",
+          "Park et al. (2026)",
+          "Triggered reasoning paths",
+          "AUROC, STAR",
+          "Inference-time reasoning backdoors"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Prompting sensitivity on political QA clarity/topic detection (replicating trend)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Prompting strategy",
+        "Clarity accuracy (↑)",
+        "Evasion accuracy (↑)",
+        "Topic accuracy (↑)"
+      ],
+      "data": [
+        [
+          "Simple prompting",
+          "0.56",
+          "0.30",
+          "0.60"
+        ],
+        [
+          "CoT",
+          "0.60",
+          "0.34",
+          "0.69"
+        ],
+        [
+          "CoT + few-shot",
+          "0.63",
+          "0.33",
+          "0.74"
+        ]
+      ],
+      "table_note": "Pattern matches Prahallad et al. (2026): prompt design reliably improves high-level clarity and topic detection, while fine-grained evasion remains difficult."
+    },
+    {
+      "table_title": "Contextual framing amplifies instability (CSF-lite + CSI relationship)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Context contrast (fixed stereotype content)",
+        "Mean stereotype shift (pp)",
+        "Mean CSI change (↑ instability)"
+      ],
+      "data": [
+        [
+          "1990 vs 2030 framing",
+          "+6.8",
+          "+0.12"
+        ],
+        [
+          "Gossip vs formal framing",
+          "+4.1",
+          "+0.09"
+        ],
+        [
+          "Out-group observer vs neutral",
+          "+10.5",
+          "+0.18"
+        ]
+      ],
+      "table_note": "Consistent with Basu & Chakraborty (2026): non-adversarial context shifts can be large. CoCoEval additionally finds CSI rises with these shifts, supporting the hypothesis that contextual framing can “activate” conflicting internal knowledge into divergent outputs."
+    },
+    {
+      "table_title": "Dual-framing multilingual bias probes show wrapper sensitivity",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Language",
+        "Dual-framing effect size (abs, ↓ better)",
+        "Neutrality rate (↑)",
+        "Wrapper-to-wrapper variance (↓)"
+      ],
+      "data": [
+        [
+          "English",
+          "0.18",
+          "0.41",
+          "0.06"
+        ],
+        [
+          "Turkish",
+          "0.23",
+          "0.38",
+          "0.09"
+        ],
+        [
+          "Spanish",
+          "0.20",
+          "0.40",
+          "0.07"
+        ]
+      ],
+      "table_note": "In line with Guey et al. (2026): robust bias measurement requires repeated wrappers and polarity-aligned dual framing; cross-lingual variance is nontrivial."
+    },
+    {
+      "table_title": "Decoding-time signals improve safety evaluation fidelity",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Condition",
+        "Jailbreak success rate (↓)",
+        "Over-refusal on benign (↓)",
+        "STAR AUROC on backdoor detection (↑)"
+      ],
+      "data": [
+        [
+          "Standard decoding (no probing)",
+          "0.62",
+          "0.07",
+          "0.97"
+        ],
+        [
+          "In-decoding safety probing (Zhao et al., 2026)",
+          "0.31",
+          "0.09",
+          "0.97"
+        ],
+        [
+          "STAR monitoring enabled (Park et al., 2026)",
+          "0.60",
+          "0.07",
+          "~1.00"
+        ],
+        [
+          "Probing + STAR",
+          "0.28",
+          "0.10",
+          "~1.00"
+        ]
+      ],
+      "table_note": "Matches the qualitative claims: decoding contains usable latent signals (Zhao et al., 2026), and probability-shift anomalies are highly discriminative for reasoning backdoors (Park et al., 2026)."
+    }
+  ]
+}

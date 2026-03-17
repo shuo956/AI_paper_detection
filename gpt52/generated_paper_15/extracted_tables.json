@@ -1,0 +1,144 @@
+{
+  "tables": [
+    {
+      "table_title": "Placement quality across scenarios (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Scenario",
+        "K8s Standard PU",
+        "Semantic-LMM PU",
+        "SAGE-Sched PU"
+      ],
+      "data": [
+        [
+          "S1: Simple affinity",
+          "78.2",
+          "89.5",
+          "90.1"
+        ],
+        [
+          "S2: Quantitative preference",
+          "62.4",
+          "85.0",
+          "91.7"
+        ],
+        [
+          "S3: Conflicting soft prefs",
+          "55.1",
+          "83.2",
+          "88.9"
+        ],
+        [
+          "S4: Topology spread",
+          "74.0",
+          "86.1",
+          "87.0"
+        ],
+        [
+          "S5: Noisy-neighbor avoidance",
+          "58.7",
+          "80.4",
+          "89.3"
+        ],
+        [
+          "S6: Compliance + performance",
+          "69.5",
+          "84.7",
+          "90.6"
+        ]
+      ],
+      "table_note": "A composite Placement Utility (PU) score combines: constraint satisfaction (hard=must), preference satisfaction, and predicted QoS improvement. Scores normalized to [0, 100]."
+    },
+    {
+      "table_title": "Scheduling latency breakdown (milliseconds; lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Intent resolution (p50)",
+        "Intent resolution (p95)",
+        "Candidate scoring (p50)",
+        "Candidate scoring (p95)",
+        "Total extender time (p50)",
+        "Total extender time (p95)"
+      ],
+      "data": [
+        [
+          "Semantic-LMM (sync LLM)",
+          "220",
+          "640",
+          "18",
+          "35",
+          "245",
+          "690"
+        ],
+        [
+          "SAGE-Sched (memory-hit)",
+          "12",
+          "30",
+          "26",
+          "55",
+          "41",
+          "95"
+        ],
+        [
+          "SAGE-Sched (LLM fallback)",
+          "210",
+          "610",
+          "28",
+          "60",
+          "250",
+          "700"
+        ]
+      ],
+      "table_note": "Measured as p50 / p95 per scheduling decision."
+    },
+    {
+      "table_title": "QoS prediction error (lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "MAE (Response Time)",
+        "MAE (Error Probability)"
+      ],
+      "data": [
+        [
+          "Simple regressor (non-iterative)",
+          "0.142",
+          "0.061"
+        ],
+        [
+          "SA-MoE (self-augmented)",
+          "0.108",
+          "0.045"
+        ]
+      ],
+      "table_note": "Mean Absolute Error (MAE) on held-out workload-node observations."
+    },
+    {
+      "table_title": "Explanation stability under correlated telemetry",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Explainer",
+        "Stability (Top-5 rank corr.)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Perturbation-based (generic)",
+          "0.62",
+          "Sensitive to correlated metrics"
+        ],
+        [
+          "ExCIR",
+          "0.81",
+          "Single-pass, correlation-aware (Sengupta et al., 2026)"
+        ]
+      ],
+      "table_note": "Stability measured as average rank-correlation of top-5 features across bootstrap resamples (higher is better)."
+    }
+  ]
+}

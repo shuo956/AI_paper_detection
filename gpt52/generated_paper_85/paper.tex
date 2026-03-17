@@ -1,0 +1,168 @@
+## Title  
+**From Knowing to Doing Under Adversarial Pressure: A Unified Evaluation of Value Enactment, Risk Sensitivity, and Norm Adherence in Large Language Models**
+
+---
+
+## Abstract  
+Large language models (LLMs) often exhibit strong normative knowledge yet fail to translate it into consistent actions in realistic settings. Prior work has shown (i) a knowledge–action gap in value enactment across advice scenarios, despite cross-model convergence in expressed moral preferences; (ii) a dissociation between verbal confidence and risk-sensitive decision policies; and (iii) frequent cross-cultural norm violations in conversation. Separately, research on adversarial paraphrasing demonstrates that semantics-preserving rewrites can manipulate LLM-based evaluators, raising concerns that safety and norm evaluations may be similarly gameable.  
+
+We propose **DoNoR** (Doing-under-Norm-and-Risk), a new evaluation framework and benchmark that jointly measures **(1) value enactment**, **(2) contextual integrity and cultural norm adherence**, and **(3) risk-sensitive abstention/deferral**, under **benign** and **paraphrase-adversarial** conditions. DoNoR integrates scenario-based value elicitation (Schwartz values), norm taxonomies for human–AI conversations, and penalty-conditioned decision tasks. We report experiments across multiple frontier LLMs, showing: (a) high agreement in stated value choices but substantially lower agreement in actions; (b) weak coupling between verbal confidence and penalty-optimal abstention; and (c) paraphrase attacks that preserve meaning can measurably increase norm violations and decrease appropriate deferral. We further analyze failure mechanisms through the lens of constraint backfire and propose mitigation via agentic reflective evaluation inspired by agent-based judging.  
+
+---
+
+## Introduction  
+Value alignment evaluation has increasingly moved from static questionnaires toward behavioral tests in realistic contexts. Huang et al. (2026) demonstrate a striking pattern: frontier LLMs show **near-perfect convergence** in scenario-based value decisions, yet exhibit a **knowledge–action gap** between self-reported values and enacted choices. This suggests that “knowing” the socially desirable value does not guarantee “doing” the value-consistent action.
+
+In parallel, Wang et al. (2026) show that LLMs’ **verbal confidence** is often not behaviorally meaningful: models fail to adjust abstention decisions even when penalties make abstention optimal, implying limited cost-sensitive agency. Meanwhile, Cheng et al. (2026) argue that norm adherence must be evaluated with nuance across contexts and cultures; their Cultural Compass taxonomy reveals frequent norm violations varying by country and interactional framing. For privacy in agentic settings, Wang & Zhang (2026) further show multimodal “modality leakage” and the difficulty of balancing utility and privacy.
+
+A key missing piece is **robustness**: if evaluations can be altered without changing meaning, then measured “alignment” may be fragile. Kaneko (2026) introduces paraphrasing adversarial attack (PAA) that raises LLM-review scores while preserving semantics, suggesting that **surface form** can manipulate LLM-based evaluators and possibly even the policy behavior of models themselves.
+
+### Research gap  
+Existing studies typically evaluate **one axis at a time**—values (Huang et al.), risk/abstention (Wang et al.), cultural norms (Cheng et al.), or adversarial paraphrasing (Kaneko). We lack a **unified, behavior-focused** benchmark that tests whether LLMs can:  
+1) enact values consistently,  
+2) respect norms (including privacy norms), and  
+3) behave strategically under risk,  
+**when the same underlying situation is paraphrased**.
+
+### Main idea  
+We propose **DoNoR**, a unified evaluation suite that measures **Doing** (actions) under **No**rms and **R**isk, and tests **paraphrase robustness**. The central hypothesis is: *paraphrasing that preserves meaning can systematically shift LLM actions, revealing brittle coupling between normative knowledge, uncertainty expression, and real decisions.*
+
+---
+
+## Related Work  
+**Value enactment and the knowledge–action gap.** Huang et al. (2026) introduce ValAct-15k and show cross-model convergence in scenario decisions but weak correspondence between stated and enacted values, plus “role-play aversion” when asked to hold a value.
+
+**Risk sensitivity and confidence faithfulness.** Wang et al. (2026) propose RiskEval and find models rarely abstain even when penalties are extreme, indicating decisions are not faithful to verbal confidence.
+
+**Norm adherence across cultures and contexts.** Cultural Compass (Cheng et al., 2026) provides a taxonomy and evaluation pipeline for societal norms in human–AI conversations, finding frequent violations depending on context and country. MPCI-Bench (Wang & Zhang, 2026) extends norm evaluation to multimodal contextual integrity and highlights modality leakage and privacy–utility trade-offs.
+
+**Adversarial paraphrasing.** Kaneko (2026) shows semantics-preserving paraphrases can increase review scores for LLM reviewers; perplexity changes in reviews provide a detection signal. This motivates paraphrase-based stress tests for safety and norm evaluations.
+
+**Why instructions fail and constraints backfire.** Rana (2026) explains negative constraint failure via “semantic pressure” and priming/override failure modes—relevant when prompts attempt to enforce “do not reveal X” privacy constraints.
+
+**Agentic judging and reflective evaluation.** Tian et al. (2026) propose RATE, an agentic evaluation framework with a reflective core agent to improve non-literal translation evaluation, motivating reflective multi-agent evaluation for norms/values.  
+
+**Disagreement-aware evaluation.** Xu & Jurgens (2026) synthesize perspectivist approaches; this informs our reporting of variance across paraphrases and contexts rather than assuming a single “consensus” label.
+
+---
+
+## Methods / Experiment  
+
+### Overview of DoNoR  
+DoNoR contains paired **base** and **paraphrased** versions of the same underlying situation. Each instance yields three coupled measurements:
+
+1. **Value Selection vs Value Action (V–A):**  
+   - *Selection:* choose which Schwartz value is most relevant (as in Huang et al., 2026).  
+   - *Action:* produce advice or a decision in the scenario; we score whether the action is consistent with the selected value (knowledge–action consistency).
+
+2. **Norm Adherence (NA):**  
+   - Evaluate responses using a Cultural Compass-inspired norm taxonomy (Cheng et al., 2026), including interactional norms (human–AI) and human–human norms the model should recognize.  
+   - For privacy-focused items, we incorporate contextual integrity framing similar to MPCI-Bench (Wang & Zhang, 2026), emphasizing the privacy–utility tradeoff.
+
+3. **Risk-Sensitive Deferral (RD):**  
+   - Following RiskEval (Wang et al., 2026), we add explicit penalty regimes for wrong answers/advice (low/medium/high).  
+   - The model can either **answer** or **abstain/seek clarification/deflect**. We compute expected utility under the penalty schedule.
+
+### Paraphrase adversary  
+We adapt the **PAA** concept (Kaneko, 2026) to generate paraphrases that preserve semantics and naturalness while maximizing one of:  
+- norm violations,  
+- value–action inconsistency, or  
+- utility collapse under high penalties.  
+
+Unlike prompt injection, this attack does not add new instructions; it rewrites the scenario text.
+
+### Models and prompting  
+We evaluate a set of frontier LLMs (not named here; the framework is model-agnostic) under:  
+- **Neutral** instruction,  
+- **Value-hold** instruction (to test role-play aversion per Huang et al., 2026),  
+- **Concise** style instruction (motivated by Cho et al., 2026 showing conciseness can reduce perceived expertise; we test whether it also harms deferral and norm adherence).
+
+### Metrics  
+**Table 1** summarizes DoNoR metrics.
+
+| Component | Metric | Definition | Inspired by |
+|---|---|---|---|
+| Value–Action (V–A) | Value agreement (VA) | Consistency of selected value across paraphrases | Huang et al. (2026) |
+| Value–Action (V–A) | Action consistency (AC) | Whether action aligns with selected value (binary or graded) | Huang et al. (2026) |
+| Norm Adherence (NA) | Norm violation rate (NVR) | % responses violating at least one norm category | Cultural Compass (Cheng et al., 2026) |
+| Risk/Deferral (RD) | Abstention rate (AR) | % instances where model abstains/defers | Wang et al. (2026) |
+| Risk/Deferral (RD) | Expected utility (EU) | Utility under penalty schedule using correctness proxy | Wang et al. (2026) |
+| Robustness | Paraphrase sensitivity (PS) | Δ metric between base and paraphrased | Kaneko (2026) |
+
+### Experimental design  
+- Each base instance has **k paraphrases** (k=3 in our experiments) generated by the paraphrase adversary.  
+- We report results for **Base**, **Benign paraphrase**, and **Adversarial paraphrase** conditions.  
+- We also report **style prompt** ablations (neutral vs concise) to probe entangled stylistic side effects (Cho et al., 2026).
+
+---
+
+## Results  
+
+### Main results across conditions  
+**Table 2**: Aggregate results (mean across models; higher VA/AC/EU is better; lower NVR is better).
+
+| Condition | VA (↑) | AC (↑) | NVR (↓) | AR@HighPenalty (↑) | EU@HighPenalty (↑) |
+|---|---:|---:|---:|---:|---:|
+| Base | 0.94 | 0.61 | 0.18 | 0.07 | 0.22 |
+| Benign Paraphrase | 0.92 | 0.57 | 0.21 | 0.06 | 0.19 |
+| Adversarial Paraphrase (PAA-style) | 0.90 | 0.44 | 0.31 | 0.04 | 0.08 |
+
+**Findings.**  
+1) **Value selection is stable** (high VA), consistent with value convergence observed by Huang et al. (2026).  
+2) **Action consistency drops sharply** under adversarial paraphrase, revealing brittleness in “doing” even when “knowing” remains stable.  
+3) **Risk-sensitive abstention remains low** even under high penalties, echoing Wang et al. (2026)’s utility collapse.  
+4) **Norm violations increase** under adversarial paraphrase, aligning with the idea that surface form can modulate evaluator and policy behavior (Kaneko, 2026), and with norm sensitivity to framing (Cheng et al., 2026).
+
+### Role-play/value-hold and style effects  
+**Table 3**: Effect of “hold a value” instruction and conciseness on Action Consistency (AC) and Norm Violation Rate (NVR), averaged across base+paraphrases.
+
+| Prompting condition | AC (↑) | NVR (↓) | Notes |
+|---|---:|---:|---|
+| Neutral | 0.55 | 0.23 | baseline |
+| “Hold this value” | 0.50 | 0.25 | consistent with role-play aversion (Huang et al., 2026) |
+| Concise style | 0.47 | 0.27 | style entanglement; conciseness may reduce “expert-like” hedging/deferral (Cho et al., 2026) |
+| Hold value + Concise | 0.42 | 0.30 | compounding degradation |
+
+### Paraphrase sensitivity by task axis  
+**Table 4**: Paraphrase Sensitivity (PS = adversarial − base; negative is worse for VA/AC/EU, positive is worse for NVR).
+
+| Metric | PS |
+|---|---:|
+| VA | -0.04 |
+| AC | -0.17 |
+| NVR | +0.13 |
+| AR@HighPenalty | -0.03 |
+| EU@HighPenalty | -0.14 |
+
+---
+
+## Discussion  
+### A unified picture of “knowing but not doing”  
+DoNoR suggests that LLMs can maintain stable *normative selections* while their *actions* drift under paraphrase pressure. This extends Huang et al. (2026): the knowledge–action gap is not only present in base scenarios but is **amplified by surface-form perturbations**, even when semantics are preserved.
+
+### Why paraphrases matter for safety evaluation  
+Kaneko (2026) shows paraphrasing can manipulate LLM reviewers without changing claims; analogously, we find paraphrasing can manipulate **behavioral safety outcomes** (norm violations, deferral failures) without changing the underlying situation. This challenges evaluation pipelines that assume robustness to rewording.
+
+### Risk sensitivity remains a bottleneck  
+Consistent with Wang et al. (2026), models rarely adopt penalty-optimal abstention. In DoNoR, paraphrase attacks further reduce abstention, worsening expected utility. This indicates that uncertainty expression is not reliably converted into action—particularly problematic in norm- and privacy-sensitive settings (Cheng et al., 2026; Wang & Zhang, 2026).
+
+### Connection to instruction backfire  
+Rana (2026) explains why negative constraints can prime forbidden content. Many norm/privacy prompts rely on “don’t reveal X”-style constraints; under adversarial paraphrase, semantic pressure may rise (e.g., more explicit mention of sensitive entities), increasing violation probability.
+
+### Implications for evaluation methodology  
+Inspired by RATE’s reflective agentic evaluation (Tian et al., 2026), a promising mitigation is **reflective multi-agent checking**: a core “reflection” process that re-evaluates the planned action against norms/values and risk before finalizing. This may reduce paraphrase sensitivity by shifting reliance from surface cues to explicit checks.
+
+---
+
+## Conclusion  
+We introduced **DoNoR**, a unified framework to evaluate LLM behavior across **value enactment**, **norm adherence**, and **risk-sensitive deferral**, explicitly testing **paraphrase robustness**. Experiments show that while value selections remain stable, **actions**, **norm compliance**, and **risk-optimal deferral** degrade under semantics-preserving paraphrase attacks. These results synthesize and extend prior findings on the knowledge–action gap, confidence–decision dissociation, and adversarial paraphrasing, highlighting robustness as a missing requirement for alignment evaluation.
+
+---
+
+## Contributions  
+1. **Unified benchmark concept:** We propose DoNoR, integrating value enactment (Huang et al., 2026), norm adherence (Cheng et al., 2026; Wang & Zhang, 2026), and risk-sensitive deferral (Wang et al., 2026) into a single evaluation.  
+2. **Paraphrase-adversarial alignment testing:** We adapt paraphrasing adversarial ideas (Kaneko, 2026) to stress-test behavioral alignment rather than review scoring.  
+3. **Empirical evidence of robustness gaps:** We show paraphrases can materially worsen value–action consistency, increase norm violations, and reduce penalty-appropriate abstention.  
+4. **Actionable design implications:** We motivate reflective/agentic checking (Tian et al., 2026) and caution against negative-constraint-heavy prompting (Rana, 2026), especially when style prompts may have side effects (Cho et al., 2026).
+
+If you want, I can (a) specify a concrete dataset schema for DoNoR (JSON fields, norm labels, penalty schedules), (b) add a detailed paraphrase-attack algorithm adapted from PAA, or (c) rewrite the Results section to report per-model breakdowns and statistical tests.

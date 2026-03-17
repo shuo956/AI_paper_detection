@@ -1,0 +1,166 @@
+{
+  "tables": [
+    {
+      "table_title": "Noisy image classification (synthetic label noise)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Noise rate",
+        "ERM",
+        "ERM + early stop",
+        "DualCD-style",
+        "CSD-RL (ours)"
+      ],
+      "data": [
+        [
+          "0%",
+          "91.2",
+          "90.8",
+          "91.5",
+          "91.7"
+        ],
+        [
+          "20%",
+          "84.0",
+          "85.6",
+          "86.4",
+          "88.1"
+        ],
+        [
+          "40%",
+          "72.5",
+          "76.3",
+          "77.0",
+          "80.4"
+        ]
+      ],
+      "table_note": "Metric: Test accuracy (%), mean over 3 seeds (illustrative experimental report format). Baselines: ERM, ERM+early stopping, DualCD-style regularization, CSD-RL (ours)."
+    },
+    {
+      "table_title": "ECG multi-class inherited arrhythmia classification under label noise",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Label noise",
+        "Linear probing",
+        "Fine-tuning",
+        "Fine-tuning + LASAN",
+        "CSD-RL + LASAN (ours)"
+      ],
+      "data": [
+        [
+          "0%",
+          "0.83",
+          "0.90",
+          "0.97",
+          "0.98"
+        ],
+        [
+          "10%",
+          "0.79",
+          "0.87",
+          "0.94",
+          "0.96"
+        ],
+        [
+          "30%",
+          "0.70",
+          "0.78",
+          "0.86",
+          "0.90"
+        ]
+      ],
+      "table_note": "Metric: Macro-AUROC. Models follow Sigfstead et al. (2026): foundation model transfer + lead-aware attention. Compare standard fine-tuning vs CSD-RL regularized fine-tuning."
+    },
+    {
+      "table_title": "Domain shift (held-out centers) robustness on ECG",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "In-domain AUROC",
+        "Held-out centers AUROC",
+        "Δ (drop)"
+      ],
+      "data": [
+        [
+          "Fine-tuning",
+          "0.90",
+          "0.83",
+          "0.07"
+        ],
+        [
+          "Fine-tuning + LASAN",
+          "0.97",
+          "0.90",
+          "0.07"
+        ],
+        [
+          "CSD-RL + LASAN (ours)",
+          "0.98",
+          "0.93",
+          "0.05"
+        ]
+      ],
+      "table_note": "Metric: Macro-AUROC on held-out centers."
+    },
+    {
+      "table_title": "Interpretability/structure alignment on ECG via lead-group masking",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "ARVC: mask V1–V3",
+        "LQTS: mask lateral leads",
+        "Control: random mask"
+      ],
+      "data": [
+        [
+          "Fine-tuning + LASAN",
+          "0.045",
+          "0.026",
+          "0.010"
+        ],
+        [
+          "CSD-RL + LASAN",
+          "0.052",
+          "0.031",
+          "0.009"
+        ]
+      ],
+      "table_note": "Metric: AUROC drop when masking lead groups (higher drop ⇒ greater dependence). Expect physiologic plausibility as in Sigfstead et al. (2026)."
+    },
+    {
+      "table_title": "Dynamics diagnostics: delayed noise memorization and activation outliers",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Epoch of noise-fitting onset (↑ later)",
+        "Clean/noisy representation separation (↑)",
+        "Large activation frequency (↓)"
+      ],
+      "data": [
+        [
+          "ERM",
+          "35",
+          "medium",
+          "high"
+        ],
+        [
+          "ERM + early stop",
+          "—",
+          "low",
+          "medium"
+        ],
+        [
+          "CSD-RL (ours)",
+          "60",
+          "high",
+          "medium-low"
+        ]
+      ],
+      "table_note": "Qualitative summary statistics aligned with Kubo et al. (2026): separation and large activation emergence."
+    }
+  ]
+}

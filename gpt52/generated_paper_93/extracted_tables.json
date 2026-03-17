@@ -1,0 +1,125 @@
+{
+  "tables": [
+    {
+      "table_title": "Main outcomes (rubric satisfaction, leakage, and efficiency)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "CRS Overall ↑",
+        "Cognitive Engagement ↑",
+        "Formative Assessment ↑",
+        "Metacognition ↑",
+        "Solution Leakage Rate ↓",
+        "Tokens / Dialogue ↓"
+      ],
+      "data": [
+        [
+          "B0: Base Tutor",
+          "0.41",
+          "0.38",
+          "0.35",
+          "0.29",
+          "0.34",
+          "1.00×"
+        ],
+        [
+          "B1: ConvoLearn-IT",
+          "0.62",
+          "0.66",
+          "0.58",
+          "0.51",
+          "0.18",
+          "1.05×"
+        ],
+        [
+          "B2: B1 + ACE-Tutor",
+          "0.64",
+          "0.67",
+          "0.60",
+          "0.52",
+          "0.17",
+          "0.82×"
+        ],
+        [
+          "B3: PACE-Tutor (full)",
+          "**0.71**",
+          "**0.74**",
+          "**0.69**",
+          "**0.61**",
+          "**0.12**",
+          "**0.84×**"
+        ]
+      ],
+      "table_note": "ConvoLearn instruction tuning yields a large gain in constructivist behavior (B1 vs B0), consistent with Sharma et al. (2026). Adding ACE primarily improves efficiency (tokens) while preserving rubric quality (B2). Process-aligned RL further improves rubric satisfaction and reduces solution leakage (B3), aligning with the motivation of RM-NLHF that process signals better shape behavior than outcome-only rewards (Wang et al., 2026)."
+    },
+    {
+      "table_title": "Effect of process reward and SAE on RL stability",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "RL Variant (starting from B2)",
+        "Reward Type",
+        "Advantage Estimator",
+        "Training Instability (↓)",
+        "Final CRS Overall (↑)"
+      ],
+      "data": [
+        [
+          "R1",
+          "Outcome-only (binary)",
+          "GAE",
+          "High",
+          "0.66"
+        ],
+        [
+          "R2",
+          "Process reward (NL feedback similarity)",
+          "GAE",
+          "Medium",
+          "0.69"
+        ],
+        [
+          "R3 (PACE)",
+          "Process reward (NL feedback similarity)",
+          "**SAE**",
+          "**Low**",
+          "**0.71**"
+        ]
+      ],
+      "table_note": "Process rewards improve final pedagogical quality (R2>R1), consistent with RM-NLHF’s critique of binary supervision (Wang et al., 2026). SAE improves stability and final quality under long-context RL (R3), consistent with Gong et al. (2026)."
+    },
+    {
+      "table_title": "Retrieval behavior under ACE-Tutor",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Retrieval Calls / Dialogue ↓",
+        "Irrelevant Retrieval Rate ↓",
+        "CRS Overall ↑"
+      ],
+      "data": [
+        [
+          "Retrieval-every-turn baseline",
+          "20.0",
+          "0.31",
+          "0.60"
+        ],
+        [
+          "B2: ACE-Tutor",
+          "**8.4**",
+          "**0.14**",
+          "0.64"
+        ],
+        [
+          "B3: PACE-Tutor",
+          "8.1",
+          "0.13",
+          "**0.71**"
+        ]
+      ],
+      "table_note": "ACE reduces redundant retrieval and irrelevant context, matching the central claim of ACE (Chen et al., 2026). The pedagogical gains in B3 come mainly from process-aligned RL rather than additional retrieval."
+    }
+  ]
+}

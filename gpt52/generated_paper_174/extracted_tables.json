@@ -1,0 +1,160 @@
+{
+  "tables": [
+    {
+      "table_title": "Table 1 — Component mapping and expected bottleneck addressed",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Component in MOSAIC-RAG",
+        "Primary reference",
+        "Bottleneck addressed",
+        "Mechanism"
+      ],
+      "data": [
+        [
+          "Tree-then-Stream Retrieval",
+          "Shi et al. (RT-RAG, 2026); Zhang et al. (FaTRQ, 2026)",
+          "Multi-hop error propagation; refinement I/O",
+          "Reasoning-tree decomposition + far-memory residual streaming refinement"
+        ],
+        [
+          "Executive Retrieval Memory",
+          "Qian et al. (MemoBrain, 2026)",
+          "Context overflow; loss of logical continuity",
+          "Dependency-aware pruning/folding/pinning under budget"
+        ],
+        [
+          "Critical-Step Routing",
+          "Kapoor et al. (TRIM, 2026)",
+          "Overuse of expensive models",
+          "Route only high-risk nodes/steps"
+        ],
+        [
+          "Parallel Context-of-Experts Decoding",
+          "Corallo & Papotti (Pced, 2026)",
+          "Prefill bottleneck; broken cross-doc reasoning",
+          "Decode-time expert logit synchronization"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Table 2 — End-to-end comparison (quality and efficiency)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Multi-hop QA EM ↑",
+        "Multi-hop QA F1 ↑",
+        "Agent Success ↑",
+        "p95 Retrieval Latency ↓",
+        "Tokens / task ↓",
+        "Expensive-model tokens (%) ↓"
+      ],
+      "data": [
+        [
+          "Standard Iterative RAG (concat)",
+          "—",
+          "—",
+          "—",
+          "High",
+          "High",
+          "High"
+        ],
+        [
+          "RT-RAG only",
+          "—",
+          "—",
+          "—",
+          "High",
+          "High",
+          "High"
+        ],
+        [
+          "MemoBrain only",
+          "—",
+          "—",
+          "↑",
+          "High",
+          "↓",
+          "High"
+        ],
+        [
+          "TRIM only",
+          "—",
+          "—",
+          "—",
+          "High",
+          "—",
+          "↓"
+        ],
+        [
+          "MOSAIC-RAG (full)",
+          "↑",
+          "↑",
+          "↑",
+          "Low",
+          "Low",
+          "Low"
+        ]
+      ],
+      "table_note": "Representative results format; to be filled with measured values in an implementation study."
+    },
+    {
+      "table_title": "Table 3 — Ablation study (systems vs. reasoning controls)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Far-memory refinement (FaTRQ)",
+        "ERM (MemoBrain-like)",
+        "CSR (TRIM-like)",
+        "Pced decoding",
+        "Expected outcome"
+      ],
+      "data": [
+        [
+          "A",
+          "✗",
+          "✗",
+          "✗",
+          "✗",
+          "Baseline bottlenecks persist"
+        ],
+        [
+          "B",
+          "✓",
+          "✗",
+          "✗",
+          "✗",
+          "Latency/throughput improves; reasoning still brittle"
+        ],
+        [
+          "C",
+          "✓",
+          "✓",
+          "✗",
+          "✗",
+          "Better long-horizon stability; may overuse strong model"
+        ],
+        [
+          "D",
+          "✓",
+          "✓",
+          "✓",
+          "✗",
+          "Best cost-quality tradeoff when prompts are moderate"
+        ],
+        [
+          "E",
+          "✓",
+          "✓",
+          "✓",
+          "✓",
+          "Best when many docs; reduces prefill bottleneck"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

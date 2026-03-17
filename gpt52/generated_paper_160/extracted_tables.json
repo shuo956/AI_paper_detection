@@ -1,0 +1,136 @@
+{
+  "tables": [
+    {
+      "table_title": "Interior field accuracy under OOD geometries (lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Train N",
+        "In-distribution Rel. L2 ↓",
+        "OOD Geometry Rel. L2 ↓"
+      ],
+      "data": [
+        [
+          "U-Net (conv baseline)",
+          "20",
+          "0.082",
+          "0.214"
+        ],
+        [
+          "Boundary-only (MAD-BNO-style)",
+          "20",
+          "0.095",
+          "0.201"
+        ],
+        [
+          "Procedure-only (DiSOL-style)",
+          "20",
+          "0.074",
+          "0.168"
+        ],
+        [
+          "BPAS (ours)",
+          "20",
+          "0.061",
+          "0.132"
+        ],
+        [
+          "U-Net (conv baseline)",
+          "100",
+          "0.051",
+          "0.162"
+        ],
+        [
+          "Procedure-only (DiSOL-style)",
+          "100",
+          "0.043",
+          "0.121"
+        ],
+        [
+          "BPAS (ours)",
+          "100",
+          "0.037",
+          "0.089"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Boundary consistency and derivative fidelity (OOD)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Boundary RMSE ↓",
+        "Neumann RMSE ↓",
+        "Gradient RMSE ↓"
+      ],
+      "data": [
+        [
+          "U-Net (no Sobolev)",
+          "0.118",
+          "0.203",
+          "0.291"
+        ],
+        [
+          "U-Net + Sobolev",
+          "0.110",
+          "0.190",
+          "0.214"
+        ],
+        [
+          "Procedure-only + Sobolev",
+          "0.091",
+          "0.161",
+          "0.187"
+        ],
+        [
+          "BPAS + Sobolev (ours)",
+          "0.072",
+          "0.133",
+          "0.141"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation study on BPAS (OOD geometry Rel. L2)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "OOD Rel. L2 ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "BPAS full",
+          "0.132",
+          "boundary + procedure + Sobolev + rollout"
+        ],
+        [
+          "– boundary module",
+          "0.156",
+          "loses boundary-only regularization (Wu et al., 2026 link)"
+        ],
+        [
+          "– procedure factorization",
+          "0.171",
+          "less robust to discrete geometry shifts (Bai et al., 2026 link)"
+        ],
+        [
+          "– Sobolev loss",
+          "0.149",
+          "worse derivative fidelity (Haim et al., 2026 link)"
+        ],
+        [
+          "– solver-consistent rollout",
+          "0.143",
+          "less stable time evolution (Shomberg, 2026 link)"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

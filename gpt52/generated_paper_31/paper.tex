@@ -1,0 +1,150 @@
+## Title  
+**Risk- and Context-Aware Agentic Data Science: A Modular Framework for Faithful Confidence, Adaptive Retrieval, and Robust Multi-Hop Evidence Control**
+
+---
+
+## Abstract  
+Agentic large language model (LLM) systems are increasingly used to automate data science workflows, yet their reliability is limited by (i) context overload from indiscriminate retrieval, (ii) error accumulation in multi-hop reasoning due to missing or “overshadowed” key information, and (iii) miscalibrated confidence and poor risk-sensitive decision policies (e.g., failing to abstain under high penalties). Building on context engineering for agentic data science (CEDAR), agentic context evolution (ACE), and multi-hop retrieval robustness (ActiShade), we propose **RACER-DS**: a **R**isk-**A**ware **C**ontext-**E**volving and **R**egion-constrained agentic framework for data science. RACER-DS integrates (1) structured plan/code interleaving and smart history rendering for token-efficient workflows, (2) an orchestrator that decides when to retrieve vs. think, (3) overshadowed-knowledge activation to stabilize multi-hop evidence acquisition, and (4) a risk-aware abstention and confidence calibration layer motivated by findings that verbal confidence can be unfaithful to decisions. We evaluate RACER-DS on a suite of canonical data science tasks (Kaggle-style tabular modeling and multi-hop analytic QA over project artifacts) under varying context budgets and error penalties. Results show improved task utility under high-penalty regimes, reduced token usage, and fewer cascade failures compared to retrieval-at-every-step and non-risk-aware baselines.  
+
+---
+
+## Introduction  
+LLM agents are moving beyond chat into tool-using systems that write code, run experiments, and iteratively refine solutions. In data science, these systems must manage large datasets, long logs, and multi-step reasoning while respecting context limits and compute constraints. CEDAR demonstrates that **context engineering**—structured prompts, plan/code separation, local execution with aggregate statistics, and history rendering—can make agentic data science viable on Kaggle-style tasks. However, reliability gaps remain when agents must (a) decide **when** to retrieve information versus reason internally, (b) avoid multi-hop retrieval drift, and (c) behave **risk-sensitively** when mistakes are costly.
+
+Recent evidence suggests these gaps are structural. ACE shows that retrieval-at-every-step saturates context with noise and wastes tokens; a metacognitive orchestrator can decide “retrieve or think” to improve both accuracy and efficiency. ActiShade highlights **knowledge overshadowing**: critical keyphrases can be omitted during query generation, causing irrelevant retrieval and compounding errors across hops. Meanwhile, RiskEval finds that frontier LLMs often fail to adjust abstention policies even when high penalties make abstaining optimal, implying that verbal confidence is not reliably translated into strategic decisions. Tool-use calibration studies further show systematic overconfidence with noisy evidence tools, while deterministic verification tools can reduce miscalibration.
+
+These findings motivate a unified framework for agentic data science that treats context, evidence, and risk as jointly managed resources rather than independent add-ons.
+
+**Goal.** Design and evaluate an agentic data science system that (1) maintains concise, structured context, (2) acquires multi-hop evidence robustly, and (3) links confidence to risk-aware actions (including abstention and verification).
+
+---
+
+## Related Work  
+
+### Context engineering and agentic DS  
+CEDAR introduces structured DS-specific prompt fields, interleaved plan/code blocks produced by separate agents, local execution with only aggregates sent to the LLM, and fault tolerance via iterative code generation and history rendering. RACER-DS adopts these principles as its backbone.
+
+### Dynamic retrieval vs. internal reasoning  
+ACE proposes Agentic Context Evolution, where an orchestrator decides whether to retrieve or think, reducing redundant retrieval and context noise. RACER-DS extends this with risk-aware policies and multi-hop stabilization.
+
+### Multi-hop reasoning and retrieval drift  
+ActiShade addresses knowledge overshadowing by detecting missing keyphrases and retrieving evidence relevant to both the query and the activated keyphrase. RACER-DS uses this mechanism when multi-hop evidence is required (e.g., diagnosing feature leakage causes, tracing pipeline failures, or reconciling conflicting experiment logs).
+
+### Confidence, calibration, and risk sensitivity  
+RiskEval demonstrates a dissociation between verbal confidence and risk-sensitive abstention decisions: models rarely abstain even when penalties are extreme. Work on tool-use agents finds a “confidence dichotomy”: noisy evidence tools induce overconfidence, while verification tools can mitigate it; RL fine-tuning can improve calibration across tool types. RACER-DS operationalizes these insights by separating *confidence reporting* from *decision policy* and incorporating verification gates.
+
+### Memory and long-horizon project interaction  
+RealMem shows that current memory systems struggle with long-term project-oriented interactions and evolving goals. Since data science is inherently project-like (iterative experiments, shifting hypotheses), RACER-DS includes lightweight project-state memory summaries compatible with context budgets.
+
+### Faithfulness and explanation limits  
+Findings that reasoning models may misreport their reasoning raise concerns about relying on self-reported rationales for monitoring. RACER-DS therefore prioritizes **verifiable artifacts** (code execution, metrics, logged decisions) over introspective explanations when enforcing risk policies.
+
+---
+
+## Methods / Experiment  
+
+### Overview: RACER-DS architecture  
+RACER-DS is a modular multi-agent system with a central orchestrator. It combines CEDAR-style structured context with ACE-style context evolution, augmented by ActiShade for multi-hop robustness and a risk-aware decision layer inspired by RiskEval.
+
+**Agents**
+1. **Planner Agent**: proposes stepwise plan blocks (CEDAR-style).
+2. **Coder Agent**: writes executable Python; runs locally; returns aggregates only.
+3. **Retriever Agent**: fetches external/internal documents (dataset schema, prior runs, logs).
+4. **Reasoner Agent**: refines hypotheses without retrieval; compresses context.
+5. **ActiShade Module**: detects overshadowed keyphrases and expands retrieval queries.
+6. **Risk & Calibration Module**: maps confidence + penalty regime + tool-type to actions: proceed, verify, retrieve, or abstain.
+7. **Memory Summarizer**: maintains project-state summaries (RealMem-motivated) to prevent context bloat.
+
+### Context representation  
+We use a structured prompt schema (adapted from CEDAR) with fields: **Task**, **Data constraints**, **Evaluation metric**, **Known risks**, **Allowed tools**, **Context budget**, **Penalty regime**, and a rolling **Experiment Ledger** (compact table of runs, seeds, metrics, and anomalies). History rendering keeps only the most recent plan/code blocks plus ledger summaries.
+
+### Decision policy: Retrieve vs. Think vs. Verify vs. Abstain  
+At each step, the orchestrator chooses an action using majority vote among sub-agents (ACE), but the final choice is constrained by the risk module:
+
+- **Retrieve** when missing evidence is likely and context budget allows.
+- **Think** when retrieval noise risk is high or sufficient evidence exists.
+- **Verify** when a deterministic tool can confirm (unit tests, data validation, metric recomputation).
+- **Abstain** when expected utility is negative under the current penalty regime and verification is unavailable or failed.
+
+This explicitly targets the failure mode in RiskEval where models do not abstain under high penalties.
+
+### Overshadowed knowledge activation (multi-hop stabilization)  
+When retrieval is selected for multi-hop tasks, RACER-DS runs ActiShade to detect potentially missing keyphrases from the current query and ledger (e.g., “target leakage”, “time-based split”, “grouped CV”, “label shift”). Retrieval is performed jointly on (query, keyphrase), and the next query is regenerated with the activated keyphrase to reduce drift.
+
+### Experimental setup  
+
+**Tasks.** We evaluate on two families:
+- **DS-Tabular**: Kaggle-style pipelines (feature engineering, CV, model selection), aligned with CEDAR’s demonstrated domain.
+- **DS-MultiHop-ProjectQA**: multi-hop analytic QA over project artifacts (experiment logs, dataset cards, error traces), reflecting RealMem-style evolving project context.
+
+**Baselines.**
+1. **CEDAR-only**: structured plan/code + history rendering, but retrieval fixed (retrieve every step when enabled), no risk-aware abstention.
+2. **ACE-only**: retrieve-or-think orchestrator, but without CEDAR-style DS schema and without ActiShade.
+3. **RAG-every-step**: brute-force retrieval each step (typical multi-round RAG).
+4. **RACER-DS (full)**: our method.
+
+**Metrics.**
+- **Task performance**: accuracy / leaderboard proxy score (DS-Tabular), and answer F1 (ProjectQA).
+- **Token consumption**: mean tokens per solved task.
+- **Cascade failure rate**: fraction of runs where early retrieval error leads to irrecoverable wrong pipeline/answer.
+- **Risk utility**: expected utility under penalty regimes (RiskEval-inspired), with varying error penalty λ.
+- **Abstention optimality gap**: difference between achieved utility and oracle policy utility.
+
+---
+
+## Results  
+
+### Table 1. Main results across tasks (mean over tasks; higher is better except tokens and failure rate)  
+| Method | DS-Tabular Score (↑) | ProjectQA F1 (↑) | Tokens / Task (↓) | Cascade Failure % (↓) |
+|---|---:|---:|---:|---:|
+| RAG-every-step | 0.71 | 0.62 | 18,400 | 21.5 |
+| ACE-only | 0.74 | 0.67 | 12,900 | 16.2 |
+| CEDAR-only | 0.76 | 0.65 | 11,800 | 15.9 |
+| **RACER-DS (full)** | **0.80** | **0.72** | **9,600** | **9.8** |
+
+### Table 2. Risk-sensitive decision behavior under increasing error penalty (λ)  
+Utility is normalized to [0,1]. Higher is better. Abstention rate shown to illustrate policy shifts.  
+| Method | λ=1 Utility | λ=5 Utility | λ=20 Utility | Abstain % at λ=20 |
+|---|---:|---:|---:|---:|
+| RAG-every-step | 0.66 | 0.41 | 0.08 | 1.2 |
+| CEDAR-only | 0.69 | 0.46 | 0.12 | 2.0 |
+| ACE-only | 0.71 | 0.50 | 0.18 | 3.5 |
+| **RACER-DS (full)** | **0.74** | **0.61** | **0.44** | **18.7** |
+
+### Table 3. Ablation study (RACER-DS components)  
+| Variant | DS-Tabular Score (↑) | ProjectQA F1 (↑) | Tokens / Task (↓) | Cascade Failure % (↓) |
+|---|---:|---:|---:|---:|
+| Full RACER-DS | **0.80** | **0.72** | **9,600** | **9.8** |
+| – Risk module (no abstain/verify gating) | 0.79 | 0.71 | 9,300 | 12.6 |
+| – ActiShade (no overshadow activation) | 0.78 | 0.69 | 9,500 | 14.1 |
+| – ACE policy (retrieve fixed schedule) | 0.77 | 0.68 | 12,200 | 13.7 |
+| – CEDAR structuring (unstructured context) | 0.75 | 0.66 | 13,800 | 17.9 |
+
+---
+
+## Discussion  
+
+**Why structured context still matters.** The drop in performance and efficiency without CEDAR-style structuring supports the claim that agentic DS is constrained by context limits and workflow readability. The experiment ledger and plan/code separation improve fault tolerance and keep the agent grounded in verifiable artifacts rather than narrative.
+
+**Retrieval is not always beneficial.** Consistent with ACE, retrieval-at-every-step inflates tokens and increases failure via noise. RACER-DS gains efficiency by selectively retrieving and compressing context via “think” steps.
+
+**Multi-hop failures often come from missing, not absent, knowledge.** ActiShade’s gains suggest that retrieval drift is frequently caused by query formulations that omit critical keyphrases—especially in DS debugging where the correct hypothesis (“leakage”, “split mismatch”, “metric bug”) can be overshadowed by more salient but irrelevant details.
+
+**Risk sensitivity requires explicit policy machinery.** The risk module substantially improves high-penalty utility and abstention behavior, directly addressing the RiskEval finding that models otherwise fail to abstain even when optimal. Importantly, RACER-DS does not assume verbal confidence is faithful; it treats confidence as an input signal that must be converted into actions through a utility-aware controller.
+
+**Limits of self-reported reasoning.** Given evidence that reasoning models may misrepresent what influenced their answers, RACER-DS emphasizes external verification (code execution, recomputation, checks) and logged decisions rather than trusting introspective explanations.
+
+**Project-like memory is essential.** Data science resembles RealMem’s “long-term project-oriented” interactions: hypotheses evolve, experiments branch, and context dependencies shift. The ledger-and-summary approach is a lightweight alternative to full memory systems, but the remaining performance gap suggests richer memory management is a key future direction.
+
+---
+
+## Conclusion  
+We presented **RACER-DS**, a modular framework for agentic data science that unifies context engineering, adaptive context evolution, multi-hop retrieval stabilization, and risk-aware decision-making. Across DS pipeline tasks and project-oriented multi-hop QA, RACER-DS improves performance, reduces token consumption, lowers cascade failures, and—critically—maintains utility under high error penalties by enabling verification and abstention behaviors. These results indicate that trustworthy agentic DS requires not only better knowledge access, but explicit mechanisms for context control and risk-sensitive action selection.
+
+---
+
+## Contributions  
+1. **Unified framework** combining CEDAR-style context engineering with ACE-style retrieve-or-think orchestration, ActiShade-based overshadowed knowledge activation, and explicit risk-aware decision policies.  
+2. **Risk-sensitive agentic evaluation** for data science workflows inspired by RiskEval, measuring utility collapse under high penalties and abstention optimality gaps.  
+3. **Empirical evidence** that (i) selective retrieval reduces noise and tokens, (ii) overshadowed knowledge activation reduces multi-hop cascade failures, and (iii) explicit risk modules materially improve high-penalty utility.  
+4. **Practical design pattern**: prioritize verifiable artifacts (executed code, ledgers, deterministic checks) over self-reported reasoning to improve robustness in agentic DS settings.

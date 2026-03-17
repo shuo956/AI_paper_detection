@@ -1,0 +1,170 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall quality, calibration, efficiency (RAG long-context QA; noisy retrieval)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "KV Compression (×)",
+        "QA EM (%)",
+        "QA F1 (%)",
+        "ECE (↓)",
+        "Rel. Energy/Answer (↓)"
+      ],
+      "data": [
+        [
+          "Full KV (no pruning)",
+          "1.0×",
+          "42.8",
+          "56.1",
+          "0.142",
+          "1.00"
+        ],
+        [
+          "KVzap-style pruning",
+          "3.0×",
+          "42.3",
+          "55.6",
+          "0.139",
+          "0.74"
+        ],
+        [
+          "Conciseness reminder only",
+          "1.0×",
+          "42.5",
+          "55.8",
+          "0.141",
+          "0.92"
+        ],
+        [
+          "CALM-KV (ours)",
+          "3.1×",
+          "42.6",
+          "55.9",
+          "0.118",
+          "0.69"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Robustness to retrieval noise (contradictory/irrelevant passages)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Clean Retrieval ECE (↓)",
+        "Noisy Retrieval ECE (↓)",
+        "ΔECE (noise sensitivity) (↓)"
+      ],
+      "data": [
+        [
+          "Full KV",
+          "0.110",
+          "0.142",
+          "+0.032"
+        ],
+        [
+          "KVzap-style",
+          "0.112",
+          "0.139",
+          "+0.027"
+        ],
+        [
+          "CALM-KV",
+          "0.109",
+          "0.118",
+          "+0.009"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Overflow metrics (BenchOverflow-style evaluation with 5k token cap)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "CSR@1k (↓)",
+        "CSR@3k (↓)",
+        "CSR@5k (↓)",
+        "95th %ile Length (↓)"
+      ],
+      "data": [
+        [
+          "Full KV",
+          "0.21",
+          "0.09",
+          "0.05",
+          "1380"
+        ],
+        [
+          "KVzap-style",
+          "0.20",
+          "0.09",
+          "0.05",
+          "1365"
+        ],
+        [
+          "Conciseness reminder only",
+          "0.12",
+          "0.04",
+          "0.02",
+          "880"
+        ],
+        [
+          "CALM-KV",
+          "0.10",
+          "0.03",
+          "0.01",
+          "820"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation of CALM-KV components",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "KV Compression (×)",
+        "ECE (↓)",
+        "CSR@3k (↓)",
+        "QA F1 (%)"
+      ],
+      "data": [
+        [
+          "CALM-KV full",
+          "3.1×",
+          "0.118",
+          "0.03",
+          "55.9"
+        ],
+        [
+          "– confidence volatility control",
+          "3.2×",
+          "0.132",
+          "0.03",
+          "55.7"
+        ],
+        [
+          "– retrieval consistency signal",
+          "3.1×",
+          "0.127",
+          "0.03",
+          "55.8"
+        ],
+        [
+          "– overflow/length-risk control",
+          "3.0×",
+          "0.119",
+          "0.07",
+          "55.9"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

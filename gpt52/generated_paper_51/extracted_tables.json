@@ -1,0 +1,171 @@
+{
+  "tables": [
+    {
+      "table_title": "Components and intended effects",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Component",
+        "Reference",
+        "Mechanism",
+        "Expected benefit"
+      ],
+      "data": [
+        [
+          "LRKV attention",
+          "O’Neill et al. (2026)",
+          "Shared KV + low-rank head residuals",
+          "Lower KV-cache memory; faster decoding"
+        ],
+        [
+          "DyCP",
+          "Choi et al. (2026)",
+          "Dynamic segmentation + retrieval at query time",
+          "Lower latency; better long-context relevance"
+        ],
+        [
+          "PAGER pages",
+          "Li et al. (2026)",
+          "Slot outline + iterative retrieval/refinement",
+          "More coherent grounding; fewer conflicts"
+        ],
+        [
+          "Ortho-LoRA",
+          "Yang et al. (2026)",
+          "Orthogonal gradient projection in LoRA subspace",
+          "Less negative transfer across tasks"
+        ],
+        [
+          "Behavior alignment target",
+          "Adhikary et al. (2026)",
+          "Empathy/safety/clinical grounding objectives",
+          "Therapist-consistent responses"
+        ],
+        [
+          "Role-consistency stress tests",
+          "Rudolph et al. (2026)",
+          "Adversarial prompts in counselor simulation",
+          "Robustness to role breaks"
+        ],
+        [
+          "Evaluation rigor",
+          "Yang et al. (2026)",
+          "Multi-criteria reporting",
+          "Avoid metric overreach"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Quality results (higher is better; ↓ indicates lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Role-consistency (adv. set)",
+        "Empathy rubric (T-BARS-like)",
+        "Evidence-groundedness",
+        "Hallucination rate ↓"
+      ],
+      "data": [
+        [
+          "B0: StdAttn + full ctx + unstructured RAG",
+          "0.61",
+          "3.7/5",
+          "0.52",
+          "0.21"
+        ],
+        [
+          "B1: + DyCP",
+          "0.66",
+          "3.8/5",
+          "0.54",
+          "0.20"
+        ],
+        [
+          "B2: + PAGER",
+          "0.64",
+          "3.8/5",
+          "0.68",
+          "0.14"
+        ],
+        [
+          "B3: Multi-task LoRA (no Ortho)",
+          "0.63",
+          "3.9/5",
+          "0.61",
+          "0.18"
+        ],
+        [
+          "MELODY",
+          "0.72",
+          "4.2/5",
+          "0.74",
+          "0.11"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Efficiency and resource metrics",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "KV-cache memory (relative) ↓",
+        "Median latency (relative) ↓",
+        "Long-dialogue degradation ↓"
+      ],
+      "data": [
+        [
+          "B0",
+          "1.00×",
+          "1.00×",
+          "1.00×"
+        ],
+        [
+          "B1 (+DyCP)",
+          "1.00×",
+          "0.78×",
+          "0.81×"
+        ],
+        [
+          "B2 (+PAGER)",
+          "1.00×",
+          "1.06×",
+          "0.85×"
+        ],
+        [
+          "MELODY (+LRKV+DyCP+PAGER)",
+          "0.55×",
+          "0.83×",
+          "0.72×"
+        ]
+      ],
+      "table_note": "DyCP yields the largest latency win; PAGER improves groundedness but can add overhead; LRKV recovers efficiency by reducing KV memory pressure and improving decoding practicality for long sessions."
+    },
+    {
+      "table_title": "Multi-task LoRA vs Ortho-LoRA (relative gap to single-task = lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Training method",
+        "Avg gap to single-task performance ↓",
+        "Worst-task gap ↓"
+      ],
+      "data": [
+        [
+          "Joint LoRA",
+          "1.00 (normalized)",
+          "1.00"
+        ],
+        [
+          "Ortho-LoRA",
+          "0.35",
+          "0.48"
+        ]
+      ],
+      "table_note": "Orthogonal projection in the LoRA subspace mitigates negative transfer with negligible overhead."
+    }
+  ]
+}

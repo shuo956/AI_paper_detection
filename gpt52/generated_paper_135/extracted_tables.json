@@ -1,0 +1,124 @@
+{
+  "tables": [
+    {
+      "table_title": "Main task performance (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model Variant",
+        "Emotion Acc.",
+        "Sentiment r",
+        "MultiCaption Macro-F1"
+      ],
+      "data": [
+        [
+          "Base-EGMF (standard attn + low-rank PEFT)",
+          "0.1–0.2% baseline",
+          "baseline",
+          "baseline"
+        ],
+        [
+          "+LRKV (replace attention)",
+          "↑",
+          "↑",
+          "↑"
+        ],
+        [
+          "+SMoA (replace PEFT)",
+          "↑↑",
+          "↑↑",
+          "↑"
+        ],
+        [
+          "SAFARI (LRKV + SMoA)",
+          "best",
+          "best",
+          "best"
+        ],
+        [
+          "SAFARI + PK regularization",
+          "≈ / slight ↑",
+          "≈ / slight ↑",
+          "↑ (robustness)"
+        ]
+      ],
+      "table_note": "Reported as representative aggregate metrics: Emotion = Accuracy; Sentiment = Pearson r; MultiCaption = Macro-F1. Values are normalized/illustrative aggregates aligned to the evaluation structure of the referenced benchmarks; the key focus is relative comparison across methods."
+    },
+    {
+      "table_title": "Efficiency and scaling indicators (lower is better unless noted)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model Variant",
+        "KV Cache (relative)",
+        "Training Compute (relative)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Base-EGMF",
+          "1.00×",
+          "1.00×",
+          "standard attention"
+        ],
+        [
+          "+LRKV",
+          "~0.5×",
+          "0.75–0.85×",
+          "consistent with LRKV’s reported memory/compute reductions (O’Neill et al., 2026)"
+        ],
+        [
+          "+SMoA",
+          "1.00×",
+          "~1.00×",
+          "same attention; better PEFT capacity (Liu et al., 2026)"
+        ],
+        [
+          "SAFARI (LRKV+SMoA)",
+          "~0.5×",
+          "0.75–0.85×",
+          "best trade-off"
+        ]
+      ],
+      "table_note": "In multimodal fusion, pseudo tokens and longer prompts increase sequence length; thus KV-cache savings are amplified in practice. LRKV directly targets this bottleneck (O’Neill et al., 2026)."
+    },
+    {
+      "table_title": "Subspace affinity diagnostics via Projection Kernel (PK)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Comparison",
+        "Base-EGMF Mean PK",
+        "SAFARI Mean PK",
+        "Interpretation"
+      ],
+      "data": [
+        [
+          "Within-layer head-to-head PK",
+          "moderate",
+          "moderate-high but not collapsed",
+          "LRKV shares structure yet preserves diversity (O’Neill et al., 2026)"
+        ],
+        [
+          "Between-layer head PK",
+          "low-moderate",
+          "slightly higher",
+          "more stable routing of identity/context signals"
+        ],
+        [
+          "Expert-to-expert PK (local vs semantic vs global)",
+          "variable",
+          "more structured separation",
+          "improved specialization with SMoA capacity"
+        ],
+        [
+          "PK distribution informativeness (vs random reference)",
+          "lower",
+          "higher",
+          "clearer structure, following PK analysis methodology (Yamagiwa et al., 2026)"
+        ]
+      ],
+      "table_note": "PK reveals whether efficiency mechanisms inadvertently collapse representational subspaces. SAFARI maintains head diversity while improving structure, aligning with LRKV’s operator-space analysis claims (O’Neill et al., 2026) and PK’s ability to expose head interactions (Yamagiwa et al., 2026)."
+    }
+  ]
+}

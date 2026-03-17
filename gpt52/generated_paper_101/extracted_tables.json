@@ -1,0 +1,206 @@
+{
+  "tables": [
+    {
+      "table_title": "System variants and enabled components",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Prefix KV cache (PMC)",
+        "Planned retrieval (TOOLQP)",
+        "Evidence corroboration (BayesRAG)",
+        "Budget-adaptive control (Anytime)",
+        "Constrained output (Think→Constrain)"
+      ],
+      "data": [
+        [
+          "B0 Vanilla",
+          "✗",
+          "✗",
+          "✗",
+          "✗",
+          "✗"
+        ],
+        [
+          "B1 Cache-only",
+          "✓",
+          "✗",
+          "✗",
+          "✗",
+          "✗"
+        ],
+        [
+          "B2 Plan-only",
+          "✗",
+          "✓",
+          "✗",
+          "✗",
+          "✗"
+        ],
+        [
+          "B3 Fuse-only",
+          "✗",
+          "✗",
+          "✓",
+          "✗",
+          "✗"
+        ],
+        [
+          "B4 Anytime-only",
+          "✗",
+          "✗",
+          "✗",
+          "✓",
+          "✗"
+        ],
+        [
+          "B5 Constrain-only",
+          "✗",
+          "✗",
+          "✗",
+          "✗",
+          "✓"
+        ],
+        [
+          "CABaR",
+          "✓",
+          "✓",
+          "✓",
+          "✓",
+          "✓"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Latency (TTFT) improvements on long-context workloads (T1)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Avg prompt tokens",
+        "KV reuse",
+        "TTFT (ms) ↓",
+        "Speedup vs B0"
+      ],
+      "data": [
+        [
+          "B0 Vanilla",
+          "18,000",
+          "No",
+          "920",
+          "1.00×"
+        ],
+        [
+          "B1 Cache-only",
+          "18,000",
+          "Yes",
+          "340",
+          "2.71×"
+        ],
+        [
+          "CABaR",
+          "18,000",
+          "Yes (+pipelined load)",
+          "320",
+          "2.88×"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Task success under fixed reasoning budgets (aggregate over T1–T3)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Budget (tokens)",
+        "Success rate (%) ↑",
+        "Anytime Index ↑ (quality vs tokens)"
+      ],
+      "data": [
+        [
+          "B0 Vanilla",
+          "512",
+          "61.2",
+          "0.41"
+        ],
+        [
+          "B2 Plan-only",
+          "512",
+          "66.8",
+          "0.45"
+        ],
+        [
+          "B3 Fuse-only",
+          "512",
+          "65.1",
+          "0.44"
+        ],
+        [
+          "B4 Anytime-only",
+          "512",
+          "67.0",
+          "0.52"
+        ],
+        [
+          "B5 Constrain-only",
+          "512",
+          "62.5",
+          "0.40"
+        ],
+        [
+          "CABaR",
+          "512",
+          "70.4",
+          "0.58"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Structured output reliability (JSON validity) and explanation coverage",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "JSON parse rate (%) ↑",
+        "Evidence-cited outputs (%) ↑",
+        "Avg output tokens ↓"
+      ],
+      "data": [
+        [
+          "B0 Vanilla",
+          "83.0",
+          "18.5",
+          "210"
+        ],
+        [
+          "B2 Plan-only",
+          "84.2",
+          "22.1",
+          "225"
+        ],
+        [
+          "B3 Fuse-only",
+          "83.7",
+          "41.0",
+          "240"
+        ],
+        [
+          "B5 Constrain-only",
+          "99.6",
+          "19.2",
+          "205"
+        ],
+        [
+          "CABaR",
+          "99.4",
+          "56.7",
+          "215"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

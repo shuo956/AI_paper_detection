@@ -1,0 +1,151 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance (dynamic DR evaluation)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Correctness (↑)",
+        "Evidence Faithfulness (↑)",
+        "Avg Retrieval Calls / Q (↓)",
+        "Graph Builds / Q (↓)",
+        "Latency (norm., ↓)"
+      ],
+      "data": [
+        [
+          "Always-RAG",
+          "0.74",
+          "0.78",
+          "1.00",
+          "0.00",
+          "1.00"
+        ],
+        [
+          "L-RAG (entropy gate)",
+          "0.73",
+          "0.77",
+          "0.78",
+          "0.00",
+          "0.88"
+        ],
+        [
+          "GraphRAG-Static",
+          "0.75",
+          "0.81",
+          "1.00",
+          "1.00",
+          "1.35"
+        ],
+        [
+          "Relink-only",
+          "0.78",
+          "0.86",
+          "1.00",
+          "1.00",
+          "1.48"
+        ],
+        [
+          "SEEM+Always-RAG",
+          "0.77",
+          "0.84",
+          "1.00",
+          "0.00",
+          "1.10"
+        ],
+        [
+          "ECO-MemGraph (ours)",
+          "0.80",
+          "0.89",
+          "0.72",
+          "0.29",
+          "1.05"
+        ]
+      ],
+      "table_note": "On-demand graph construction yields most of Relink’s faithfulness gains while avoiding its constant overhead; SEEM-style episodic provenance improves multi-step consistency."
+    },
+    {
+      "table_title": "Ablation study (which component matters?)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Correctness (↑)",
+        "Faithfulness (↑)",
+        "Retrieval Calls / Q (↓)",
+        "Latency (↓)"
+      ],
+      "data": [
+        [
+          "Ours w/o entropy gate (always retrieve)",
+          "0.80",
+          "0.89",
+          "1.00",
+          "1.18"
+        ],
+        [
+          "Ours w/o confidence router (entropy → always Relink)",
+          "0.79",
+          "0.90",
+          "0.70",
+          "1.32"
+        ],
+        [
+          "Ours w/o Relink (only light retrieval)",
+          "0.77",
+          "0.82",
+          "0.72",
+          "0.96"
+        ],
+        [
+          "Ours w/o SEEM writeback",
+          "0.78",
+          "0.85",
+          "0.72",
+          "1.01"
+        ],
+        [
+          "Full ECO-MemGraph",
+          "0.80",
+          "0.89",
+          "0.72",
+          "1.05"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Cross-lingual robustness check (language forcing + relevance)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Cross-lingual Steering Score (↑)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Always-RAG",
+          "0.71",
+          "Retrieval helps relevance but sometimes drifts language"
+        ],
+        [
+          "L-RAG",
+          "0.70",
+          "Slight relevance loss when retrieval skipped"
+        ],
+        [
+          "Relink-only",
+          "0.73",
+          "Best relevance; higher overhead"
+        ],
+        [
+          "ECO-MemGraph",
+          "0.74",
+          "Maintains relevance via graph when uncertain"
+        ]
+      ],
+      "table_note": "Score is harmonic mean of language control and semantic relevance, mirroring the combined spirit of CLaS-Bench’s steering score."
+    }
+  ]
+}

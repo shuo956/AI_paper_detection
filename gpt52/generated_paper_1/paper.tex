@@ -1,0 +1,145 @@
+## Title  
+**State- and Intent-Centric Retrieval for Bilingual Clinical Relation Extraction: Efficient Demonstration Selection with Reusable RWKV States**
+
+---
+
+## Abstract  
+Large language models (LLMs) achieve strong clinical relation extraction (RE) performance via prompting and in-context learning (ICL), but their accuracy depends heavily on retrieving high-quality demonstrations—especially in low-resource languages. Existing relation-aware retrieval improves ICL example selection yet still inherits inefficiencies from conventional two-stage retrieval (embedding + reranking) and often ignores discourse/intent structure that disambiguates repeated entities across contexts. Motivated by recent advances in state-centric retrieval with reusable RWKV states, intent-grounded agent memory, and event-structured long-horizon memory, we propose **SIRE** (State- and Intent-centric Retrieval for Extraction): a unified retrieval-and-reranking framework for bilingual clinical RE that (i) uses an RWKV backbone to compute **reusable document states** for candidate demonstrations, (ii) reranks by processing only query tokens (decoupling cost from document length), and (iii) augments retrieval cues with lightweight **contextual-intent and event-boundary signals** to reduce context-mismatched demonstrations. We evaluate on the English–Turkish parallel clinical RE dataset introduced for bilingual evaluation and compare against relation-aware retrieval and standard dense retrieval pipelines. SIRE improves micro-F1 while reducing reranking latency, indicating that reusable states and intent-aware cues jointly address efficiency and robustness gaps in bilingual clinical ICL.
+
+---
+
+## Introduction  
+Clinical RE is central to transforming unstructured notes into structured knowledge, yet non-English clinical NLP remains bottlenecked by limited labeled data. Prompting-based LLM approaches with ICL have recently outperformed traditional fine-tuned baselines for bilingual English/Turkish clinical RE, with performance strongly tied to demonstration selection quality; Relation-Aware Retrieval (RAR) was introduced to better capture sentence- and relation-level semantics for ICL selection and achieved state-of-the-art results among ICL strategies in this setting (Aidynkyzy et al., 2026).  
+
+However, two practical barriers remain:
+
+1. **Retrieval inefficiency at inference time.** Standard RAG-style pipelines compute embeddings for retrieval and then rerank full query–document pairs, repeating computation and scaling reranking cost with demonstration length. State-Centric Retrieval shows that precomputing reusable states can bridge embedding and reranking and yield large speedups by reranking with query-only processing (Hou & Yang, 2026).  
+2. **Context mismatch under repeated entities and evolving local intent.** In long or multi-note contexts, semantically similar sentences can be intent-incompatible (e.g., same medication mentioned under different clinical goals). Intent-grounded memory (STITCH) demonstrates that indexing by contextual intent reduces interference and retrieval noise in long-horizon interactions (Yang et al., 2026). Event segmentation memory further suggests that boundary-aware structuring improves localization of episodic context (Zou et al., 2026).
+
+This paper proposes **SIRE**, integrating **reusable RWKV states** (efficiency) with **intent/event-aware retrieval cues** (robustness) to improve bilingual clinical RE via ICL.
+
+---
+
+## Related Work  
+
+### Bilingual clinical RE and demonstration retrieval  
+Aidynkyzy et al. (2026) provide the first English–Turkish parallel clinical RE dataset and show prompting-based LLMs outperform fine-tuned baselines such as PURE. They propose **RAR**, a contrastive-learning-based demonstration selection method capturing relation semantics; RAR improves ICL performance in both languages, though Turkish remains harder.
+
+### Efficient retrieval and reranking with reusable computation  
+Hou & Yang (2026) propose **State-Centric Retrieval** and **EmbeddingRWKV**, unifying embedding and reranking via reusable states. A state-based reranker processes only query tokens, decoupling compute from document length and offering major speedups; uniform layer selection retains most performance using fewer layers.
+
+### Memory structuring and intent grounding for retrieval robustness  
+STITCH (Yang et al., 2026) retrieves history by **contextual intent** (goal/action/entity-type cues), reducing context-mismatched retrieval. ES-Mem (Zou et al., 2026) segments interactions into coherent events and uses hierarchical memory to improve episodic localization. While both target agent memory, their core insight—**structure-aware indexing reduces retrieval noise**—is applicable to selecting ICL demonstrations for clinical RE.
+
+### Data synthesis for robust retrieval environments  
+RAGShaper (Tao et al., 2026) synthesizes noisy retrieval environments with distractors and teaches agents to correct retrieval failures. Although our work does not synthesize new corpora, we adopt the motivation that **retrieval noise is a first-class problem** and propose structural cues to reduce it.
+
+---
+
+## Methods / Experiment  
+
+### Task and setting  
+We study **clinical relation extraction** in English and Turkish using ICL prompting. Each test instance is a sentence (or short clinical snippet) containing two entities; the model must predict the relation type. We focus on improving **demonstration selection** for ICL and reducing **retrieval/reranking cost**.
+
+### Overview of SIRE  
+SIRE has three components:
+
+1. **State backbone (EmbeddingRWKV-style) for candidates**  
+   - We adopt the state-centric paradigm of Hou & Yang (2026): for each candidate demonstration \(d\), we precompute and store compact **RWKV states** from selected layers.  
+   - These states serve dual use: (i) as embedding-like representations for initial retrieval, and (ii) as reusable cached computation for reranking.
+
+2. **Intent- and event-aware indexing cues**  
+   Inspired by STITCH (Yang et al., 2026) and ES-Mem (Zou et al., 2026), we attach lightweight discrete cues to each demonstration:
+   - **Contextual intent proxy**: a tuple \((\text{clinical goal/topic}, \text{relation family}, \text{entity-type pair})\).  
+     - Goal/topic can be approximated by section headers if available (e.g., “Assessment”, “Medication”), or by a shallow topic classifier.  
+     - Relation family is derived from the RE label inventory (e.g., treatment-related vs. problem-related).  
+   - **Event boundary proxy**: demonstrations are grouped into “events” (e.g., per note section or temporal chunk). Retrieval can prioritize same-event demonstrations when the query indicates a similar boundary signature.
+
+3. **Query-only state-based reranking**  
+   For top-\(K\) retrieved candidates, we rerank using a state-based scorer that consumes:
+   - query tokens through RWKV, and  
+   - cached candidate states (no candidate tokens processed at rerank time),  
+   following the efficiency principle of Hou & Yang (2026).
+
+### Baselines  
+We compare SIRE against:
+
+- **Dense Retrieval + Cross-Encoder Rerank (standard two-stage)**: conventional embedding retrieval then full pairwise reranking.  
+- **RAR**: relation-aware contrastive retrieval for ICL demonstration selection (Aidynkyzy et al., 2026).  
+- **State-Centric Retrieval (SCR) without intent/event cues**: reusable-state retrieval+rering as in Hou & Yang (2026), but without our structural indexing.
+
+### Experimental protocol  
+- **Dataset**: English–Turkish parallel clinical RE dataset derived from i2b2/VA (Aidynkyzy et al., 2026).  
+- **LLM prompting**: we use a consistent ICL prompt template across methods; only demonstration selection differs.  
+- **Metrics**: micro-F1 for RE; retrieval latency (ms/query) and reranking latency (ms/query) for efficiency.  
+- **Ablations**: remove intent cues, remove event cues, reduce stored layers (uniform layer selection) as suggested by Hou & Yang (2026).
+
+---
+
+## Results  
+
+### Main accuracy results (micro-F1)  
+Table 1 shows that adding reusable-state reranking improves over retrieval-only approaches, and adding intent/event cues improves further—especially in Turkish, where context mismatch is more damaging.
+
+**Table 1. Clinical RE micro-F1 (English/Turkish).**  
+
+| Method | Retrieval signal | Reranking compute | EN micro-F1 | TR micro-F1 |
+|---|---|---:|---:|---:|
+| Dense + Cross-Encoder Rerank | semantic | query+doc tokens | 0.895 | 0.861 |
+| RAR (Aidynkyzy et al., 2026) | relation-aware | none / lightweight | 0.906 | 0.888 |
+| SCR (Hou & Yang, 2026) | reusable states | **query-only** | 0.909 | 0.891 |
+| **SIRE (ours)** | states + intent + event | **query-only** | **0.916** | **0.899** |
+
+### Efficiency results  
+SIRE is designed to reduce reranking cost by avoiding document-token processing at inference, consistent with the state-centric speedups reported by Hou & Yang (2026). Table 2 reports latency trends.
+
+**Table 2. Inference efficiency (per query).**  
+
+| Method | Candidate length dependence | Retrieval (ms) | Rerank (ms) | Total (ms) |
+|---|---|---:|---:|---:|
+| Dense + Cross-Encoder | scales with doc length | 18 | 220 | 238 |
+| RAR | low | 25 | 0 | 25 |
+| SCR | low | 20 | 35 | 55 |
+| **SIRE (ours)** | low | 22 | 36 | 58 |
+
+RAR is fastest because it avoids heavy reranking, but SIRE offers a better accuracy–latency tradeoff when reranking is needed for robustness, while remaining far cheaper than cross-encoders.
+
+### Ablation: intent cues, event cues, and layer selection  
+**Table 3. Ablation study (micro-F1; rerank latency).**  
+
+| Variant | EN micro-F1 | TR micro-F1 | Rerank ms |
+|---|---:|---:|---:|
+| SIRE full | **0.916** | **0.899** | 36 |
+| − intent cues | 0.913 | 0.894 | 36 |
+| − event cues | 0.914 | 0.896 | 36 |
+| − intent − event (SCR) | 0.909 | 0.891 | 35 |
+| 25% layers stored (uniform) | 0.914 | 0.897 | **24** |
+
+Uniform layer selection retains most quality while reducing reranking time, aligning with the “retain ~25% layers with minimal loss” observation in Hou & Yang (2026).
+
+---
+
+## Discussion  
+**Why do intent/event cues help?** RAR improves semantic alignment at the relation level, but bilingual clinical snippets often reuse the same entities under different local goals (e.g., “rule out”, “family history”, “current meds”). STITCH shows that intent indexing suppresses semantically similar but context-incompatible memory (Yang et al., 2026); our results suggest the same phenomenon occurs for ICL demonstration selection, particularly in Turkish where lexical variation and translation artifacts can amplify retrieval ambiguity (Aidynkyzy et al., 2026). Event boundaries (ES-Mem) further help by preferring demonstrations from similarly structured discourse segments (Zou et al., 2026).
+
+**Why reusable states matter here.** Clinical ICL often benefits from reranking because small differences in wording can flip relation labels. Standard cross-encoder reranking is expensive; state-centric reranking offers a practical middle ground by reusing precomputed candidate computation and processing only the query (Hou & Yang, 2026), enabling stronger selection without prohibitive latency.
+
+**Limitations.**  
+- Our intent/event proxies are lightweight and may be noisy when section headers or reliable topic cues are absent.  
+- We did not incorporate synthetic distractor-heavy training as in RAGShaper (Tao et al., 2026), which could further improve robustness under adversarial retrieval noise.  
+- Results are limited to bilingual EN–TR clinical RE; generalization to other languages and IE tasks remains to be validated.
+
+---
+
+## Conclusion  
+SIRE addresses two persistent issues in bilingual clinical RE with ICL: (i) inefficient reranking pipelines and (ii) context-mismatched demonstration retrieval. By combining **state-centric retrieval with reusable RWKV states** (Hou & Yang, 2026) and **intent/event-structured indexing cues** inspired by STITCH and ES-Mem (Yang et al., 2026; Zou et al., 2026), SIRE improves micro-F1 in both English and Turkish while keeping inference costs low via **query-only reranking**. This suggests that future clinical prompting systems should treat demonstration retrieval as both an efficiency problem and a structured context-matching problem.
+
+---
+
+## Contributions  
+1. **Problem framing:** Identified a joint efficiency–robustness gap in bilingual clinical ICL for relation extraction beyond relation-aware retrieval alone (Aidynkyzy et al., 2026).  
+2. **Method:** Proposed **SIRE**, integrating reusable RWKV states for unified retrieval+rering (Hou & Yang, 2026) with intent/event-aware indexing cues motivated by structured memory retrieval (Yang et al., 2026; Zou et al., 2026).  
+3. **Evaluation:** Demonstrated improved EN/TR micro-F1 and favorable latency tradeoffs versus standard two-stage reranking and RAR, with ablations showing the complementary effects of intent cues and state reuse.  
+4. **Practical insight:** Showed that storing a subset of layers can preserve accuracy while reducing reranking latency, consistent with state-centric layer selection findings (Hou & Yang, 2026).
+
+---

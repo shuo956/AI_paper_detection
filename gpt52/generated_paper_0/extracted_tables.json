@@ -1,0 +1,161 @@
+{
+  "tables": [
+    {
+      "table_title": "Retrieval compression vs retrieval quality",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Representation",
+        "Compression Ratio (vs multi-vector)",
+        "NDCG@3 (relative)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Full Multi-Vector",
+          "multi-vector",
+          "1×",
+          "1.00",
+          "Upper bound"
+        ],
+        [
+          "Mean Pooling",
+          "single-vector",
+          "~1000×",
+          "0.55–0.60",
+          "Heuristic loss (cf. ReinPool)"
+        ],
+        [
+          "RL Pooling (RCM)",
+          "single-vector",
+          "700–1200×",
+          "0.76–0.81",
+          "ReinPool-like behavior (Cha et al., 2026)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "End-to-end cost–quality trade-off (agent QA)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Retrieval",
+        "Reasoning Control",
+        "Accuracy (rel.)",
+        "Avg Tokens",
+        "CSR@3k ↓"
+      ],
+      "data": [
+        [
+          "Full MV + Long",
+          "Full",
+          "None",
+          "1.00",
+          "High",
+          "High"
+        ],
+        [
+          "Mean Pool + Long",
+          "Mean pooled",
+          "None",
+          "0.90",
+          "High",
+          "High"
+        ],
+        [
+          "Full MV + Mid",
+          "Full",
+          "Mid-Think triggers",
+          "0.99",
+          "Medium",
+          "Medium"
+        ],
+        [
+          "RCM + Fixed Mid",
+          "RCM",
+          "Fixed mid budget",
+          "0.98",
+          "Medium",
+          "Medium"
+        ],
+        [
+          "PARC (ours)",
+          "RCM",
+          "Pressure-aware TRB",
+          "0.99–1.00",
+          "Low–Med",
+          "Low"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "RL training efficiency with diversity-aware reward reweighting",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "RL Method",
+        "Completions/Prompt",
+        "Steps to Peak (rel.)",
+        "Wall-clock (rel.)",
+        "Outcome Quality"
+      ],
+      "data": [
+        [
+          "GRPO-style baseline",
+          "K",
+          "1.00",
+          "1.00",
+          "Peak baseline"
+        ],
+        [
+          "MMR-GRPO-style (DRL)",
+          "K",
+          "~0.52",
+          "~0.30",
+          "Comparable peak (Wei & Huang, 2026)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Pressure sensitivity and failure modes",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Pressure Regime (by \\( \\Pi \\))",
+        "Fixed Long-CoT",
+        "Fixed Mid",
+        "PARC (pressure-aware)",
+        "Observed Failure Type"
+      ],
+      "data": [
+        [
+          "Low \\( \\Pi \\)",
+          "Strong",
+          "Strong",
+          "Strong",
+          "None dominant"
+        ],
+        [
+          "Medium \\( \\Pi \\)",
+          "Overflow tails",
+          "Stable",
+          "Stable",
+          "Overflow (Feiglin et al., 2026)"
+        ],
+        [
+          "High \\( \\Pi \\)",
+          "More violations",
+          "Some violations",
+          "Fewer violations",
+          "Priming/override risk (Rana, 2026)"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

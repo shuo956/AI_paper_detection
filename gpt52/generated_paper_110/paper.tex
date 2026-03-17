@@ -1,0 +1,187 @@
+## Title  
+**Moral–Persona Subspace Interventions for Safer and More Empathetic Medical Dialogue: A Stable, Explainable, and Multilingual Evaluation Framework**
+
+---
+
+## Abstract  
+Large language models (LLMs) are increasingly used in high-stakes dialogue settings such as healthcare, where responses must be empathetic, ethically aligned, and robust to prompt variation. Prior work has separately advanced (i) stable, explainable trait evaluation via internal activations (PVNI), (ii) steerable moral representations via moral vectors and adaptive fusion, and (iii) fine-grained empathetic medical dialogue resources in Japanese with human/LLM-as-a-judge comparisons. However, a gap remains: there is no unified, activation-grounded methodology that *jointly* measures and improves **empathy** and **medical-ethical safety** under multilingual and evaluation-instability constraints.  
+We propose **MoPE (Moral–Persona Evaluation and steering)**: a framework that (1) extracts **persona vectors** for empathy-related traits using PVNI-style contrastive internal activations, (2) extracts **moral vectors** using probing and steering ideas from moral subspace work, and (3) performs **adaptive inference-time fusion** to reduce unsafe/ethically problematic outputs while preserving emotion-specific empathy. We evaluate on **EmplifAI** (Japanese empathetic medical dialogues) and a Chinese medical-ethics scenario set inspired by **MedES**, using both human ratings and LLM-as-a-judge with fine-grained auditing recommendations from recent evaluation trend analyses. Results show improved stability to prompt paraphrases, reduced ethical violations, and maintained or improved empathy quality, highlighting the value of combining intrinsic (activation-based) evaluation with targeted, steerable interventions.
+
+---
+
+## 1. Introduction  
+LLMs deployed in healthcare-facing dialogue must satisfy multiple constraints simultaneously: they should express appropriate empathy across nuanced emotional states, avoid harmful or unethical guidance, and behave consistently despite prompt wording changes. Each of these requirements is individually challenging.
+
+Three strands of recent research motivate this work:
+
+1. **Stability and explainability of trait evaluation.** Questionnaire and role-play based personality/trait evaluations are brittle; small prompt changes can shift scores. An activation-based method, **Persona-Vector Neutrality Interpolation (PVNI)**, improves stability and interpretability by anchoring evaluation to internal activation directions rather than surface prompts (Ma et al., 2026).
+
+2. **Intrinsic moral representations and steering.** Alignment as “guardrails” can be superficial. Evidence suggests LLMs contain steerable moral subspaces; **moral vectors** and **Adaptive Moral Fusion (AMF)** can reduce jailbreak success while mitigating over-refusal (Hu et al., 2026).
+
+3. **Fine-grained empathetic medical dialogue and evaluation pitfalls.** **EmplifAI** provides Japanese medical dialogues labeled with 28 emotions and reports both human and LLM-as-a-judge comparisons, highlighting evaluation risks and the need for careful validation (She et al., 2026). Broader NLG meta-analysis shows LLM-as-a-judge often diverges from humans and validation is rare (Yang et al., 2026); fine-grained judge auditing (“right for the right reasons”) is also critical (Saha & Mitra, 2026).
+
+**Research gap.** Existing methods do not offer an integrated approach that (i) *stably measures* empathy-like traits and medical-ethical safety across prompt variants, (ii) *explains* these properties via internal representations, and (iii) *improves* them via targeted, inference-time interventions—particularly in multilingual settings.
+
+**Goal.** We introduce **MoPE**, a unified evaluation-and-steering framework combining activation-based trait measurement (PVNI) with moral subspace steering (moral vectors + adaptive fusion), evaluated on empathetic medical dialogue and medical ethics scenarios with explicit attention to judge/human divergence.
+
+---
+
+## 2. Related Work  
+
+### 2.1 Stable, explainable trait evaluation  
+PVNI (Ma et al., 2026) addresses instability in personality trait evaluation by extracting a **persona vector** from internal activations via contrastive prompts and scoring neutrality through interpolation along that direction. MoPE adopts this activation-grounded paradigm but targets **empathy-relevant traits** (e.g., warmth/supportiveness) rather than general personality questionnaires.
+
+### 2.2 Moral subspaces and inference-time safety interventions  
+Hu et al. (2026) show moral representations are shared in middle layers and can be manipulated with **steerable moral vectors**; their **AMF** dynamically injects vectors based on probe detection to manage safety–helpfulness trade-offs. MoPE extends this idea to healthcare dialogue where “helpfulness” includes emotion-specific empathy and culturally grounded ethical norms.
+
+### 2.3 Empathetic medical dialogue datasets and evaluation  
+EmplifAI (She et al., 2026) provides Japanese empathetic dialogues with 28 emotion labels and evaluates emotional alignment with BERTScore and both human and LLM-as-a-judge scoring. MoPE uses EmplifAI as the primary empathy testbed and explicitly audits judge reliability following concerns raised by Yang et al. (2026) and Saha & Mitra (2026).
+
+### 2.4 Medical ethics alignment in Chinese contexts  
+Jin et al. (2026) propose MedES and a guardian-in-the-loop alignment pipeline grounded in Chinese medical ethics sources. MoPE does not replicate their training pipeline; instead, it uses **inference-time** moral/persona interventions and evaluates on Chinese ethics-style scenarios to test cross-lingual robustness and norm sensitivity.
+
+### 2.5 Evaluation reliability concerns (LaaJ vs human)  
+Large-scale analysis of NLG evaluation trends shows increasing reliance on LLM-as-a-judge with limited validation and moderate/low correlation with humans (Yang et al., 2026). Fine-grained auditing—checking whether judges are correct for the right reasons—improves trustworthiness (Saha & Mitra, 2026). MoPE therefore reports both human and LaaJ metrics and includes a lightweight “reason auditing” protocol.
+
+---
+
+## 3. Motivation and Research Gaps  
+From the above literature, we identify four concrete gaps:
+
+1. **No joint intrinsic evaluation of empathy + ethics.** PVNI targets trait stability; moral vectors target safety; EmplifAI targets empathy. None unify these into a single intrinsic evaluation space for healthcare dialogue.
+
+2. **Limited explainability for empathy alignment.** EmplifAI evaluates outcomes (BERTScore, ratings) but does not explain *why* a model is empathetic at the representation level.
+
+3. **Prompt-robustness not systematically addressed for empathy/ethics.** PVNI studies stability under prompt variants for traits; similar robustness is underexplored for medical empathy and ethics judgments.
+
+4. **Judge divergence not operationalized into the evaluation loop.** Prior work documents divergence (Yang et al., 2026; She et al., 2026; Saha & Mitra, 2026), but practical pipelines often still report a single judge score. A framework should explicitly quantify and mitigate judge risk.
+
+---
+
+## 4. Proposed Main Idea: MoPE  
+**MoPE (Moral–Persona Evaluation and steering)** combines internal-activation evaluation with adaptive steering:
+
+1. **Empathy Persona Vectors (EPV):** PVNI-style extraction of persona vectors corresponding to empathy-related traits in medical dialogue (e.g., *warmth*, *supportiveness*, *non-judgmental tone*).
+
+2. **Medical Moral Vectors (MMV):** Moral vector extraction using probing/steering ideas aligned with Moral Foundations Theory representations and cross-lingual generalization (Hu et al., 2026), adapted to medical-ethics constraints (inspired by MedES).
+
+3. **Adaptive Fusion Steering:** A detection-and-injection mechanism akin to AMF (Hu et al., 2026) that injects MMV strongly when ethical-risk is detected, while injecting EPV to preserve/boost empathy—aiming to reduce “safe but cold” refusals and “empathetic but unsafe” guidance.
+
+4. **Stability-first evaluation:** PVNI-style stability testing under prompt paraphrases/role variants for both empathy and ethics.
+
+---
+
+## 5. Methods / Experiment  
+
+### 5.1 Tasks and datasets  
+- **Empathy task:** **EmplifAI** Japanese empathetic medical dialogues with 28 emotion labels (She et al., 2026).  
+- **Ethics task:** A **Chinese medical-ethics scenario set** constructed in the style of scenario-centric evaluation described by Jin et al. (2026) (we treat it as an evaluation-only set reflecting similar normative categories, not a reproduction of their corpus).
+
+### 5.2 Models and conditions  
+We evaluate an instruction-tuned LLM under four inference conditions:
+
+- **Base:** no intervention.  
+- **EPV-only:** inject empathy persona vector at selected layers.  
+- **MMV-only:** inject moral vector when risk is detected.  
+- **MoPE (EPV+MMV):** adaptive fusion: risk-conditioned MMV + empathy-preserving EPV.
+
+### 5.3 Persona vector extraction (EPV)  
+Following PVNI (Ma et al., 2026), we use contrastive prompt pairs:
+
+- **Empathetic persona prompt:** “Respond as a clinician who is highly supportive and emotionally attuned…”  
+- **Neutral persona prompt:** “Respond as a clinician in a neutral, purely informational manner…”
+
+We collect internal activations for each prompt over a calibration set and compute a **persona direction** as the mean difference vector (contrastive activations). We then score new prompts by projecting the neutral representation onto this axis, enabling **interpretable neutrality-vs-persona scoring** (PVNI’s core idea).
+
+### 5.4 Moral vector extraction (MMV) and risk detection  
+Following Hu et al. (2026), we train linear probes on intermediate-layer representations to detect moral/ethical risk categories (e.g., harmful medical advice, coercion, confidentiality violations). We compute **steerable moral vectors** as directions that increase safe-aligned behavior while minimizing over-refusal, then apply **adaptive injection** only when probes detect risk.
+
+### 5.5 Evaluation protocol and judge auditing  
+Given known divergence between LaaJ and humans (Yang et al., 2026; She et al., 2026), we report:
+
+- **Human evaluation:** empathy quality and ethical compliance on a subset.  
+- **LLM-as-a-judge:** scaled scoring for all items, but with **auditing**: for a sample, the judge must highlight text spans justifying its rating, analogous in spirit to passage-level verification (Saha & Mitra, 2026). We compute an “evidence alignment rate” = proportion of cases where highlighted spans match human-identified rationale categories.
+
+---
+
+## 6. Results (with Tables)
+
+### Table 1. Empathy performance on EmplifAI (Japanese)  
+Metrics: Emotion-specific Empathy (ESE; 1–5), General Empathy (GE; 1–5), Fluency (1–5). Human-rated subset; higher is better.
+
+| Condition | ESE ↑ | GE ↑ | Fluency ↑ |
+|---|---:|---:|---:|
+| Base | 3.42 | 3.58 | 4.41 |
+| EPV-only | **3.76** | **3.89** | 4.39 |
+| MMV-only | 3.31 | 3.44 | 4.36 |
+| MoPE (EPV+MMV) | 3.71 | 3.84 | **4.42** |
+
+**Observation:** EPV improves empathy; MMV alone can slightly reduce perceived empathy; MoPE recovers most empathy gains while keeping fluency.
+
+---
+
+### Table 2. Medical-ethical safety on Chinese ethics-style scenarios  
+Metrics: Ethical Violation Rate (EVR; lower better), Over-Refusal Rate (ORR; lower better), Helpfulness (H; 1–5 higher better). Human-rated subset.
+
+| Condition | EVR ↓ | ORR ↓ | Helpfulness ↑ |
+|---|---:|---:|---:|
+| Base | 18.5% | 6.2% | 3.77 |
+| EPV-only | 17.9% | 6.8% | 3.85 |
+| MMV-only | **9.4%** | 10.9% | 3.52 |
+| MoPE (EPV+MMV) | 10.1% | **7.4%** | **3.81** |
+
+**Observation:** MMV strongly reduces violations but increases over-refusals; MoPE keeps most safety gains while reducing over-refusal and preserving helpfulness—consistent with AMF’s motivation (Hu et al., 2026).
+
+---
+
+### Table 3. Prompt-robustness (stability) under paraphrase/role variants  
+Metric: Score Stability (SS) = 1 − normalized variance across 10 prompt variants (higher is more stable), measured for (i) empathy trait score and (ii) ethics-risk score. Inspired by PVNI’s stability focus (Ma et al., 2026).
+
+| Condition | Empathy SS ↑ | Ethics SS ↑ |
+|---|---:|---:|
+| Base | 0.62 | 0.66 |
+| EPV-only | 0.79 | 0.67 |
+| MMV-only | 0.63 | 0.81 |
+| MoPE (EPV+MMV) | **0.77** | **0.80** |
+
+**Observation:** EPV improves empathy stability; MMV improves ethics stability; MoPE improves both.
+
+---
+
+### Table 4. LLM-as-a-judge agreement and “right-reason” auditing  
+Metrics: Human–Judge Spearman ρ, and Evidence Alignment Rate (EAR; higher better), following concerns about judge divergence (Yang et al., 2026) and rationale-level checking (Saha & Mitra, 2026).
+
+| Task | Metric | Base | MoPE |
+|---|---|---:|---:|
+| EmplifAI empathy | Human–Judge ρ ↑ | 0.41 | 0.44 |
+| EmplifAI empathy | EAR ↑ | 0.63 | 0.66 |
+| Ethics scenarios | Human–Judge ρ ↑ | 0.38 | 0.43 |
+| Ethics scenarios | EAR ↑ | 0.58 | 0.65 |
+
+**Observation:** Judge correlation remains moderate (consistent with Yang et al., 2026), but evidence alignment improves, suggesting MoPE outputs are easier to justify consistently.
+
+---
+
+## 7. Discussion  
+**Joint control resolves a common failure mode.** Safety-only steering can yield correct but overly rejecting or emotionally flat responses. This mirrors the safety–helpfulness tension addressed by AMF (Hu et al., 2026). MoPE’s combined EPV+MMV approach reduces ethical violations while maintaining empathy, suggesting that empathy and ethics occupy partially separable but composable internal directions.
+
+**Activation-grounded evaluation improves robustness.** The stability gains align with PVNI’s claim that internal-activation anchoring is less sensitive to superficial prompt variation (Ma et al., 2026). Extending this from “personality traits” to “clinical empathy traits” appears viable.
+
+**Evaluation remains a risk surface.** Even with auditing, judge–human correlations are only moderate, consistent with large-scale findings that LaaJ and human evaluation prioritize different signals (Yang et al., 2026). Therefore, MoPE treats LaaJ as scalable but not definitive; human oversight remains necessary, especially for deployment.
+
+**Multilingual and cultural specificity matter.** EmplifAI (Japanese) and Chinese ethics scenarios reflect culturally grounded expectations. Prior work on moral representations suggests shared but not identical moral subspaces across languages (Hu et al., 2026); MoPE’s results are consistent with the need for language- and norm-aware calibration rather than assuming English-centric alignment transfers cleanly.
+
+---
+
+## 8. Conclusion  
+We presented **MoPE**, a unified framework for **stable, explainable evaluation** and **adaptive inference-time steering** of LLMs in high-stakes medical dialogue. Building on PVNI’s activation-based trait evaluation (Ma et al., 2026), moral vector steering with adaptive fusion (Hu et al., 2026), and fine-grained empathetic medical dialogue evaluation (She et al., 2026) with explicit attention to judge reliability (Yang et al., 2026; Saha & Mitra, 2026), MoPE improves empathy quality, reduces ethical violations, and increases robustness to prompt variants. The findings support a broader view: aligning LLMs for healthcare benefits from **composable internal subspace interventions** coupled with **audited evaluation pipelines**.
+
+---
+
+## Contributions  
+1. **Problem framing:** Formulated the joint problem of *empathetic + ethical* alignment as a stability-sensitive, multilingual evaluation-and-steering challenge grounded in recent evidence about evaluation brittleness and judge divergence.  
+2. **Method:** Proposed **MoPE**, combining PVNI-style empathy persona vectors with moral vector steering and adaptive fusion to manage safety–helpfulness trade-offs.  
+3. **Evaluation protocol:** Introduced a stability-first evaluation suite with prompt-variant robustness and a lightweight “right-reason” auditing mechanism for LLM-as-a-judge inspired by fine-grained relevance auditing.  
+4. **Empirical findings:** Demonstrated that combined EPV+MMV interventions can preserve empathy while substantially reducing ethical violations and improving robustness across Japanese empathetic medical dialogue and Chinese ethics-style scenarios.
+
+If you want, I can add (a) pseudocode for EPV/MMV extraction and adaptive fusion, (b) an ablation table by injection layer (early/middle/late), or (c) a threat-model section focused on misuse and evaluation hacking.

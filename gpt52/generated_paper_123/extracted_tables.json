@@ -1,0 +1,142 @@
+{
+  "tables": [
+    {
+      "table_title": "Main results across reliability dimensions",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "EM / Accuracy ↑",
+        "Brier ↓",
+        "Hallucination ↓",
+        "PSS ↓"
+      ],
+      "data": [
+        [
+          "Vanilla RAG",
+          "62.4",
+          "0.214",
+          "14.8%",
+          "0.37"
+        ],
+        [
+          "RAG + TT-Adapt (TTARAG)",
+          "66.1",
+          "0.205",
+          "13.9%",
+          "0.36"
+        ],
+        [
+          "RAG + Epi-Calibrate (EpiCaR-style)",
+          "64.8",
+          "0.162",
+          "12.7%",
+          "0.35"
+        ],
+        [
+          "RAG + Consensus (Kallem-style)",
+          "67.0",
+          "0.171",
+          "11.9%",
+          "0.34"
+        ],
+        [
+          "PRCC-RAG (full)",
+          "70.5",
+          "0.138",
+          "9.6%",
+          "0.24"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation study of PRCC-RAG components",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "EM ↑",
+        "Brier ↓",
+        "Hallucination ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Full PRCC-RAG",
+          "70.5",
+          "0.138",
+          "9.6%",
+          "All modules enabled"
+        ],
+        [
+          "– PR-Retrieval",
+          "68.2",
+          "0.141",
+          "10.8%",
+          "Worse under long-context perturbations"
+        ],
+        [
+          "– TT-Adapt",
+          "69.1",
+          "0.139",
+          "10.1%",
+          "More domain-shift errors"
+        ],
+        [
+          "– Epi-Calibrate",
+          "70.0",
+          "0.186",
+          "11.4%",
+          "Overconfidence increases"
+        ],
+        [
+          "– C-Select",
+          "67.6",
+          "0.152",
+          "10.9%",
+          "Loses instance-level robustness"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Multi-hop (kinship-style) vs. long-context stress performance",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Multi-hop EM ↑",
+        "Long-context EM ↑",
+        "Long-context PSS ↓"
+      ],
+      "data": [
+        [
+          "Vanilla RAG",
+          "58.7",
+          "60.2",
+          "0.41"
+        ],
+        [
+          "RAG + TT-Adapt",
+          "60.1",
+          "64.5",
+          "0.40"
+        ],
+        [
+          "RAG + Consensus",
+          "62.8",
+          "64.9",
+          "0.38"
+        ],
+        [
+          "PRCC-RAG (full)",
+          "66.4",
+          "69.1",
+          "0.26"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

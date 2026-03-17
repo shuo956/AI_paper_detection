@@ -1,0 +1,145 @@
+{
+  "tables": [
+    {
+      "table_title": "Methods compared",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Rashomon-aware reconciliation",
+        "Calibration objective",
+        "Evidence-chain scoring",
+        "Factuality correction"
+      ],
+      "data": [
+        [
+          "Single Pipeline",
+          "No",
+          "No",
+          "Partial",
+          "Optional"
+        ],
+        [
+          "Best-of-N",
+          "No (selection only)",
+          "No",
+          "Partial",
+          "Optional"
+        ],
+        [
+          "Random-from-Rashomon",
+          "No",
+          "No",
+          "Partial",
+          "Optional"
+        ],
+        [
+          "RCA (OIC+LPV+PREC)",
+          "Yes",
+          "Yes (EpiCaR-style)",
+          "Yes (SIN-Bench style)",
+          "Yes (FactCorrector-style)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Main quantitative outcomes (illustrative experimental report format)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Task Success ↑",
+        "Answer Disagreement ↓",
+        "Evidence Disagreement ↓",
+        "Factual Precision ↑",
+        "Calibration (ECE) ↓"
+      ],
+      "data": [
+        [
+          "Single Pipeline",
+          "0.71",
+          "0.00",
+          "0.00",
+          "0.68",
+          "0.12"
+        ],
+        [
+          "Random-from-Rashomon",
+          "0.72",
+          "0.19",
+          "0.27",
+          "0.67",
+          "0.13"
+        ],
+        [
+          "Best-of-N",
+          "0.74",
+          "0.16",
+          "0.22",
+          "0.70",
+          "0.12"
+        ],
+        [
+          "RCA (full)",
+          "0.73",
+          "0.07",
+          "0.10",
+          "0.75",
+          "0.08"
+        ]
+      ],
+      "table_note": "Interpretation: forming a Rashomon set without reconciliation increases instability (random selection). Best-of-N improves success but does not fix disagreement. RCA substantially reduces disagreement while improving factual precision and calibration, with negligible task-success change."
+    },
+    {
+      "table_title": "Ablation study of RCA components",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Task Success ↑",
+        "Answer Disagreement ↓",
+        "Factual Precision ↑",
+        "Calibration (ECE) ↓"
+      ],
+      "data": [
+        [
+          "RCA w/o OIC",
+          "0.73",
+          "0.10",
+          "0.73",
+          "0.08"
+        ],
+        [
+          "RCA w/o LPV",
+          "0.72",
+          "0.11",
+          "0.74",
+          "0.09"
+        ],
+        [
+          "RCA w/o PREC",
+          "0.74",
+          "0.13",
+          "0.71",
+          "0.08"
+        ],
+        [
+          "RCA w/o Epistemic objective",
+          "0.73",
+          "0.07",
+          "0.75",
+          "0.12"
+        ],
+        [
+          "RCA (full)",
+          "0.73",
+          "0.07",
+          "0.75",
+          "0.08"
+        ]
+      ],
+      "table_note": "PREC is most important for reducing disagreement; the epistemic objective primarily improves calibration (consistent with EpiCaR’s motivation)."
+    }
+  ]
+}

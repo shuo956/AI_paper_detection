@@ -1,0 +1,134 @@
+{
+  "tables": [
+    {
+      "table_title": "Clinical RE micro-F1 (English/Turkish)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Retrieval signal",
+        "Reranking compute",
+        "EN micro-F1",
+        "TR micro-F1"
+      ],
+      "data": [
+        [
+          "Dense + Cross-Encoder Rerank",
+          "semantic",
+          "query+doc tokens",
+          "0.895",
+          "0.861"
+        ],
+        [
+          "RAR (Aidynkyzy et al., 2026)",
+          "relation-aware",
+          "none / lightweight",
+          "0.906",
+          "0.888"
+        ],
+        [
+          "SCR (Hou & Yang, 2026)",
+          "reusable states",
+          "**query-only**",
+          "0.909",
+          "0.891"
+        ],
+        [
+          "**SIRE (ours)**",
+          "states + intent + event",
+          "**query-only**",
+          "**0.916**",
+          "**0.899**"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Inference efficiency (per query)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Candidate length dependence",
+        "Retrieval (ms)",
+        "Rerank (ms)",
+        "Total (ms)"
+      ],
+      "data": [
+        [
+          "Dense + Cross-Encoder",
+          "scales with doc length",
+          "18",
+          "220",
+          "238"
+        ],
+        [
+          "RAR",
+          "low",
+          "25",
+          "0",
+          "25"
+        ],
+        [
+          "SCR",
+          "low",
+          "20",
+          "35",
+          "55"
+        ],
+        [
+          "**SIRE (ours)**",
+          "low",
+          "22",
+          "36",
+          "58"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation study (micro-F1; rerank latency)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "EN micro-F1",
+        "TR micro-F1",
+        "Rerank ms"
+      ],
+      "data": [
+        [
+          "SIRE full",
+          "**0.916**",
+          "**0.899**",
+          "36"
+        ],
+        [
+          "− intent cues",
+          "0.913",
+          "0.894",
+          "36"
+        ],
+        [
+          "− event cues",
+          "0.914",
+          "0.896",
+          "36"
+        ],
+        [
+          "− intent − event (SCR)",
+          "0.909",
+          "0.891",
+          "35"
+        ],
+        [
+          "25% layers stored (uniform)",
+          "0.914",
+          "0.897",
+          "**24**"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

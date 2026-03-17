@@ -1,0 +1,172 @@
+{
+  "tables": [
+    {
+      "table_title": "Experimental matrix (models × components)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Retrieval",
+        "Multi-doc decoding",
+        "Evidence-centric RL (EAPO-like)",
+        "Interpretable probabilities (PRISM-like)",
+        "Primary goal"
+      ],
+      "data": [
+        [
+          "Base-RAG",
+          "Yes",
+          "Concatenate",
+          "No",
+          "No",
+          "Baseline accuracy"
+        ],
+        [
+          "Pced-RAG",
+          "Yes",
+          "Pced (Corallo & Papotti, 2026)",
+          "No",
+          "No",
+          "Efficiency + cross-doc reasoning"
+        ],
+        [
+          "Evi-RAG",
+          "Yes",
+          "Pced",
+          "Yes (Guan et al., 2026)",
+          "No",
+          "Faithfulness / evidence quality"
+        ],
+        [
+          "EviPRaG",
+          "Yes",
+          "Pced",
+          "Yes",
+          "Yes (Nan et al., 2026)",
+          "Faithfulness + calibrated uncertainty"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Metrics aligned to “pragmatic understanding”",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Dimension",
+        "Operational metric",
+        "Why it matters",
+        "Reference motivation"
+      ],
+      "data": [
+        [
+          "Evidence use",
+          "Evidence F1 / citation correctness",
+          "Distinguishes reasoning from guessing",
+          "Guan et al. (2026)"
+        ],
+        [
+          "Uncertainty quality",
+          "ECE / Brier score + explanation fidelity",
+          "Supports decision-making and auditability",
+          "Nan et al. (2026)"
+        ],
+        [
+          "Human alignment",
+          "Editing load; theme coverage",
+          "Measures real workflow benefit",
+          "Seegmiller et al. (2026)"
+        ],
+        [
+          "Evaluation validity",
+          "Human–judge correlation; attack sensitivity",
+          "Prevents misleading progress claims",
+          "Yang et al. (2026); Kaneko (2026)"
+        ],
+        [
+          "Epistemic adequacy",
+          "Narrative coherence + contextual judgment rubric",
+          "Goes beyond prediction",
+          "Ting et al. (2026)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Expected outcome patterns (hypotheses to be tested)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Comparison",
+        "Expected change",
+        "Rationale grounded in literature"
+      ],
+      "data": [
+        [
+          "Pced-RAG vs Base-RAG",
+          "Similar accuracy, lower latency/cost",
+          "Pced avoids long prefill while preserving cross-doc interaction (Corallo & Papotti, 2026)"
+        ],
+        [
+          "Evi-RAG vs Pced-RAG",
+          "Higher evidence quality; fewer unsupported correct answers",
+          "Dense evidence reward targets retrieval bottleneck and “lucky guesses” (Guan et al., 2026)"
+        ],
+        [
+          "EviPRaG vs Evi-RAG",
+          "Better calibration + interpretable factor contributions",
+          "Shapley reconstruction improves probability estimation transparency (Nan et al., 2026)"
+        ],
+        [
+          "LaaJ-only vs human eval",
+          "Potential divergence; requires validation",
+          "Observed human–LaaJ signal differences and scarce validation (Yang et al., 2026)"
+        ],
+        [
+          "Judge scores under paraphrase attack",
+          "Inflated scores without substantive improvement",
+          "PAA increases review scores while preserving meaning (Kaneko, 2026)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Adversarially-aware evaluation checklist (reporting standard)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Step",
+        "Check",
+        "Pass criterion"
+      ],
+      "data": [
+        [
+          "1",
+          "Judge–human correlation measured on same subset",
+          "Report Pearson/Spearman + CI; must exceed pre-set threshold"
+        ],
+        [
+          "2",
+          "Evidence faithfulness audited",
+          "Evidence metrics stable across paraphrases"
+        ],
+        [
+          "3",
+          "PAA-style paraphrase stress test",
+          "Judge score inflation bounded; otherwise discount judge metric"
+        ],
+        [
+          "4",
+          "Human editing-load measured (Task B)",
+          "Demonstrated reduction vs baseline"
+        ],
+        [
+          "5",
+          "“Pragmatic understanding” narrative rubric",
+          "Human panel agreement reported"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

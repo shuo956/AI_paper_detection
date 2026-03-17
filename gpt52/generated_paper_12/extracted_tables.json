@@ -1,0 +1,168 @@
+{
+  "tables": [
+    {
+      "table_title": "DR-agent performance and efficiency (illustrative experimental summary)",
+      "is_baseline": true,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Pruning",
+        "Multi-budget",
+        "Min-Seek scaling",
+        "PTQ + FAQ",
+        "Score ↑",
+        "Latency (s/task) ↓",
+        "Energy ↓",
+        "Peak Memory (GB) ↓"
+      ],
+      "data": [
+        [
+          "Baseline Agent",
+          "No",
+          "No",
+          "No",
+          "No",
+          "1.00",
+          "1.00",
+          "1.00",
+          "1.00"
+        ],
+        [
+          "MI-Prune only (MI-PRUN-style)",
+          "Yes",
+          "No",
+          "No",
+          "No",
+          "0.97",
+          "0.78",
+          "0.80",
+          "0.82"
+        ],
+        [
+          "Min-Seek only",
+          "No",
+          "No",
+          "Yes",
+          "No",
+          "1.04",
+          "1.08",
+          "1.10",
+          "0.95"
+        ],
+        [
+          "ORBIT-like budgets only",
+          "No",
+          "Yes",
+          "No",
+          "No",
+          "1.02",
+          "0.92",
+          "0.90",
+          "1.00"
+        ],
+        [
+          "Prune + Budgets",
+          "Yes",
+          "Yes",
+          "No",
+          "No",
+          "1.00",
+          "0.74",
+          "0.76",
+          "0.82"
+        ],
+        [
+          "Prune + Budgets + Min-Seek",
+          "Yes",
+          "Yes",
+          "Yes",
+          "No",
+          "1.05",
+          "0.79",
+          "0.83",
+          "0.78"
+        ],
+        [
+          "MIRAGE (full)",
+          "Yes",
+          "Yes",
+          "Yes",
+          "Yes",
+          "1.06",
+          "0.77",
+          "0.79",
+          "0.76"
+        ]
+      ],
+      "table_note": "Score is normalized examiner score; Energy is normalized per-task energy; lower is better."
+    },
+    {
+      "table_title": "Post-training quantization impact with and without FAQ-style regenerated calibration",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model Variant",
+        "PTQ Calibration",
+        "Score Drop vs FP16 ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Pruned model (FP16)",
+          "—",
+          "0.00",
+          "Reference"
+        ],
+        [
+          "Pruned + PTQ",
+          "Original calibration set",
+          "0.05",
+          "Larger degradation due to shifted activations"
+        ],
+        [
+          "Pruned + PTQ",
+          "FAQ regenerated",
+          "0.02",
+          "Reduced loss; more representative activation coverage (Xiao et al., 2026)"
+        ]
+      ],
+      "table_note": "FAQ-style regenerated calibration reduces PTQ loss by improving activation coverage."
+    },
+    {
+      "table_title": "Mode usage and marginal returns (MIRAGE)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Mode",
+        "Avg. tokens generated",
+        "Share of tasks",
+        "Score contribution",
+        "Energy contribution"
+      ],
+      "data": [
+        [
+          "Short",
+          "Low",
+          "High",
+          "Moderate",
+          "Low"
+        ],
+        [
+          "Standard",
+          "Medium",
+          "Medium",
+          "High",
+          "Medium"
+        ],
+        [
+          "Extended + Min-Seek",
+          "High (adaptive)",
+          "Low",
+          "Highest on hard tasks",
+          "Highest but bounded"
+        ]
+      ],
+      "table_note": "Avoid paying extended reasoning cost uniformly, while preserving a reliable high-effort option for hard instances."
+    }
+  ]
+}

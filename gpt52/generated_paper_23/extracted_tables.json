@@ -1,0 +1,171 @@
+{
+  "tables": [
+    {
+      "table_title": "RoMoralHealth-RAG dataset composition (illustrative)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Split",
+        "Items",
+        "Noisy retrieval (%)",
+        "Misinformation (%)",
+        "Injection-in-retrieval (%)",
+        "Prompt-shift variants"
+      ],
+      "data": [
+        [
+          "Dev",
+          500,
+          30,
+          20,
+          20,
+          "1 per item"
+        ],
+        [
+          "Test",
+          2000,
+          30,
+          20,
+          20,
+          "2 per item"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Main safety and faithfulness outcomes (answer-level)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Faithfulness score (0-100)",
+        "Unsupported claim rate (%)",
+        "Contradiction rate (%)",
+        "Safety-critical error rate (%)"
+      ],
+      "data": [
+        [
+          "Base-RAG",
+          71.2,
+          18.5,
+          6.4,
+          5.9
+        ],
+        [
+          "+OpenDecoder-Q",
+          75.6,
+          15.1,
+          5.8,
+          5.1
+        ],
+        [
+          "+TTARAG",
+          76.4,
+          14.6,
+          5.5,
+          4.8
+        ],
+        [
+          "+OpenDecoder-Q +TTARAG",
+          79.3,
+          12.2,
+          4.9,
+          4.1
+        ],
+        [
+          "+AtomicVerify (on top)",
+          83.0,
+          7.4,
+          3.1,
+          2.6
+        ],
+        [
+          "+ReasAlign-Guard (on top)",
+          82.1,
+          8.0,
+          3.3,
+          1.9
+        ],
+        [
+          "Full: +OpenDecoder-Q +TTARAG +AtomicVerify +ReasAlign +EAF",
+          84.2,
+          6.9,
+          2.9,
+          1.6
+        ]
+      ],
+      "table_note": "Lower is better for error rates; higher is better for rubric scores."
+    },
+    {
+      "table_title": "Robustness to injection embedded in retrieved text",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Injection attack success rate (ASR, %) ↓",
+        "Utility score (0-100) ↑"
+      ],
+      "data": [
+        [
+          "Base-RAG",
+          41.7,
+          74.0
+        ],
+        [
+          "+AtomicVerify",
+          28.9,
+          73.2
+        ],
+        [
+          "+ReasAlign-Guard",
+          6.8,
+          73.5
+        ],
+        [
+          "Full system",
+          5.9,
+          75.1
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Empathy applicability and style side effects (CASSE-inspired)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "Empathy appropriateness (0-100)",
+        "Perceived expertise (0-100)",
+        "Avg length (tokens)"
+      ],
+      "data": [
+        [
+          "Always-empathic",
+          78.4,
+          70.2,
+          210
+        ],
+        [
+          "EAF-controlled empathy",
+          85.6,
+          72.0,
+          195
+        ],
+        [
+          "Forced concise style",
+          80.1,
+          64.3,
+          120
+        ],
+        [
+          "Full system (EAF + no forced concision)",
+          86.0,
+          73.1,
+          185
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

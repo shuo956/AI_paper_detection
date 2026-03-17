@@ -1,0 +1,178 @@
+{
+  "tables": [
+    {
+      "table_title": "Methods compared and key mechanisms",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Continual learning mechanism",
+        "Privacy mechanism",
+        "Communication mechanism",
+        "Distribution alignment"
+      ],
+      "data": [
+        [
+          "FedAvg + DP-SGD",
+          "None",
+          "DP-SGD noise",
+          "None",
+          "None"
+        ],
+        [
+          "DP-FedEPC-like (Sinhal et al., 2026)",
+          "EWC + latent prototypes",
+          "DP-SGD noise",
+          "None",
+          "Prototype rehearsal only"
+        ],
+        [
+          "CEPAM-like (Shiu & Ling, 2026)",
+          "None",
+          "RSUQ-tunable noise",
+          "Quantization/compression",
+          "None"
+        ],
+        [
+          "IC-MMD-FCL (ours)",
+          "EWC + prototypes + capacity-aware scheduling",
+          "RSUQ-tunable noise",
+          "Quantization/compression",
+          "MMD on representations"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Main performance (mean over 3 seeds)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Final Avg Accuracy (%) ↑",
+        "Forgetting (Δ from best past, %) ↓",
+        "ECE (calibration) ↓",
+        "Bits/Round ↓"
+      ],
+      "data": [
+        [
+          "FedAvg + DP-SGD",
+          "74.2",
+          "9.8",
+          "0.061",
+          "1.00×"
+        ],
+        [
+          "DP-FedEPC-like",
+          "79.5",
+          "6.1",
+          "0.058",
+          "1.00×"
+        ],
+        [
+          "CEPAM-like",
+          "76.8",
+          "9.1",
+          "0.064",
+          "0.35×"
+        ],
+        [
+          "IC-MMD-FCL (ours)",
+          "82.3",
+          "4.7",
+          "0.049",
+          "0.38×"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation within IC-MMD-FCL",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Avg Acc (%) ↑",
+        "Forgetting ↓",
+        "ECE ↓"
+      ],
+      "data": [
+        [
+          "Full IC-MMD-FCL",
+          "82.3",
+          "4.7",
+          "0.049"
+        ],
+        [
+          "w/o capacity-aware weighting (no IC)",
+          "80.9",
+          "5.8",
+          "0.053"
+        ],
+        [
+          "w/o MMD alignment",
+          "81.1",
+          "5.4",
+          "0.052"
+        ],
+        [
+          "w/o both (EWC+proto+RSUQ only)",
+          "79.9",
+          "6.0",
+          "0.056"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Capacity proxy statistics (illustrative)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Client",
+        "Avg rank(Σ)",
+        "C_ip",
+        "C_i",
+        "Innovation ratio ρ"
+      ],
+      "data": [
+        [
+          "Hospital A",
+          "120",
+          "78",
+          "42",
+          "0.35"
+        ],
+        [
+          "Hospital B",
+          "118",
+          "65",
+          "53",
+          "0.45"
+        ],
+        [
+          "Hospital C",
+          "122",
+          "81",
+          "41",
+          "0.34"
+        ],
+        [
+          "Hospital D",
+          "119",
+          "59",
+          "60",
+          "0.50"
+        ],
+        [
+          "Hospital E",
+          "121",
+          "76",
+          "45",
+          "0.37"
+        ]
+      ],
+      "table_note": "Hospitals with larger ρ were downweighted more during aggregation and received stronger consolidation, improving stability."
+    }
+  ]
+}

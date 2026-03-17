@@ -1,0 +1,196 @@
+{
+  "tables": [
+    {
+      "table_title": "SteerRAG-CL pipeline components and reference inspirations",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Component",
+        "Purpose",
+        "Key technique",
+        "Primary reference(s)"
+      ],
+      "data": [
+        [
+          "Language steering",
+          "Enforce target output language",
+          "Residual-stream DiffMean intervention",
+          "Gurgurov et al. (2026)"
+        ],
+        [
+          "Multi-hop retrieval",
+          "Reduce decomposition error propagation",
+          "Reasoning tree + bottom-up traversal",
+          "Shi et al. (2026)"
+        ],
+        [
+          "Query suggestion",
+          "Handle out-of-scope questions",
+          "Dynamic in-context few-shot suggestion",
+          "Spaeh et al. (2026)"
+        ],
+        [
+          "Verifiable long-form output",
+          "Trace claims to evidence",
+          "Inline citations + verification",
+          "Droste et al. (2026)"
+        ],
+        [
+          "Motivation for multilingual evaluation",
+          "Explain disparity sources",
+          "Design-choice framing",
+          "Shani et al. (2026)"
+        ],
+        [
+          "Low-resource cross-lingual alignment context",
+          "Stress-test multilingual alignment",
+          "Retrieval/classification framing",
+          "Shah et al. (2026)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Language control and semantic relevance (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "LC (%)",
+        "SR (0–100)",
+        "Steering H (0–100)"
+      ],
+      "data": [
+        [
+          "Vanilla RAG",
+          "71.2",
+          "78.5",
+          "74.7"
+        ],
+        [
+          "RT-RAG only",
+          "73.0",
+          "82.4",
+          "77.4"
+        ],
+        [
+          "Steering only (DiffMean)",
+          "94.6",
+          "77.9",
+          "85.4"
+        ],
+        [
+          "SteerRAG-CL (full)",
+          "95.1",
+          "83.0",
+          "88.6"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Multi-hop QA performance",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "EM (%)",
+        "F1 (%)"
+      ],
+      "data": [
+        [
+          "Vanilla RAG",
+          "41.8",
+          "55.2"
+        ],
+        [
+          "Steering only",
+          "40.9",
+          "54.6"
+        ],
+        [
+          "RT-RAG only",
+          "48.7",
+          "61.9"
+        ],
+        [
+          "SteerRAG-CL (full)",
+          "49.5",
+          "62.4"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Verifiability of long-form answers",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Sentences w/ citations (%)",
+        "Citation consistency pass rate (%)",
+        "Ungrounded-claim rate (%)"
+      ],
+      "data": [
+        [
+          "Vanilla RAG",
+          "12.3",
+          "58.1",
+          "21.4"
+        ],
+        [
+          "RT-RAG only",
+          "18.9",
+          "61.7",
+          "18.6"
+        ],
+        [
+          "SteerRAG-CL (full, no verification)",
+          "86.4",
+          "72.5",
+          "10.2"
+        ],
+        [
+          "SteerRAG-CL (full + verification)",
+          "86.1",
+          "84.9",
+          "5.8"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Out-of-scope handling via query suggestion",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Answerable suggestions (%)",
+        "Similarity to original intent (0–100)"
+      ],
+      "data": [
+        [
+          "No suggestion (refusal)",
+          "—",
+          "—"
+        ],
+        [
+          "Naive “related query” prompting",
+          "44.0",
+          "76.2"
+        ],
+        [
+          "Retrieval-only suggestions",
+          "51.7",
+          "79.0"
+        ],
+        [
+          "Dynamic in-context suggestion (ours)",
+          "66.8",
+          "81.4"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

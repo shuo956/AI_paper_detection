@@ -1,0 +1,132 @@
+{
+  "tables": [
+    {
+      "table_title": "Main performance (illustrative experimental outcomes consistent with referenced findings)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Evidence EP@1 ↑",
+        "Ranking Variance RV ↓",
+        "Execution Accuracy EA ↑",
+        "Clarification Appropriateness CA ↑"
+      ],
+      "data": [
+        [
+          "Vanilla LLM",
+          "0.41",
+          "0.18",
+          "0.36",
+          "0.07"
+        ],
+        [
+          "KG+LLM (Structure First)",
+          "0.46",
+          "0.16",
+          "0.40",
+          "0.08"
+        ],
+        [
+          "Cards+LLM (Constraint rerank)",
+          "0.55",
+          "0.09",
+          "0.43",
+          "0.10"
+        ],
+        [
+          "Cards+KG+LLM",
+          "0.59",
+          "0.08",
+          "0.47",
+          "0.11"
+        ],
+        [
+          "C2C (full)",
+          "0.63",
+          "0.06",
+          "0.52",
+          "0.44"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation on C2C components",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "EA ↑",
+        "Key failure mode observed"
+      ],
+      "data": [
+        [
+          "Full C2C",
+          "0.52",
+          "—"
+        ],
+        [
+          "– Clarification trigger",
+          "0.49",
+          "Overconfident answers under period/metric ambiguity"
+        ],
+        [
+          "– Reflective computation",
+          "0.48",
+          "Arithmetic slips; unit/scale errors persist"
+        ],
+        [
+          "– KG grounding",
+          "0.46",
+          "Wrong numeric span chosen from similar rows"
+        ],
+        [
+          "– Card reranking",
+          "0.44",
+          "Unstable evidence; entity/period mismatch"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Error breakdown (share of wrong answers)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Wrong period",
+        "Wrong metric",
+        "Wrong numeric span",
+        "Arithmetic error",
+        "Other"
+      ],
+      "data": [
+        [
+          "Vanilla LLM",
+          "0.22",
+          "0.19",
+          "0.27",
+          "0.24",
+          "0.08"
+        ],
+        [
+          "Cards+KG+LLM",
+          "0.17",
+          "0.14",
+          "0.22",
+          "0.20",
+          "0.27"
+        ],
+        [
+          "C2C (full)",
+          "0.09",
+          "0.10",
+          "0.18",
+          "0.14",
+          "0.49"
+        ]
+      ],
+      "table_note": "“Other” increases because many formerly-wrong cases are rerouted into clarification/insufficient-info rather than forced answers."
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "tables": [
+    {
+      "table_title": "End-to-end performance (Finance track)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Groundedness ↑",
+        "Evasion detection Acc. ↑",
+        "Hallucination rate ↓",
+        "Avg. tokens (in+out) ↓"
+      ],
+      "data": [
+        [
+          "Vanilla LLM",
+          "0.62",
+          "0.71",
+          "0.18",
+          "1850"
+        ],
+        [
+          "RAG-only",
+          "0.78",
+          "0.74",
+          "0.11",
+          "2300"
+        ],
+        [
+          "Hybrid-RAG",
+          "0.82",
+          "0.75",
+          "0.09",
+          "2450"
+        ],
+        [
+          "Consensus-only",
+          "0.66",
+          "0.79",
+          "0.15",
+          "2100"
+        ],
+        [
+          "CoSaT-RAG (full)",
+          "0.88",
+          "0.83",
+          "0.06",
+          "1650"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Scientific track: structured + unstructured reasoning",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "SQL fully correct ↑",
+        "Answer groundedness ↑ (k=10 passages)",
+        "Expert rating (1–5) ↑"
+      ],
+      "data": [
+        [
+          "RAG-only",
+          "N/A",
+          "0.86",
+          "3.9"
+        ],
+        [
+          "Hybrid-RAG (SpectraQuery-style)",
+          "0.79",
+          "0.93",
+          "4.3"
+        ],
+        [
+          "CoSaT-RAG (full)",
+          "0.82",
+          "0.95",
+          "4.5"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Position-bias stress test (PosIR-style manipulation)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Evidence at start",
+        "Evidence middle",
+        "Evidence end",
+        "Position variance ↓"
+      ],
+      "data": [
+        [
+          "Dense retriever + RAG",
+          "0.84",
+          "0.71",
+          "0.76",
+          "0.0032"
+        ],
+        [
+          "Hybrid-RAG",
+          "0.86",
+          "0.74",
+          "0.78",
+          "0.0026"
+        ],
+        [
+          "CoSaT-RAG (position-aware)",
+          "0.85",
+          "0.82",
+          "0.83",
+          "0.0002"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Token efficiency ablations",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Configuration",
+        "Instruction form",
+        "Output conciseness",
+        "Tokens saved vs. Hybrid-RAG ↓",
+        "Groundedness change"
+      ],
+      "data": [
+        [
+          "Hybrid-RAG",
+          "Prose",
+          "None",
+          "0%",
+          "0"
+        ],
+        [
+          "+ MetaGlyph",
+          "Symbolic",
+          "None",
+          "28%",
+          "-0.01"
+        ],
+        [
+          "+ Concise output",
+          "Prose",
+          "Enabled",
+          "22%",
+          "0.00"
+        ],
+        [
+          "CoSaT-RAG full",
+          "Symbolic (fallback)",
+          "Enabled",
+          "33%",
+          "+0.03"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

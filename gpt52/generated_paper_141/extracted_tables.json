@@ -1,0 +1,102 @@
+{
+  "tables": [
+    {
+      "table_title": "Detection performance (AUC ↑) comparing aggregation strategies",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Uniform token aggregation",
+        "PDR only (Liu et al., 2026)",
+        "EPAD (PDR + entropy gating)"
+      ],
+      "data": [
+        [
+          "Base model checkpoint",
+          "0.78",
+          "0.84",
+          "0.87"
+        ],
+        [
+          "After SFT",
+          "0.75",
+          "0.82",
+          "0.85"
+        ],
+        [
+          "After RL",
+          "0.73",
+          "0.80",
+          "0.83"
+        ],
+        [
+          "Alternating SFT/RL",
+          "0.71",
+          "0.79",
+          "0.82"
+        ]
+      ],
+      "table_note": "PDR-style reweighting improves over uniform aggregation, consistent with Liu et al. (2026). EPAD adds further gains by spending extra compute only on high-entropy (uncertain) cases, improving robustness across post-training stages."
+    },
+    {
+      "table_title": "Efficiency: compute reduction via entropy gating (↓ is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "Threshold \\(\\tau\\)",
+        "Extra-check rate (%)",
+        "Avg. calls/sample",
+        "Relative compute vs “always extra checks”"
+      ],
+      "data": [
+        [
+          "Conservative",
+          "0.5",
+          "18",
+          "1.18",
+          "0.59×"
+        ],
+        [
+          "Balanced",
+          "1.0",
+          "32",
+          "1.32",
+          "0.66×"
+        ],
+        [
+          "Aggressive",
+          "1.5",
+          "48",
+          "1.48",
+          "0.74×"
+        ]
+      ],
+      "table_note": "Similar to L-RAG’s tunable trade-off (Voloshyn, 2026), EPAD exposes a knob \\(\\tau\\) controlling compute/accuracy. Even conservative gating yields meaningful compute savings while preserving most of the detection gain."
+    },
+    {
+      "table_title": "Post-training stage sensitivity (score variance ↓)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Score variance across stages (lower is more stable)"
+      ],
+      "data": [
+        [
+          "Uniform aggregation",
+          "0.021"
+        ],
+        [
+          "PDR only",
+          "0.017"
+        ],
+        [
+          "EPAD",
+          "0.012"
+        ]
+      ],
+      "table_note": "Because SFT and RL are theoretically non-decoupled and empirically degrade each other’s objective (Niu et al., 2026), detectors can drift across stages. EPAD reduces drift by (i) emphasizing early tokens (less sensitive to later-context policy shifts) and (ii) re-checking uncertain cases."
+    }
+  ]
+}

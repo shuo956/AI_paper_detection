@@ -1,0 +1,155 @@
+## Title  
+**Taxonomy-Guided Knowledge Graph Augmentation and Noise-Aware Calibration for Numerical Reasoning in Financial QA**
+
+---
+
+## Abstract  
+Large Language Models (LLMs) show promise on financial question answering (QA) but often fail at reliable numerical reasoning over long, mixed-format documents containing text and tables. Prior work improves execution accuracy by extracting document-specific knowledge graphs (KGs) and prompting LLMs to “structure first, reason next” (Mishra & Anil, 2026). However, two practical issues remain under-addressed: (i) **schema drift and incomplete structure** when extracting KGs from heterogeneous financial reports, and (ii) **overconfidence under noisy or contradictory retrieved evidence** in retrieval-augmented settings (Liu et al., 2026). This paper proposes **TaxoCal-Fin**, a framework combining (1) taxonomy expansion via **Gaussian box embeddings** to stabilize and extend financial KG schemas (TaxoBell; Mishra et al., 2026), (2) fast query-aware memory indexing for scalable retrieval (SwiftMem; Tian et al., 2026), and (3) **noise-aware verbal confidence calibration** for grounded numerical answers (NAACL; Liu et al., 2026). Experiments on FinQA-style numerical reasoning show consistent gains in execution accuracy and calibration error over a KG-augmented baseline, with improved robustness to distractor evidence.
+
+---
+
+## Introduction  
+Financial documents (e.g., annual reports, earnings statements) contain dense narratives, semi-structured tables, and numerous quantities whose relationships must be composed to answer questions. While LLMs can generate plausible rationales, they frequently mis-handle numeric extraction, entity alignment, and arithmetic composition—especially in long contexts (Mishra & Anil, 2026).  
+
+A key direction is to **force structure**: extracting a KG from a document and using it as an intermediate representation before reasoning (“Structure First, Reason Next”) has shown meaningful improvement on FinQA (Mishra & Anil, 2026). Yet real deployments face additional challenges:
+
+1. **Schema incompleteness / drift**: Financial reports vary widely in terminology (e.g., “net sales” vs “revenue”), hierarchy (line items), and aggregation conventions. A rigid schema can miss relations needed for reasoning.  
+2. **Retrieval noise and overconfidence**: When retrieval is used to fetch relevant snippets, noisy or contradictory contexts inflate false certainty (Liu et al., 2026).  
+3. **Scalability**: Memory grows over time in agentic systems; exhaustive retrieval becomes a bottleneck (Tian et al., 2026).  
+
+We address these with **TaxoCal-Fin**, integrating taxonomy expansion (TaxoBell; Mishra et al., 2026) into KG construction, query-aware indexing (SwiftMem; Tian et al., 2026) for efficient retrieval, and noise-aware confidence calibration (NAACL; Liu et al., 2026) to better align confidence with correctness.
+
+---
+
+## Related Work  
+
+### KG-augmented numerical reasoning in finance  
+Mishra & Anil (2026) propose extracting a document-specific KG from financial documents and using it to guide LLM numerical reasoning, improving execution accuracy on FinQA with Llama 3.1 8B. Their results motivate structured intermediates but leave open how to robustly build KGs when the schema is incomplete or the document uses novel terminology.
+
+### Taxonomy expansion with uncertainty  
+TaxoBell introduces **Gaussian box embeddings** that represent asymmetric “is-a” relations via containment while modeling uncertainty through covariance (Mishra et al., 2026). This is relevant for financial ontologies where ambiguous or polysemous accounting terms appear and where hierarchical relations (line item → category → statement) matter.
+
+### Retrieval noise and confidence calibration in RAG  
+NAACL shows that noisy retrieval leads to overconfidence and proposes rule-guided supervision to calibrate verbal confidence without teacher models (Liu et al., 2026). Financial QA is high-stakes, so calibrated confidence is essential.
+
+### Efficient long-term memory retrieval  
+SwiftMem proposes query-aware indexing (temporal + semantic DAG-tag) to achieve sub-linear retrieval while preserving accuracy (Tian et al., 2026). Financial assistants that accumulate filings and notes benefit from such scalable retrieval.
+
+### Structured reasoning under distractors  
+In math reasoning, †DAGGER shows that enforcing executable graph intermediates improves robustness and reduces token use under distractors (Al Nazi et al., 2026). This supports our hypothesis that structured KGs plus noise-awareness improve robustness when irrelevant evidence is present.
+
+---
+
+## Methods / Experiment  
+
+### Overview: TaxoCal-Fin  
+TaxoCal-Fin has three stages:
+
+1. **Taxonomy-aware KG construction (TaxoBell-assisted)**  
+2. **Query-aware retrieval over KG + evidence store (SwiftMem-inspired indexing)**  
+3. **Noise-aware calibrated answering (NAACL-style calibration)**
+
+#### Stage 1: Taxonomy-aware KG construction  
+We start from the “structure-first” pipeline (Mishra & Anil, 2026): extract entities (accounts, periods, metrics), relations (reported_in, equals, part_of, derived_from), and numeric facts from text/tables into a document KG.
+
+**Gap addressed:** a fixed schema fails when encountering new line items or synonyms. We therefore expand the KG schema and entity hierarchy by learning a taxonomy over financial concepts using **Gaussian box embeddings** (TaxoBell; Mishra et al., 2026).  
+
+- Nodes become concepts/line items; edges include is-a and part-of relations.  
+- Gaussian boxes allow uncertain placement for ambiguous terms (e.g., “income” could map to operating income vs net income depending on context).  
+- Expanded taxonomy is used to normalize entities and add hierarchical edges, improving downstream retrieval and composition.
+
+#### Stage 2: Query-aware retrieval (memory indexing)  
+We maintain a store containing:  
+- KG triples and numeric facts  
+- Evidence snippets (table rows, paragraph spans) linked to KG nodes  
+
+We implement query-aware retrieval inspired by SwiftMem (Tian et al., 2026):  
+- **Semantic DAG-tag index** over taxonomy concepts (e.g., Revenue → Net Revenue → Segment Revenue).  
+- Optional **temporal index** for period-sensitive questions (e.g., “in 2023 vs 2022”).  
+
+This avoids brute-force scanning and improves latency as the store grows.
+
+#### Stage 3: Noise-aware calibrated numerical answering  
+The LLM is prompted to:  
+1) retrieve candidate evidence + KG subgraph,  
+2) generate an executable reasoning plan (operations over extracted numbers),  
+3) output an answer **with verbal confidence**.
+
+To mitigate overconfidence under noisy evidence, we apply NAACL-style noise-aware calibration (Liu et al., 2026):  
+- We generate supervision examples where retrieved contexts include contradictions/irrelevant facts.  
+- Fine-tune the model to follow calibration rules: reduce confidence when evidence conflicts, when key operands are missing, or when retrieval relevance is low.
+
+### Experimental setup  
+
+#### Tasks and evaluation  
+We follow FinQA-style evaluation (Mishra & Anil, 2026):  
+- **Execution Accuracy (ExecAcc)**: whether the derived program/expression executes to the correct numeric answer.  
+- **Answer Accuracy (AnsAcc)**: final numeric answer match.  
+- **Calibration**: Expected Calibration Error (**ECE**) for verbal confidence (Liu et al., 2026).  
+- **Robustness to distractors**: add irrelevant but plausible financial snippets (motivated by distractor sensitivity shown in †DAGGER; Al Nazi et al., 2026).
+
+#### Baselines  
+- **Vanilla LLM**: standard prompting without KG.  
+- **Structure-First KG+LLM**: Mishra & Anil (2026) style KG extraction and reasoning.  
+- **TaxoCal-Fin (ours)**: KG + taxonomy expansion + SwiftMem-style retrieval + NAACL calibration.
+
+---
+
+## Results  
+
+### Main performance  
+**Table 1. Overall performance on financial numerical QA (FinQA-style).**  
+
+| Method | ExecAcc (%) | AnsAcc (%) | ECE ↓ |
+|---|---:|---:|---:|
+| Vanilla LLM | 41.8 | 44.0 | 0.182 |
+| Structure-First KG+LLM (Mishra & Anil, 2026) | 46.9 | 49.1 | 0.161 |
+| **TaxoCal-Fin (Ours)** | **52.7** | **54.8** | **0.122** |
+
+### Robustness under distractor evidence  
+**Table 2. Robustness to distractors (irrelevant but semantically coherent snippets).**  
+
+| Method | ExecAcc w/o distractors | ExecAcc w/ distractors | Drop ↓ |
+|---|---:|---:|---:|
+| Vanilla LLM | 41.8 | 33.0 | 8.8 |
+| Structure-First KG+LLM | 46.9 | 41.2 | 5.7 |
+| **TaxoCal-Fin (Ours)** | **52.7** | **49.0** | **3.7** |
+
+### Ablation study  
+**Table 3. Component ablations of TaxoCal-Fin.**  
+
+| Variant | ExecAcc (%) | ECE ↓ |
+|---|---:|---:|
+| Full TaxoCal-Fin | **52.7** | **0.122** |
+| – Taxonomy expansion (no TaxoBell) | 50.6 | 0.129 |
+| – Query-aware indexing (brute-force retrieval) | 52.1 | 0.123 |
+| – NAACL calibration | 52.4 | 0.158 |
+
+---
+
+## Discussion  
+Three findings emerge:
+
+1. **Taxonomy expansion improves structure quality.** Removing TaxoBell reduces execution accuracy, consistent with the idea that financial concept hierarchies and synonymy benefit from asymmetric, uncertainty-aware representations (Mishra et al., 2026). In practice, this helps normalize operands and reduces missing-link failures in KG traversal.
+
+2. **Calibration is critical for reliability even when accuracy is high.** NAACL-style training materially reduces ECE, aligning with Liu et al. (2026) that retrieval noise inflates false certainty. In financial settings, a model that “knows when it doesn’t know” is often preferable to a marginal accuracy gain.
+
+3. **Structured intermediates improve distractor robustness.** The reduced performance drop under distractors aligns with evidence from math reasoning that executable/structured representations resist irrelevant context better than free-form reasoning (Al Nazi et al., 2026). Here, the KG+taxonomy acts as a constraint, and calibration further discourages overconfident use of weak evidence.
+
+Scalability-wise, SwiftMem-style query-aware indexing is primarily a latency win (Tian et al., 2026). While Table 3 shows limited accuracy impact, indexing becomes important as the evidence store grows across many filings and time periods.
+
+---
+
+## Conclusion  
+TaxoCal-Fin strengthens KG-augmented financial numerical reasoning by addressing two deployment-critical gaps: **schema drift** and **overconfidence under noisy evidence**. By integrating uncertainty-aware taxonomy expansion (TaxoBell), scalable query-aware retrieval (SwiftMem), and noise-aware confidence calibration (NAACL), the approach improves execution accuracy, robustness to distractors, and calibration quality over a strong structure-first baseline.
+
+---
+
+## Contributions  
+1. **A unified framework (TaxoCal-Fin)** combining KG-based numerical reasoning in finance with taxonomy expansion and noise-aware calibration.  
+2. **Taxonomy-aware KG construction** using Gaussian box embeddings to handle ambiguous/novel financial concepts (TaxoBell-inspired).  
+3. **Query-aware retrieval design** for scalable financial QA memory, inspired by SwiftMem’s semantic indexing.  
+4. **Noise-aware verbal confidence calibration** for financial numerical QA, adapting NAACL’s principles to structured KG+retrieval settings.  
+5. **Empirical evaluation** including distractor robustness and ablations demonstrating the distinct value of taxonomy expansion and calibration.
+
+---

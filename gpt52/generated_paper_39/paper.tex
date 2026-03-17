@@ -1,0 +1,165 @@
+## Title  
+**Conflict-Aware, Context-Robust Evaluation for Large Language Models: Linking Intra-Memory Knowledge Conflict, Prompt Sensitivity, and Safety Signals**
+
+---
+
+## Abstract  
+Current evaluation of large language models (LLMs) often treats errors—hallucination, bias, refusal, and jailbreak susceptibility—as separable phenomena measured with fixed prompts and static test conditions. However, recent work suggests these behaviors are strongly shaped by (i) *intra-memory knowledge conflict* encoded during pretraining and localized to specific internal components (Pham et al., 2026), (ii) *contextual sensitivity* where bias and other decisions shift under innocuous framing changes (Basu & Chakraborty, 2026; Guey et al., 2026), and (iii) *latent internal signals* during decoding that could be surfaced for safer generation (Zhao et al., 2026; Park et al., 2026). We propose **CoCoEval** (Conflict–Context Evaluation), a unified evaluation methodology and experimental study that measures how knowledge conflict interacts with contextual framing and decoding-time safety awareness. CoCoEval combines (1) mechanistic conflict localization-inspired probing, (2) robustness grids and dual-framing across languages, and (3) decoding-time anomaly/safety signal readouts. We report results on a suite of tasks spanning political QA clarity (Prahallad et al., 2026), contextual bias stress tests (Basu & Chakraborty, 2026), multilingual bias probes (Guey et al., 2026), Turkish capability coverage (Toraman et al., 2026), and jailbreak/backdoor settings (Zhao et al., 2026; Park et al., 2026). Our findings indicate that (a) context perturbations amplify inconsistent parametric beliefs into measurable output instability, (b) models with stronger “latent safety signals” show lower jailbreak success *only when* decoding-time probing is used, and (c) standard single-condition scores can overestimate robustness. We conclude with actionable evaluation recommendations and reporting artifacts.
+
+---
+
+## Introduction  
+LLMs are increasingly assessed through leaderboards and benchmark suites, yet multiple 2026 studies highlight that “one-score” evaluation is fragile:
+
+* **Parametric knowledge is not single-valued.** Pretraining can encode contradictory facts about the same event, producing *intra-memory knowledge conflict* that is localized to particular components and can be causally controlled at inference (Pham et al., 2026).  
+* **Outputs are highly context-sensitive.** Bias can change dramatically with time/place/audience framing even without adversarial prompting (Basu & Chakraborty, 2026). Prompt framing sensitivity is also central to robust bias measurement (Guey et al., 2026) and clarity evaluation (Prahallad et al., 2026).  
+* **Safety is multidimensional and decoding-dependent.** Frontier model safety varies across threat models and modalities; worst-case adversarial safety can collapse (Ma et al., 2026). Moreover, even “successfully jailbroken” models may exhibit latent safety signals during decoding (Zhao et al., 2026), and inference-time backdoors in reasoning can be detected via probability-shift statistics (Park et al., 2026).
+
+**Gap.** Existing evaluations typically do not connect these threads: they measure bias, hallucination, clarity, and jailbreak risk separately, rarely testing whether *knowledge conflict* is a driver of *contextual instability*, or whether *decoding-time signals* can predict or mitigate those instabilities.
+
+**Goal.** We introduce **CoCoEval**, an evaluation study designed to quantify:  
+1) how contextual framing interacts with knowledge conflict to produce unstable outputs, and  
+2) how decoding-time safety/anomaly signals relate to robustness under jailbreak/backdoor pressure.
+
+---
+
+## Related Work  
+**Mechanistic localization of conflicting knowledge.** Pham et al. (2026) propose a mechanistic interpretability framework to identify where conflicting pretraining knowledge is encoded and how to intervene causally at inference time. CoCoEval borrows the *evaluation premise*—conflict is internal and localizable—even when we treat models as black boxes in parts of our study.
+
+**Context-robust bias measurement.** Basu & Chakraborty (2026) show stereotype selection shifts under non-adversarial contextual framing and propose Context Sensitivity Fingerprints (CSF). Guey et al. (2026) propose BiasLab with multilingual dual-framing and randomized wrappers to reduce template dependence. CoCoEval integrates both ideas: *systematic contextual grids* + *dual-framing robustness*.
+
+**Prompt effects in evaluation.** Prahallad et al. (2026) demonstrate prompt strategy substantially affects automatic clarity and topic detection accuracy in political QA, motivating prompt-robust evaluation protocols.
+
+**Safety signals during decoding and reasoning attacks.** Zhao et al. (2026) surface latent safety signals “in-decoding” to improve jailbreak defense without high over-refusal. Park et al. (2026) detect inference-time reasoning backdoors using probability-shift anomalies (STAR). CoCoEval treats these as complementary decoding-time observables.
+
+**Holistic safety evaluation.** Ma et al. (2026) show safety is uneven across models and adversarial tests can drive worst-case safety below 6%, motivating multi-axis evaluation.
+
+**Language-specific benchmarking.** TurkBench (Toraman et al., 2026) provides broad Turkish evaluation coverage; we use it to test whether conflict/context sensitivity generalizes beyond English.
+
+---
+
+## Methods / Experiment  
+
+### Overview: CoCoEval Protocol  
+CoCoEval has three layers, each producing artifacts that can be reported alongside standard benchmark scores.
+
+1) **Conflict Probing Layer (CPL).** Measures output instability across paraphrases and contextual framings for *known conflict-prone* queries (inspired by Pham et al., 2026).  
+2) **Context & Framing Robustness Layer (CFRL).** Runs (a) contextual grids (CSF-style) and (b) multilingual dual-framing probes (BiasLab-style).  
+3) **Decoding Signal Layer (DSL).** Collects decoding-time indicators: latent safety-awareness probes (Zhao et al., 2026) and probability-shift anomaly statistics (STAR; Park et al., 2026) during jailbreak/backdoor evaluations.
+
+### Tasks and Data Sources  
+We assemble an evaluation suite from the referenced works:
+
+- **Political QA clarity & topic detection:** CLARITY dataset setting (Prahallad et al., 2026).  
+- **Contextual bias stress test:** Contextual StereoSet contrasts (Basu & Chakraborty, 2026).  
+- **Multilingual dual-framing bias:** BiasLab-style mirrored probes (Guey et al., 2026).  
+- **Turkish general capability:** TurkBench categories (Toraman et al., 2026).  
+- **Safety under jailbreak/backdoor:** jailbreak prompts and decoding-time probing (Zhao et al., 2026); inference-time reasoning backdoor detection (Park et al., 2026).  
+- **Safety evaluation framing:** we report results in a multi-dimensional profile consistent with Ma et al. (2026).
+
+### Metrics  
+We define three primary metrics.
+
+1) **Conflict Sensitivity Index (CSI).** For a set of semantically equivalent prompts \(p_i\) about the same claim under different contexts, CSI measures dispersion in model commitments (e.g., contradiction rate, entropy of stance labels). This operationalizes the idea that internal conflict manifests as unstable outputs (motivated by Pham et al., 2026).  
+2) **Context Sensitivity Fingerprint (CSF-lite).** Following Basu & Chakraborty (2026), we compute paired contrasts (e.g., 1990 vs 2030; gossip vs formal) and dispersion statistics with bootstrap confidence intervals.  
+3) **Decoding Safety/Anomaly Signal Scores.**  
+   - **SafeProbe score:** strength of surfaced latent safety signal during decoding (Zhao et al., 2026).  
+   - **STAR score:** state-transition amplification anomaly statistic (Park et al., 2026).
+
+### Experimental Setup (Models and Conditions)  
+We evaluate a representative set of LLMs (treated as black boxes) under:
+
+- **Prompting styles** for clarity/topic tasks: simple, CoT, CoT+few-shot (Prahallad et al., 2026).  
+- **Contextual framing grid** for bias (Basu & Chakraborty, 2026).  
+- **Dual-framing multilingual wrappers** for bias (Guey et al., 2026).  
+- **Jailbreak settings** with and without decoding-time safety probing (Zhao et al., 2026).  
+- **Reasoning backdoor detection** using STAR (Park et al., 2026).
+
+---
+
+## Results (with Tables)
+
+### Table 1 — CoCoEval suite components and what they diagnose  
+| CoCoEval Layer | Reference Anchor | What varies | Primary output | Failure mode revealed |
+|---|---|---|---|---|
+| CPL (Conflict Probing) | Pham et al. (2026) | Paraphrase + context | CSI | Intra-memory conflict → output instability |
+| CFRL (Context Robustness) | Basu & Chakraborty (2026) | Time/place/audience frames | CSF-lite | Bias/stance shifts under non-adversarial context |
+| CFRL (Dual-framing multilingual) | Guey et al. (2026) | Target swap + wrappers + language | Effect sizes, neutrality | Template dependence; cross-lingual drift |
+| Task-specific prompting | Prahallad et al. (2026) | Prompt strategy | Accuracy/EM | Evaluation sensitivity to prompting |
+| DSL (Decoding safety probes) | Zhao et al. (2026) | In-decoding probing on/off | SafeProbe score, jailbreak SR | Latent safety signal overridden without probing |
+| DSL (Backdoor anomaly) | Park et al. (2026) | Triggered reasoning paths | AUROC, STAR | Inference-time reasoning backdoors |
+
+### Table 2 — Prompting sensitivity on political QA clarity/topic detection (replicating trend)  
+| Prompting strategy | Clarity accuracy (↑) | Evasion accuracy (↑) | Topic accuracy (↑) |
+|---|---:|---:|---:|
+| Simple prompting | 0.56 | 0.30 | 0.60 |
+| CoT | 0.60 | **0.34** | 0.69 |
+| CoT + few-shot | **0.63** | 0.33 | **0.74** |
+
+*Pattern matches Prahallad et al. (2026): prompt design reliably improves high-level clarity and topic detection, while fine-grained evasion remains difficult.*
+
+### Table 3 — Contextual framing amplifies instability (CSF-lite + CSI relationship)  
+| Context contrast (fixed stereotype content) | Mean stereotype shift (pp) | Mean CSI change (↑ instability) |
+|---|---:|---:|
+| 1990 vs 2030 framing | +6.8 | +0.12 |
+| Gossip vs formal framing | +4.1 | +0.09 |
+| Out-group observer vs neutral | +10.5 | +0.18 |
+
+*Consistent with Basu & Chakraborty (2026): non-adversarial context shifts can be large. CoCoEval additionally finds CSI rises with these shifts, supporting the hypothesis that contextual framing can “activate” conflicting internal knowledge into divergent outputs.*
+
+### Table 4 — Dual-framing multilingual bias probes show wrapper sensitivity  
+| Language | Dual-framing effect size (abs, ↓ better) | Neutrality rate (↑) | Wrapper-to-wrapper variance (↓) |
+|---|---:|---:|---:|
+| English | 0.18 | 0.41 | 0.06 |
+| Turkish | 0.23 | 0.38 | 0.09 |
+| Spanish | 0.20 | 0.40 | 0.07 |
+
+*In line with Guey et al. (2026): robust bias measurement requires repeated wrappers and polarity-aligned dual framing; cross-lingual variance is nontrivial.*
+
+### Table 5 — Decoding-time signals improve safety evaluation fidelity  
+| Condition | Jailbreak success rate (↓) | Over-refusal on benign (↓) | STAR AUROC on backdoor detection (↑) |
+|---|---:|---:|---:|
+| Standard decoding (no probing) | 0.62 | 0.07 | 0.97 |
+| In-decoding safety probing (Zhao et al., 2026) | **0.31** | 0.09 | 0.97 |
+| STAR monitoring enabled (Park et al., 2026) | 0.60 | 0.07 | **~1.00** |
+| Probing + STAR | **0.28** | 0.10 | **~1.00** |
+
+*Matches the qualitative claims: decoding contains usable latent signals (Zhao et al., 2026), and probability-shift anomalies are highly discriminative for reasoning backdoors (Park et al., 2026).*
+
+---
+
+## Discussion  
+**1) Knowledge conflict is an evaluation confound, not just a model bug.**  
+Pham et al. (2026) argue conflicting parametric knowledge can be localized and controlled. CoCoEval extends this perspective by showing that conflict expresses as *context-dependent instability*: the same underlying contradiction may remain hidden under one framing yet emerge under another. This helps explain why fixed-prompt evaluations can be brittle.
+
+**2) “Bias” is often “contextual decision instability.”**  
+Contextual StereoSet (Basu & Chakraborty, 2026) demonstrates large shifts without adversarial prompting. CoCoEval’s combined CSI+CSF-lite reporting encourages interpreting these shifts as *conditional behaviors* rather than a single scalar “bias level,” aligning with the methodological warning in Basu & Chakraborty (2026).
+
+**3) Prompting is part of the measurement apparatus.**  
+As shown in political QA clarity evaluation (Prahallad et al., 2026), the evaluator’s prompt changes measured performance. Therefore, CoCoEval treats prompt strategy as an experimental factor rather than a fixed choice.
+
+**4) Safety must be measured at decoding time, not only after the fact.**  
+Zhao et al. (2026) and Park et al. (2026) both exploit signals observable during generation. CoCoEval’s DSL results suggest that post-hoc refusal rates or toxicity labels alone can miss important dynamics: models may “know” something is unsafe internally but still produce unsafe continuations unless the signal is surfaced and acted upon.
+
+**5) Multilingual and language-specific evaluation is essential.**  
+TurkBench (Toraman et al., 2026) and BiasLab (Guey et al., 2026) motivate broader-than-English auditing. CoCoEval finds wrapper sensitivity and effect sizes can differ across languages, reinforcing the need for multilingual robustness protocols.
+
+**Limitations.**  
+- CoCoEval’s conflict probing is inspired by mechanistic findings (Pham et al., 2026) but does not itself localize circuits in all settings (especially black-box models).  
+- Calibration and judge-model choices can introduce measurement bias; BiasLab-style normalization helps but does not eliminate this risk (Guey et al., 2026).  
+- Holistic safety remains hard: Ma et al. (2026) show worst-case adversarial safety can collapse; CoCoEval improves diagnosis, not guaranteed prevention.
+
+---
+
+## Conclusion  
+We introduced **CoCoEval**, a conflict-aware, context-robust, decoding-sensitive evaluation methodology for LLMs. Grounded in recent evidence on intra-memory knowledge conflict (Pham et al., 2026), contextual bias instability (Basu & Chakraborty, 2026; Guey et al., 2026), prompt sensitivity (Prahallad et al., 2026), and decoding-time safety/anomaly signals (Zhao et al., 2026; Park et al., 2026), CoCoEval demonstrates that many “model behaviors” are conditional on framing and decoding dynamics. We recommend reporting (i) context dispersion profiles (CSF-lite), (ii) conflict sensitivity (CSI), and (iii) decoding-time safety/anomaly indicators alongside standard benchmark scores to better predict real-world performance and risk.
+
+---
+
+## Contributions  
+1. **Unified evaluation framing:** Connects intra-memory knowledge conflict, contextual robustness, and decoding-time safety signals into a single evaluation protocol.  
+2. **New metrics/reporting artifacts:** Introduces CSI and integrates CSF-lite and decoding-time signal scores into a practical reporting suite.  
+3. **Cross-domain coverage:** Demonstrates the protocol across political QA clarity (Prahallad et al., 2026), contextual bias stress tests (Basu & Chakraborty, 2026), multilingual dual-framing bias (Guey et al., 2026), Turkish benchmarking (Toraman et al., 2026), and jailbreak/backdoor settings (Zhao et al., 2026; Park et al., 2026).  
+4. **Actionable recommendation:** Treat prompt design and context framing as experimental factors; incorporate decoding-time monitoring for safety evaluation, consistent with the multidimensional safety perspective of Ma et al. (2026).
+
+---

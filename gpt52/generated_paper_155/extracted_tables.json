@@ -1,0 +1,174 @@
+{
+  "tables": [
+    {
+      "table_title": "Retrieval effectiveness (clean retrieval)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Retrieval strategy",
+        "Representation",
+        "Recall@30 ↑",
+        "HitRate@30 (transition) ↑"
+      ],
+      "data": [
+        [
+          "Dense-RAG",
+          "always",
+          "single embedding",
+          "0.271",
+          "0.512"
+        ],
+        [
+          "L-RAG",
+          "entropy-gated",
+          "single embedding",
+          "0.268",
+          "0.505"
+        ],
+        [
+          "Ideation-RAG",
+          "always",
+          "decomposed (p/m/f)",
+          "0.311",
+          "0.612"
+        ],
+        [
+          "OpenDecoder-RAG",
+          "always",
+          "single embedding + quality-aware decoding",
+          "0.276",
+          "0.520"
+        ],
+        [
+          "EIDR-NA (ours)",
+          "entropy-gated + hierarchical",
+          "decomposed + quality indicators",
+          "0.357",
+          "0.651"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Efficiency–accuracy trade-off (entropy threshold sweep)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Entropy threshold \\( \\tau \\)",
+        "Retrieval reduction ↓",
+        "Accuracy / groundedness ↑"
+      ],
+      "data": [
+        [
+          "L-RAG",
+          "0.5",
+          "9%",
+          "0.781"
+        ],
+        [
+          "L-RAG",
+          "1.0",
+          "26%",
+          "0.760"
+        ],
+        [
+          "EIDR-NA",
+          "0.5",
+          "22%",
+          "0.789"
+        ],
+        [
+          "EIDR-NA",
+          "1.0",
+          "31%",
+          "0.772"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Calibration under noisy retrieval (contradictory/irrelevant context injected)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Uses noise-aware calibration",
+        "Uses quality-aware decoding",
+        "ECE (clean) ↓",
+        "ECE (noisy) ↓"
+      ],
+      "data": [
+        [
+          "Dense-RAG",
+          "✗",
+          "✗",
+          "0.142",
+          "0.231"
+        ],
+        [
+          "OpenDecoder-RAG",
+          "✗",
+          "✓",
+          "0.139",
+          "0.205"
+        ],
+        [
+          "Ideation-RAG",
+          "✗",
+          "✗",
+          "0.136",
+          "0.219"
+        ],
+        [
+          "NAACL-style (calibration only)",
+          "✓",
+          "✗",
+          "0.121",
+          "0.188"
+        ],
+        [
+          "EIDR-NA (ours)",
+          "✓",
+          "✓",
+          "0.118",
+          "0.176"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Decomposed novelty assessment quality (correlation with expert judgments)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Novelty output type",
+        "Corr. with experts ↑",
+        "Provides per-dimension novelty"
+      ],
+      "data": [
+        [
+          "LLM-as-judge (prompt)",
+          "holistic",
+          "0.21",
+          "✗"
+        ],
+        [
+          "Ideation Space novelty (Shen-style)",
+          "decomposed",
+          "0.35",
+          "✓"
+        ],
+        [
+          "EIDR-NA (ours)",
+          "decomposed + noise-aware confidence",
+          "0.39",
+          "✓"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

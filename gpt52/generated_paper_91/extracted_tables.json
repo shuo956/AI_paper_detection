@@ -1,0 +1,150 @@
+{
+  "tables": [
+    {
+      "table_title": "Planning task: Utility vs. budget (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "B=64",
+        "B=128",
+        "B=256",
+        "B=512",
+        "Anytime Index ↑"
+      ],
+      "data": [
+        [
+          "Vanilla-CoT",
+          "41.2",
+          "52.8",
+          "61.0",
+          "66.4",
+          "0.582"
+        ],
+        [
+          "Anytime-SelfImprove (Zhang et al., 2026)",
+          "44.9",
+          "56.7",
+          "64.8",
+          "69.0",
+          "0.612"
+        ],
+        [
+          "SCR-only (Han et al., 2026)",
+          "48.5",
+          "58.9",
+          "65.1",
+          "68.2",
+          "0.621"
+        ],
+        [
+          "SAFE-Anytime (ours)",
+          "50.1",
+          "60.5",
+          "66.0",
+          "69.1",
+          "0.636"
+        ]
+      ],
+      "table_note": "Quality is normalized to [0,100]. Anytime Index computed over the budget grid."
+    },
+    {
+      "table_title": "Privacy auditing: text-only membership inference risk (lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Auditor AUC ↓",
+        "TPR@1%FPR ↓"
+      ],
+      "data": [
+        [
+          "Vanilla-CoT",
+          "0.641",
+          "0.182"
+        ],
+        [
+          "Anytime-SelfImprove (Zhang et al., 2026)",
+          "0.655",
+          "0.201"
+        ],
+        [
+          "SCR-only (Han et al., 2026)",
+          "0.623",
+          "0.161"
+        ],
+        [
+          "SAFE-Anytime (ours)",
+          "0.598",
+          "0.132"
+        ]
+      ],
+      "table_note": "SimMIA-style auditor AUC; evaluated on held-out membership benchmark constructed following text-only constraints (Yi & Li, 2026)."
+    },
+    {
+      "table_title": "Efficiency: average generated tokens to reach near-final quality",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Tokens to 95% quality ↓",
+        "Relative reduction vs. Vanilla"
+      ],
+      "data": [
+        [
+          "Vanilla-CoT",
+          "410",
+          "—"
+        ],
+        [
+          "Anytime-SelfImprove",
+          "372",
+          "9.3%"
+        ],
+        [
+          "SCR-only",
+          "290",
+          "29.3%"
+        ],
+        [
+          "SAFE-Anytime (ours)",
+          "276",
+          "32.7%"
+        ]
+      ],
+      "table_note": "Tokens needed to reach ≥95% of the method’s own B=512 quality (lower is better)."
+    },
+    {
+      "table_title": "Exposía scoring: agreement with instructor scores (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Proposal Scoring (avg corr) ↑",
+        "Feedback Scoring (avg corr) ↑",
+        "Content-heavy dims Δ"
+      ],
+      "data": [
+        [
+          "Vanilla-CoT",
+          "0.61",
+          "0.58",
+          "baseline"
+        ],
+        [
+          "SCR-only",
+          "0.63",
+          "0.60",
+          "+0.01"
+        ],
+        [
+          "SAFE-Anytime (ours)",
+          "0.65",
+          "0.62",
+          "+0.03"
+        ]
+      ],
+      "table_note": "Illustrative reporting across dimensions; mirrors the multi-aspect scoring emphasis found effective in Exposía (Zyska et al., 2026)."
+    }
+  ]
+}

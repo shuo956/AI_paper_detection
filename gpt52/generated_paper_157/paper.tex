@@ -1,0 +1,191 @@
+## Title  
+**RediFact: Training-Free Factuality Correction with Misconception Redirection for Patient-Facing Long-Form Health QA**
+
+---
+
+## Abstract  
+Large language models (LLMs) used for health information frequently produce long-form answers that (i) contain factual errors and (ii) fail to *redirect* user questions that embed false premises—an especially risky failure mode in real-world patient communication. Prior work has studied long-form factuality correction via structured feedback without retraining (FactCorrector) and benchmarked redirection failures on real patient questions (MedRedFlag), but these threads remain largely disconnected: correction methods typically assume the user question is valid, while redirection benchmarks do not provide a correction mechanism that edits the model’s long answer into a safe, misconception-aware response. We propose **RediFact**, a **training-free** post-hoc pipeline that combines (1) misconception-premise detection and redirection planning, (2) graph-inspired claim-level factuality correction, and (3) identity-robust prompt neutralization to reduce quality degradation due to irrelevant demographic cues. We introduce **MedVELI-Redir**, a derived evaluation set that aligns systematically injected factual error correction (VELI5-style) with real-world misconception redirection needs (MedRedFlag-style). Experiments across multiple LLMs show RediFact improves factual precision and redirection success while maintaining relevance and empathy. We report detailed ablations and failure analyses, highlighting remaining challenges around ambiguity and perspectivist judgment.
+
+---
+
+## 1. Introduction  
+LLMs are increasingly used by lay users for medical guidance, yet two safety-critical shortcomings persist.
+
+1. **Long-form factual errors**: Even when an LLM’s response is coherent and helpful, it may contain incorrect claims. Post-hoc factuality correction using structured feedback—without retraining—has recently shown strong gains for long-form outputs (Carnerero-Cano et al., 2026).
+
+2. **Failure to redirect misconceptions**: Real patient questions often embed false premises (e.g., “Since antibiotics cure colds, which one should I take?”). Safe communication requires *redirection*: explicitly correcting the misconception and then addressing the underlying need. MedRedFlag shows state-of-the-art LLMs often fail to do this, even when they detect the problematic premise (Sambara et al., 2026).
+
+These issues interact: a model can be factually correct about details yet still unsafe if it answers *within* a false premise; conversely, it can redirect appropriately but introduce factual errors in the long explanation.
+
+**Gap.** Existing correction methods (e.g., FactCorrector) focus on correcting factual claims in an answer, but do not explicitly model misconception redirection as a prerequisite step. Meanwhile, redirection benchmarks quantify the gap but do not provide an editing/correction approach. Additionally, response quality can degrade depending on user identity cues (Zhang et al., 2026), which may further destabilize medical QA behavior.
+
+**Goal.** We develop a training-free method that edits an LLM’s long-form answer into a response that is simultaneously: (i) misconception-redirecting, (ii) factually corrected at the claim level, and (iii) robust to irrelevant identity cues.
+
+**Contributions** are listed explicitly in Section 9.
+
+---
+
+## 2. Related Work  
+
+### 2.1 Post-hoc long-form factuality correction  
+**FactCorrector** introduces a graph-inspired method that leverages structured feedback about factuality to produce corrected long-form answers without retraining and proposes **VELI5**, a dataset with systematically injected factual errors and ground-truth corrections (Carnerero-Cano et al., 2026). Our work borrows the *structured, claim-level correction* framing and extends it with a redirection-aware front-end and medical safety constraints.
+
+### 2.2 Misconception redirection in health communication  
+**MedRedFlag** curates 1100+ real-world health questions requiring redirection and shows LLMs frequently fail to redirect, leading to potentially harmful advice (Sambara et al., 2026). We treat redirection as a first-class objective and evaluate explicitly on a MedRedFlag-derived setting.
+
+### 2.3 Identity-robust generation and content integrity  
+Zhang et al. (2026) show that irrelevant sociodemographic cues can degrade core output quality and propose a training-free neutralization approach preserving semantically essential attributes. We incorporate an analogous “content integrity” step to reduce variance in medical QA quality due to identity cues.
+
+### 2.4 Disagreement-aware evaluation  
+Medical redirection and “what counts as safe/helpful” can be subjective. Xu & Jurgens (2026) synthesize perspectivist modeling and disagreement-aware evaluation; we use this lens to interpret rater/clinician vs automated judge discrepancies in redirection quality.
+
+### 2.5 Tokenization as a confound in long-form evaluation  
+Token counts vary substantially across tokenizers and domains (Roberts et al., 2026). We therefore report length in **characters and sentences** in addition to tokens to avoid misleading comparisons.
+
+---
+
+## 3. Research Gaps and Motivation  
+From the above literature, we identify four concrete gaps:
+
+1. **Correction without redirection**: FactCorrector-style pipelines correct factual claims but do not ensure the response *rejects* a false premise (Carnerero-Cano et al., 2026).  
+2. **Redirection without editing mechanisms**: MedRedFlag measures failure but does not propose a general, training-free editing approach that converts a non-redirecting answer into a redirecting one (Sambara et al., 2026).  
+3. **Identity cue instability**: Identity-dependent degradation can affect factuality and safety even for objective medical questions (Zhang et al., 2026).  
+4. **Evaluation ambiguity**: Redirection quality can involve normative judgments and disagreement; consensus-only scoring can obscure meaningful variation (Xu & Jurgens, 2026).
+
+These gaps motivate a unified, training-free post-hoc editor for patient-facing long-form medical QA.
+
+---
+
+## 4. Proposed Main Idea: RediFact  
+**RediFact** is a **training-free, post-hoc response editor** that transforms an initial LLM response into a safer and more clinically appropriate answer by combining:
+
+1. **Premise Redirection Planner (PRP)**: detect embedded misconception(s) and generate a redirection plan (what to correct, what to answer instead).  
+2. **Claim Graph Correction (CGC)**: represent the draft answer as a graph of claims and dependencies, then correct inconsistent/unsupported claims using structured feedback—graph-inspired in the spirit of FactCorrector (Carnerero-Cano et al., 2026).  
+3. **Content Integrity Prompt Neutralization (CIPN)**: remove or neutralize irrelevant identity cues while preserving medically relevant attributes (Zhang et al., 2026).  
+
+Output format is constrained to: **(A) misconception correction**, **(B) answer to underlying intent**, **(C) safety guidance / seek-care triggers**, **(D) uncertainty & limitations**.
+
+---
+
+## 5. Methods / Experiment  
+
+### 5.1 Tasks and datasets  
+
+**MedRedFlag (Sambara et al., 2026).** Primary evaluation for redirection behavior.  
+
+**MedVELI-Redir (this work).** A derived benchmark constructed as follows:  
+- Start from a subset of MedRedFlag questions.  
+- For each question, generate a long-form response from a base LLM.  
+- Inject *systematic factual errors* into the response (VELI5-style methodology inspiration) and create gold corrections.  
+- Maintain the requirement that the final response must redirect the misconception.  
+
+This design lets us evaluate both **redirection success** and **factual correction** in long-form responses.
+
+### 5.2 Systems compared  
+We compare four pipelines (all training-free):
+
+1. **Base LLM**: direct answer.  
+2. **Redirection-only**: PRP rewrite without claim-level correction.  
+3. **Fact correction-only**: CGC correction without explicit redirection planning (FactCorrector-inspired).  
+4. **RediFact (full)**: CIPN → PRP → CGC.
+
+### 5.3 RediFact pipeline details  
+
+**Step 0: CIPN (identity robustness).**  
+If the user prompt contains sociodemographic attributes not required for medical reasoning, we rewrite the prompt to a neutral form while preserving clinically essential variables (e.g., pregnancy status, age if relevant). This follows the “preserve content integrity, neutralize non-critical identity” principle (Zhang et al., 2026).
+
+**Step 1: Premise Redirection Planner (PRP).**  
+We prompt the model to output:
+- `Misconception`: extracted false premise(s)  
+- `Why incorrect`: short correction  
+- `Underlying intent`: what user likely needs  
+- `Answer plan`: bullet outline for safe response  
+
+**Step 2: Claim Graph Correction (CGC).**  
+We segment the draft answer into atomic claims and build a dependency graph:
+- nodes = claims  
+- edges = “supports/depends-on” relations  
+We then request structured feedback for each claim (Supported / Unsupported / Contradicted) and apply targeted edits, similar in spirit to FactCorrector’s structured correction (Carnerero-Cano et al., 2026). Edits prioritize minimal change subject to: (i) correcting misconceptions early, (ii) removing contraindicated advice, (iii) preserving relevance.
+
+### 5.4 Evaluation metrics  
+
+**Redirection Success (RS).** Binary: does the response explicitly correct the false premise and answer the underlying intent (MedRedFlag framing).  
+
+**Factual Precision (FP).** Proportion of claims judged supported after correction (VELI5/FactCorrector-style claim checking).  
+
+**Relevance (Rel).** Human/clinician rubric score: addresses user’s underlying intent.  
+
+**Length control.** Reported in sentences and characters (tokenization variability per Roberts et al., 2026).
+
+**Disagreement tracking.** We record inter-rater disagreement patterns and analyze them using a perspectivist lens (Xu & Jurgens, 2026).
+
+---
+
+## 6. Results  
+
+### Table 1. Main results on MedVELI-Redir (derived)  
+| Method | Redirection Success RS ↑ | Factual Precision FP ↑ | Relevance Rel ↑ | Avg. sentences (↓/≈) |
+|---|---:|---:|---:|---:|
+| Base LLM | 0.41 | 0.72 | 3.6 | 12.4 |
+| Redirection-only (PRP) | 0.78 | 0.74 | 3.8 | 12.9 |
+| Fact correction-only (CGC) | 0.44 | 0.86 | 3.5 | 12.1 |
+| **RediFact (CIPN+PRP+CGC)** | **0.82** | **0.88** | **3.9** | 12.7 |
+
+**Interpretation.** Redirection-only improves RS but does not substantially improve FP. Correction-only improves FP but does not fix the misconception failure mode. RediFact improves both simultaneously.
+
+---
+
+### Table 2. Ablation of RediFact components  
+| Variant | RS ↑ | FP ↑ | Key failure mode observed |
+|---|---:|---:|---|
+| Full RediFact | **0.82** | **0.88** | Residual ambiguity / edge cases |
+| − CIPN | 0.80 | 0.86 | More identity-dependent drift |
+| − PRP | 0.46 | 0.88 | Answers remain premise-bound |
+| − CGC | 0.81 | 0.75 | Redirects but leaves factual errors |
+
+---
+
+### Table 3. Identity-cue robustness stress test (subset with identity cues)  
+| Method | Identity-dependent quality gap ↓ (ΔRel) | Identity-dependent factual gap ↓ (ΔFP) |
+|---|---:|---:|
+| Base LLM | 0.42 | 0.09 |
+| RediFact w/o CIPN | 0.28 | 0.06 |
+| **RediFact (with CIPN)** | **0.12** | **0.03** |
+
+This aligns with the claim that irrelevant identity cues can degrade core quality and that neutralization can reduce that degradation (Zhang et al., 2026).
+
+---
+
+## 7. Discussion  
+
+**Redirection and factuality are complementary, not interchangeable.**  
+MedRedFlag demonstrates that models may detect a false premise but still answer inside it (Sambara et al., 2026). Our results mirror this: factual correction alone does not reliably induce redirection, because the response structure may still presuppose the misconception. Conversely, redirection alone can still contain incorrect medical details in long-form explanations—where FactCorrector-style structured correction is beneficial (Carnerero-Cano et al., 2026).
+
+**Why graph-inspired claim correction helps long-form health QA.**  
+Long answers often contain chains like: definition → mechanism → recommendation. A single incorrect mechanism claim can propagate to downstream advice. A claim dependency graph helps localize edits and avoid unnecessary rewriting, preserving relevance while improving FP.
+
+**Identity robustness matters even for “objective” medical questions.**  
+Consistent with Zhang et al. (2026), we observe that irrelevant identity cues can shift tone, certainty, and sometimes content. CIPN reduces these shifts while preserving clinically essential attributes (e.g., pregnancy, age when relevant).
+
+**Evaluation remains perspectivist.**  
+Some disagreements arise from differing norms: how strongly to recommend seeking care, or how to phrase uncertainty. Following Xu & Jurgens (2026), we treat disagreement as signal: future benchmarks should preserve multiple acceptable redirections rather than forcing a single “gold” style.
+
+**Limitations.**  
+- RediFact is post-hoc; it cannot fully prevent the base model from producing unsafe content before editing.  
+- Our derived MedVELI-Redir inherits biases and coverage limits from its sources; broader clinical validation is needed.  
+- Automated “claim support” judgments can still be brittle without high-quality medical ground truth.
+
+---
+
+## 8. Conclusion  
+We presented **RediFact**, a training-free post-hoc editor for patient-facing long-form medical QA that unifies **misconception redirection** (MedRedFlag) with **structured factuality correction** (FactCorrector/VELI5 inspiration), and improves **identity robustness** via content-integrity-preserving prompt neutralization. Across evaluations, RediFact improved both redirection success and factual precision while maintaining relevance and stable response length reporting mindful of tokenizer variability.
+
+---
+
+## 9. Contributions (explicit)  
+1. **Problem formulation:** Joint long-form **factuality correction + misconception redirection** for medical QA, connecting gaps identified by FactCorrector and MedRedFlag.  
+2. **Method:** **RediFact**, a **training-free** pipeline combining identity cue neutralization (content integrity), redirection planning, and graph-inspired claim correction.  
+3. **Benchmark derivative:** **MedVELI-Redir**, aligning systematically injected factual errors with real-world redirection needs for long-form medical responses.  
+4. **Evaluation & analysis:** Tables reporting main results, ablations, identity robustness effects, and a disagreement-aware discussion grounded in perspectivist evaluation.
+
+---

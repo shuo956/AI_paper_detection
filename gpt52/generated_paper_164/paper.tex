@@ -1,0 +1,185 @@
+## Title  
+**ClinicianSteer: Variance-Aware, Theme-Grounded Steering for Clinician-Aligned Patient Portal Drafting**
+
+---
+
+## Abstract  
+Large language models (LLMs) can draft responses to patient portal messages, but real deployment depends on whether drafts reliably match individual clinicians’ content preferences and reduce editing effort. Prior work shows substantial epistemic uncertainty in clinician alignment across response themes—especially for question-asking—and proposes theme-level evaluation of clinician editing load. Separately, recent work argues that hallucinations and unreliability often manifest as *variance* under semantically equivalent prompts, motivating stability-based diagnostics. Meanwhile, inference-time steering via logit-level interventions offers training-free controllability, and evidence-centric evaluation paradigms emphasize traceable grounding rather than answer-only correctness.  
+
+We propose **ClinicianSteer**, a framework that combines (i) **theme-grounded drafting** using a clinician response taxonomy, (ii) **training-free logit steering** to emphasize under-produced themes (e.g., eliciting questions), and (iii) **variance-aware evaluation** using paraphrase-based semantic stability as a proxy for reliability in clinical drafting. We design an experiment protocol extending clinician editing-load evaluation with stability metrics and evidence-anchored checks. Results (simulated in this paper as a research proposal with expected outcomes) indicate that combining theme prompting with logit steering improves theme coverage and reduces expected editing operations, while stability metrics diagnose remaining failure modes that standard correctness-style evaluation misses.
+
+---
+
+## Introduction  
+Patient portal messaging creates significant clinician workload. LLMs are increasingly used to draft responses, but practical value hinges on whether drafts reduce clinician editing time and remain safe and consistent across minor prompt variations. Seegmiller et al. (2026) demonstrate that even with retrieval-augmented generation and preference optimization, aligning drafts to *individual clinician styles* remains uncertain, with systematic weaknesses in certain themes such as **question asking** to elicit missing patient information. This suggests that “overall quality” metrics are insufficient: systems must be optimized at the level of *thematic elements* that clinicians actually edit.
+
+A second deployment barrier is **reliability**. Flouro & Chadwick (2026) argue hallucinations “live in variance”: semantically equivalent prompts can produce divergent outputs, which is especially dangerous in agentic or workflow-integrated settings. In patient messaging, small changes—template variations, EHR context formatting, or paraphrased patient text—can trigger inconsistent clinical advice or omissions.
+
+Recent advances provide building blocks to address these issues: (1) **logit-level inference-time interventions** enable controllable generation without model access beyond logits (An et al., 2026), (2) evidence-grounded long-context evaluation emphasizes “No Evidence, No Score” style checks (Ren et al., 2026) and evidence-augmented RL paradigms (Guan et al., 2026), and (3) explanation evaluation warns that naive explainability metrics can be gamed in a Rashomon set (Rawal et al., 2026), motivating careful evaluation design.
+
+**Goal.** We propose a clinician-aligned drafting pipeline that explicitly targets theme-level deficiencies while also measuring and improving semantic stability under paraphrasing.
+
+---
+
+## Related Work  
+
+### Clinician-aligned drafting and editing load  
+Seegmiller et al. (2026) introduce a taxonomy of thematic elements in clinician responses and an evaluation framework for clinician editing load at content and theme levels. They find persistent uncertainty in aligning to individual clinicians, and highlight question-asking as a difficult theme. ClinicianSteer adopts their theme-centric stance as the primary target for optimization and evaluation.
+
+### Steering and controllable generation  
+An et al. (2026) propose training-free **logit-level interventions** using token score tables derived from labeled corpora, achieving consistent control over formality, complexity, and toxicity. We adapt this idea to **clinical response themes**, using theme-labeled corpora (or clinician-labeled exemplars) to build token preference tables that bias decoding toward missing themes such as eliciting questions.
+
+### Reliability as variance; paraphrase consistency  
+Flouro & Chadwick (2026) propose **Semantic Stability** via **Paraphrase Consistency (PC@k)**: generate k paraphrases, decode each, and measure agreement. We extend this to patient-message drafting, where stability means maintaining consistent triage advice, safety guidance, and information requests across paraphrases.
+
+### Evidence-centric evaluation in long-context scientific settings  
+Ren et al. (2026) argue that answer correctness can diverge from evidence-grounded reasoning and propose evidence-chain tasks and “No Evidence, No Score.” Guan et al. (2026) further show that evidence extraction is a bottleneck and propose reward shaping for evidence quality. While patient messaging differs from scientific QA, the *principle*—reward/score grounded content rather than fluent guesses—transfers to clinical drafting via citation of patient-provided facts and explicit uncertainty.
+
+### Risks in explanation-based selection  
+Rawal et al. (2026) show explanation evaluation can be misleading across a Rashomon set; their AXE method detects “fairwashing.” This cautions against relying on superficial rationales (“because the patient said…”) unless evaluation checks are robust. ClinicianSteer therefore treats explanations as *auxiliary*, prioritizing measurable theme coverage, edit load, and stability.
+
+---
+
+## Gaps and Motivation  
+From the above literature, key gaps emerge:
+
+1. **Theme deficits persist under adaptation.** Even with prompting, RAG, SFT, and preference optimization, question-asking remains weak (Seegmiller et al., 2026). There is limited exploration of *inference-time controllability* targeted at clinician themes.
+
+2. **Reliability is under-measured in drafting tasks.** Editing-load metrics capture distance to a reference response, but do not capture *variance under prompt paraphrases*—a core risk highlighted by Flouro & Chadwick (2026).
+
+3. **Grounding and “no-evidence” penalties are not standard in portal drafting evaluation.** Evidence-centric scoring paradigms (Ren et al., 2026; Guan et al., 2026) are rarely adapted to clinician messaging workflows.
+
+**Motivation.** A clinically deployable drafting assistant should (i) match clinician theme preferences, (ii) be stable to benign prompt variations, and (iii) avoid unsupported additions by explicitly grounding to patient-stated facts or asking clarifying questions.
+
+---
+
+## Proposed Main Idea  
+**ClinicianSteer**: a clinician-aligned patient message drafting framework that combines:
+
+1. **Theme-Grounded Drafting:** Use a clinician response theme taxonomy (as in Seegmiller et al., 2026) to structure generation targets and evaluation.
+
+2. **Training-Free Theme Logit Steering:** Build theme-specific token score tables and apply logit shifts at decoding time (An et al., 2026) to increase probability mass on tokens correlated with under-produced themes (e.g., question forms, symptom probes, timeline queries).
+
+3. **Variance-Aware Evaluation:** Measure **Paraphrase Consistency (PC@k)** for clinically critical attributes (triage level, safety instructions, medication advice, and information requests), following the semantic stability framing (Flouro & Chadwick, 2026).
+
+4. **Evidence-Anchored Checks:** Penalize additions not supported by the patient message context; score only grounded content where possible, inspired by “No Evidence, No Score” (Ren et al., 2026) and evidence-bottleneck findings (Guan et al., 2026).
+
+---
+
+## Methods / Experiment  
+
+### Task and data  
+- **Task:** Draft a clinician response to a patient portal message.  
+- **Dataset:** Use the expert-annotated clinician drafting dataset and theme taxonomy released by Seegmiller et al. (2026) as the core benchmark (or a comparable institutional dataset annotated with the same taxonomy).  
+- **Unit of personalization:** Individual clinician (per Seegmiller et al., 2026), enabling evaluation of alignment to clinician-specific style and content.
+
+### Models and baselines  
+We compare four systems:
+
+1. **B0: Base Prompting** – standard instruction prompting.  
+2. **B1: Theme Prompting** – prompt includes explicit theme checklist / taxonomy targets (as in theme-driven adaptation in Seegmiller et al., 2026).  
+3. **B2: Theme Prompting + RAG** – retrieve similar clinician responses and include excerpts (Seegmiller et al., 2026).  
+4. **ClinicianSteer (Ours): Theme Prompting + Logit Steering (+ optional RAG)** – apply logit shifts during decoding (An et al., 2026).
+
+### Theme logit steering construction (training-free)  
+Following An et al. (2026), we create a **token score table** per theme:
+
+- Collect theme-labeled spans from clinician responses (e.g., “question asking,” “reassurance,” “medication instructions,” “follow-up plan”).  
+- Compute token log-odds association with each theme (z-normalized).  
+- At inference, choose a target theme vector (e.g., boost question-asking when the patient message contains ambiguity signals) and shift logits accordingly:
+  \[
+  \tilde{z}_t = z_t + \lambda \cdot s_{\text{theme}}(token_t)
+  \]
+where \( \lambda \) controls steering strength.
+
+### Variance-aware evaluation protocol  
+For each patient message:
+1. Generate **k paraphrases** of the patient message (or instruction wrapper) while preserving meaning.  
+2. Draft responses for each paraphrase using greedy decoding (to isolate variance as in Flouro & Chadwick, 2026).  
+3. Compute:
+   - **PC@k (Draft Agreement):** mode agreement over discretized response attributes.  
+   - **Theme Stability:** agreement on which themes appear.  
+   - **Safety-Critical Stability:** agreement on triage urgency and contraindication warnings.
+
+### Editing-load evaluation  
+Adopt Seegmiller et al. (2026) framework:
+- **Content-level edit load:** estimated edits to transform draft into clinician reference (token-level or span-level operations).  
+- **Theme-level edit load:** missing/incorrect themes relative to clinician reference.
+
+### Evidence-anchored scoring  
+Inspired by Ren et al. (2026), we score only claims that can be anchored to:
+- explicit patient message facts, or  
+- explicit clinician uncertainty/clarifying questions (treated as safe non-claims).  
+
+Unsupported additions (e.g., inventing diagnoses) receive penalties.
+
+---
+
+## Results (with Tables)  
+The tables below present **representative expected outcomes** for the proposed evaluation suite; they are formatted as if reporting results from the described experiment. (Exact values depend on the clinician dataset and chosen base model; the purpose here is to specify measurable endpoints aligned with the cited work.)
+
+### Table 1. Theme-level coverage and edit load (lower is better for edit load)  
+| System | Theme Coverage F1 ↑ | Missing “Question Asking” Rate ↓ | Theme Edit Load (ops/msg) ↓ | Content Edit Load (ops/msg) ↓ |
+|---|---:|---:|---:|---:|
+| B0: Base Prompting | 0.61 | 0.42 | 5.8 | 18.4 |
+| B1: Theme Prompting | 0.68 | 0.31 | 4.9 | 16.7 |
+| B2: Theme Prompting + RAG | 0.71 | 0.28 | 4.6 | 15.9 |
+| **ClinicianSteer (Ours)** | **0.77** | **0.16** | **3.7** | **14.8** |
+
+**Interpretation:** Consistent with Seegmiller et al. (2026), prompting and RAG improve theme alignment, but question-asking remains a gap; logit steering specifically reduces missing question-asking and lowers theme edit load.
+
+---
+
+### Table 2. Variance-aware reliability (Paraphrase Consistency)  
+| System | PC@5 (Theme Set Agreement) ↑ | PC@5 (Triage Urgency Agreement) ↑ | PC@5 (Medication Advice Agreement) ↑ |
+|---|---:|---:|---:|
+| B0: Base Prompting | 0.52 | 0.71 | 0.63 |
+| B1: Theme Prompting | 0.58 | 0.74 | 0.66 |
+| B2: Theme Prompting + RAG | 0.60 | 0.76 | 0.68 |
+| **ClinicianSteer (Ours)** | **0.69** | **0.82** | **0.74** |
+
+**Interpretation:** Following Flouro & Chadwick (2026), stability improves when generation is constrained. Theme steering reduces variance in which themes appear and improves consistency of safety-critical attributes.
+
+---
+
+### Table 3. Evidence-anchored faithfulness (higher is better)  
+| System | Grounded Claim Rate ↑ | Unsupported Addition Rate ↓ | “No Evidence, No Score” Composite ↑ |
+|---|---:|---:|---:|
+| B0: Base Prompting | 0.78 | 0.14 | 0.54 |
+| B1: Theme Prompting | 0.81 | 0.12 | 0.58 |
+| B2: Theme Prompting + RAG | 0.85 | 0.09 | 0.63 |
+| **ClinicianSteer (Ours)** | **0.86** | **0.07** | **0.66** |
+
+**Interpretation:** Evidence anchoring benefits from retrieval (more support) and from steering toward asking questions rather than making unsupported assertions—echoing the evidence bottleneck emphasized by Ren et al. (2026) and Guan et al. (2026).
+
+---
+
+## Discussion  
+
+### Why logit steering helps clinician alignment  
+Seegmiller et al. (2026) show theme-driven adaptation improves many themes but struggles with question-asking. ClinicianSteer addresses this by **directly biasing decoding** toward lexical and structural markers of elicitation (e.g., interrogatives, temporal qualifiers, symptom probes). Unlike fine-tuning, this is **training-free** and can be individualized by building token tables from each clinician’s historical responses.
+
+### Reliability requires variance-aware metrics, not just “quality”  
+A draft that matches a reference on average can still be unsafe if it is unstable under small prompt reformulations. The PC@k-style semantic stability metric (Flouro & Chadwick, 2026) is therefore a practical diagnostic for clinical drafting, where workflows introduce frequent paraphrases (triage templates, nurse rewordings, patient edits). Importantly, stability can fail in different regimes: a system may be consistently wrong (bias) or inconsistently wrong (variance). ClinicianSteer’s evaluation separates these.
+
+### Grounding vs. plausible fabrication  
+Evidence-chain evaluation in scientific documents (Ren et al., 2026) highlights that correctness can be decoupled from traceable support. In patient messaging, the analogous failure is **inventing clinical facts**. By rewarding grounded claims and encouraging clarifying questions, ClinicianSteer aligns with evidence-augmented reasoning principles (Guan et al., 2026) without requiring full RL in the first iteration.
+
+### Evaluation pitfalls and the Rashomon concern  
+Rawal et al. (2026) caution that explanation quality metrics can be misleading across a set of similarly performing models. For clinical drafting, a model might produce superficially “reasonable” justifications while relying on spurious cues. This motivates ClinicianSteer’s emphasis on **observable edits, theme presence, stability, and grounding** rather than trusting self-explanations.
+
+---
+
+## Conclusion  
+ClinicianSteer proposes a variance-aware, theme-grounded approach to clinician-aligned patient portal drafting. Building on clinician editing-load evaluation (Seegmiller et al., 2026), semantic stability diagnostics (Flouro & Chadwick, 2026), and training-free logit steering (An et al., 2026), the framework targets persistent theme gaps—especially question-asking—while explicitly measuring reliability under paraphrasing. Evidence-anchored scoring further discourages unsupported additions, adapting insights from long-context evidence evaluation (Ren et al., 2026; Guan et al., 2026). The resulting research agenda offers a concrete path toward deployable drafting assistants that are not only high-quality on average, but also stable and clinically safer.
+
+---
+
+## Contributions  
+1. **ClinicianSteer framework:** A unified pipeline combining clinician theme taxonomy, training-free logit steering, and variance-aware evaluation for portal response drafting.  
+2. **Theme-targeted controllability:** A method to correct under-produced clinician-preferred themes (notably question-asking) without fine-tuning, leveraging logit-level interventions (An et al., 2026).  
+3. **Reliability evaluation protocol:** Adaptation of paraphrase-based semantic stability (PC@k) (Flouro & Chadwick, 2026) to clinical drafting, including safety-critical attribute agreement.  
+4. **Evidence-anchored scoring for drafting:** A “grounded claims” scoring layer inspired by “No Evidence, No Score” (Ren et al., 2026) and evidence-bottleneck findings (Guan et al., 2026).  
+5. **Deployment-oriented metrics:** An evaluation suite centered on clinician editing operations and stability rather than answer-only quality, addressing known alignment uncertainty (Seegmiller et al., 2026).
+
+---

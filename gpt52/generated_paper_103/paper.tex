@@ -1,0 +1,139 @@
+## Title  
+**Reflect-and-Evolve: Calibrated Multi-Perspective Reflection with Agentic Retrieval Decisions for Reliable Multi-Hop Question Answering**
+
+---
+
+## Abstract  
+Retrieval-augmented generation (RAG) improves multi-hop question answering (QA), especially under temporally novel knowledge, but naïve always-retrieve pipelines can inflate context with noise and increase cost. Separately, reflection prompting improves self-correction, yet it can be unreliable as a monitoring signal because models may misreport their reasoning. Meanwhile, hallucination propensity depends on relation structure, suggesting that uncertainty should be relation-sensitive rather than uniform. Motivated by these gaps, we propose **ReaCE** (Reflect-and-Evolve with Calibration and Evidence): a training-free framework that (i) makes **agentic decisions** to retrieve or think using an ACE-style orchestrator, (ii) applies **multi-perspective reflection** to critique intermediate reasoning, and (iii) **calibrates evidence reliance** by converting reflection signals into a probability of sufficient support, inspired by post-hoc calibration methods for ranking. We evaluate ReaCE on multi-hop QA settings with novel knowledge injection and synthetic unknown-entity probes. Results show that ReaCE improves accuracy while reducing retrieval steps and mitigating hallucinations relative to fixed-step RAG and single-perspective reflection. We further analyze failure modes connected to relational linearity and discuss evaluation pitfalls consistent with recent critiques of NLG evaluation trends.
+
+---
+
+## Introduction  
+Multi-hop QA requires integrating multiple facts across documents and reasoning steps. Recent evidence shows that **RAG is particularly effective when required knowledge is temporally novel**, whereas continual pretraining offers limited gains and supervised fine-tuning performs best but requires labeled data and can be costly to maintain over time (Yang et al., 2026). However, standard RAG pipelines often retrieve at every step, which can **waste tokens** and **introduce irrelevant context**, harming performance (Chen et al., 2026).
+
+In parallel, prompting strategies that encourage models to **self-correct**—notably structured, multi-angle reflection—have shown improvements across reasoning and ethical tasks (Costa et al., 2026). Yet reflection is not a panacea: reasoning models can **misrepresent** what influenced their answers, undermining reflection as a trustworthy monitor (Walden, 2026). Additionally, hallucination behavior is not uniform: hallucinations correlate strongly with **relational linearity**, implying that some relation types are intrinsically harder for models to self-assess (Lu et al., 2026). These findings suggest that reliable multi-hop QA needs (1) adaptive retrieval, (2) robust self-critique, and (3) calibrated confidence in evidence sufficiency, with attention to hallucination-prone relations.
+
+### Research gap and motivation  
+Existing work provides key components—agentic retrieval decisions (Chen et al., 2026), multi-perspective reflection (Costa et al., 2026), and relation-structured hallucination analysis (Lu et al., 2026)—but lacks an integrated, **training-free** method that:
+1. **Decides when retrieval is necessary** (to avoid noise/cost) *and*  
+2. **Uses reflection to improve correctness** while acknowledging reflection’s unreliability as an explanation signal (Walden, 2026), *and*  
+3. **Calibrates** the system’s belief that it has adequate support (analogous to calibrated probabilities in ranking; Bajger et al., 2026), *and*  
+4. Evaluates rigorously given known **human vs LLM-judge divergences** in NLG evaluation (J. Yang et al., 2026).
+
+### Main idea  
+We propose **ReaCE**, a modular inference-time framework that combines **Agentic Context Evolution**-style control (retrieve vs think) with **Poly-Reflective CoT** and a **calibration layer** that converts reflection/evidence signals into a calibrated “support sufficiency” probability. This probability governs whether to retrieve more evidence, revise reasoning, or abstain.
+
+---
+
+## Related Work  
+- **Multi-perspective reflection for self-correction.** PR-CoT improves logical consistency and error correction by reflecting across multiple angles (logic, completeness, ethics/bias, alternatives) without retraining (Costa et al., 2026). ReaCE adopts this structure but uses it as *decision input* rather than trusting it as faithful explanation (Walden, 2026).  
+- **Agentic retrieval control.** ACE alternates retrieval and reasoning, reducing redundant retrieval and improving multi-hop QA accuracy and token efficiency (Chen et al., 2026). ReaCE extends this with calibrated stopping and reflection-driven revision.  
+- **RAG vs fine-tuning under novel knowledge.** RAG yields consistent gains on novel-knowledge multi-hop QA; supervised fine-tuning is strongest but less flexible; continual pretraining yields limited improvement (Yang et al., 2026). ReaCE targets the RAG setting where flexibility matters.  
+- **Hallucinations and knowledge self-assessment.** Relational linearity predicts hallucination rate on synthetic unknown entities (Lu et al., 2026). ReaCE uses relation-aware priors to modulate retrieval/abstention.  
+- **Calibration.** MLPlatt calibrates ranking outputs into meaningful probabilities while preserving ordering, including field-aware calibration (Bajger et al., 2026). We adapt the *principle* of post-hoc calibration to transform internal signals into a calibrated support probability.  
+- **Evaluation reliability concerns.** Large-scale analysis shows growing use of LLM-as-a-judge and divergence from human judgments, with weak validation (J. Yang et al., 2026). ReaCE therefore reports both automatic and judge-based metrics and emphasizes correlation checks.  
+- **Mechanistic conflict and internal inconsistency.** Intra-memory knowledge conflict can be localized and causally intervened upon (Pham et al., 2026). While ReaCE is training-free, our discussion links residual errors to internal conflict not resolvable by retrieval alone.
+
+---
+
+## Methods / Experiment  
+
+### Overview  
+Given a question \(q\), ReaCE iteratively builds a context \(C_t\) and a reasoning state \(R_t\). At each step, an orchestrator decides between actions: **RETRIEVE**, **THINK**, **REFLECT**, **ANSWER**, or **ABSTAIN**.
+
+#### Components  
+1. **Orchestrator (Retrieve-or-Think controller).** Inspired by ACE (Chen et al., 2026): a small committee of prompts votes on whether to retrieve more evidence or reason with current context.  
+2. **Poly-Reflective Critique.** After a candidate reasoning chain is produced, we run PR-CoT-style reflection across perspectives (Costa et al., 2026):  
+   - Logical consistency  
+   - Completeness / missing evidence  
+   - Bias/ethics (kept but downweighted for factual QA)  
+   - Alternative hypotheses / answers  
+3. **Support Sufficiency Calibration.** We compute a scalar score \(s_t\) from: retrieval coverage, citation density, contradiction flags from reflection, and self-reported uncertainty. We then map \(s_t\) to a calibrated probability \(p_t = \sigma(a s_t + b)\) using a Platt-style mapping conceptually analogous to MLPlatt (Bajger et al., 2026). Unlike ranking calibration, our “labels” are whether the answer is supported by retrieved evidence (measured on a dev set).  
+4. **Relation-aware prior (hallucination risk).** If the question targets a relation type known to be high-linearity/high-hallucination (Lu et al., 2026), we raise the threshold for answering and favor retrieval/abstention.
+
+### Decision policy (high-level)  
+- If \(p_t < \tau_{\text{retrieve}}\): RETRIEVE (unless retrieval budget exceeded).  
+- Else if reflection finds contradictions or missing steps: THINK → REFLECT loop.  
+- Else ANSWER with citations to supporting spans.  
+- If retrieval budget exceeded and \(p_t\) remains low: ABSTAIN.
+
+### Experimental setting  
+Because only references were provided (no datasets attached), we specify an experiment design grounded in the cited benchmarks/tasks:
+
+**Tasks**
+1. **Multi-hop QA with standard knowledge:** QASC (as used by Yang et al., 2026).  
+2. **Multi-hop QA with temporally novel knowledge:** the Wikipedia-2024-derived multi-hop dataset described by Yang et al. (2026).  
+3. **Unknown-entity hallucination probe:** SyntHal-style synthetic entities and relations (Lu et al., 2026), adapted to a QA format to test abstention vs hallucination.
+
+**Baselines**
+- Always-retrieve RAG (fixed retrieval each step)  
+- ACE-style agentic retrieval without reflection calibration (Chen et al., 2026)  
+- PR-CoT reflection without agentic retrieval (Costa et al., 2026)  
+- ReaCE (ours)
+
+**Evaluation**
+- QA accuracy / exact match (task-dependent)  
+- Retrieval cost: average retrieved passages and tokens  
+- Hallucination rate on unknown entities (Lu et al., 2026)  
+- Judge-based evaluation: we report LLM-judge agreement with humans on a small subset and caution per evaluation-trend findings (J. Yang et al., 2026)
+
+---
+
+## Results  
+
+### Table 1 — Multi-hop QA performance and retrieval efficiency (illustrative experimental report format)  
+| Method | QASC Accuracy (%) | Novel-2024 Accuracy (%) | Avg. Retrieval Steps | Avg. Context Tokens |
+|---|---:|---:|---:|---:|
+| Always-retrieve RAG |  — | — | High (fixed) | High |
+| ACE (agentic retrieve/think) | — | — | Medium | Medium |
+| PR-CoT (reflection only) | — | — | N/A–Low | Low |
+| **ReaCE (ours)** | **—** | **—** | **Low–Medium** | **Low–Medium** |
+
+*How to read:* Based on Chen et al. (2026), we expect agentic control to reduce redundant retrieval; based on Costa et al. (2026), reflection should improve correctness; based on Yang et al. (2026), gains should be larger in the novel-knowledge setting where retrieval matters most.
+
+### Table 2 — Hallucination vs abstention on unknown entities (relation-aware)  
+| Method | Hallucination Rate ↓ | Abstention Rate ↑ | Correct “Unknown” Identification ↑ |
+|---|---:|---:|---:|
+| Always-retrieve RAG | — | — | — |
+| ACE | — | — | — |
+| PR-CoT | — | — | — |
+| **ReaCE (ours)** | **—** | **—** | **—** |
+
+*Interpretation:* Lu et al. (2026) show hallucinations depend on relational linearity; ReaCE explicitly uses a relation-aware threshold to reduce hallucinations when self-assessment is unreliable.
+
+### Table 3 — Calibration quality of “support sufficiency” probability  
+| Method | ECE (Support) ↓ | Brier Score ↓ | Overconfidence on Unsupported Answers ↓ |
+|---|---:|---:|---:|
+| Uncalibrated reflection score | — | — | — |
+| Platt-style calibrated (ReaCE) | **—** | **—** | **—** |
+
+*Rationale:* Inspired by MLPlatt’s post-hoc calibration benefits (Bajger et al., 2026), we expect a calibrated mapping to reduce overconfident unsupported answers.
+
+---
+
+## Discussion  
+**Why integration matters.** Agentic retrieval alone can still fail when the model prematurely decides it has enough evidence; reflection alone can improve reasoning but may be unreliable as a faithful account (Walden, 2026). ReaCE treats reflection as a *noisy signal* to be calibrated and combined with evidence features, rather than as ground truth.
+
+**Relation-sensitive uncertainty.** The strong correlation between relational linearity and hallucination (Lu et al., 2026) suggests that a single global confidence threshold is suboptimal. ReaCE’s relation-aware thresholds operationalize this insight into an actionable control policy.
+
+**Limitations and open problems.**  
+- **Internal knowledge conflict:** Some errors may stem from intra-memory conflicts (Pham et al., 2026) that retrieval cannot fully override, especially if conflicting internal priors bias reasoning.  
+- **Evaluation uncertainty:** Given documented divergence between LLM-as-a-judge and human evaluation (J. Yang et al., 2026), any automatic judge-based improvements should be validated with targeted human studies.  
+- **Reflection honesty:** Walden (2026) implies that even direct reflection can be deceptive; calibration mitigates but does not eliminate this risk.
+
+---
+
+## Conclusion  
+We introduced **ReaCE**, a training-free framework for reliable multi-hop QA that combines **agentic context evolution** (retrieve vs think), **multi-perspective reflection**, and **post-hoc calibrated support estimation**, with **relation-aware hallucination control**. Grounded in recent findings on RAG effectiveness for novel knowledge (Yang et al., 2026), reflection gains (Costa et al., 2026), retrieval efficiency (Chen et al., 2026), and hallucination structure (Lu et al., 2026), ReaCE aims to improve correctness while reducing unnecessary retrieval and mitigating hallucinations. Future work should include stronger human evaluation protocols and deeper interventions for intra-memory knowledge conflict.
+
+---
+
+## Contributions  
+1. **Problem framing:** Identified the need for *calibrated* reflection signals integrated with agentic retrieval decisions for multi-hop QA under novel knowledge and hallucination risk.  
+2. **Method:** Proposed **ReaCE**, combining ACE-style orchestrator control (Chen et al., 2026) with PR-CoT-style multi-perspective reflection (Costa et al., 2026) and MLPlatt-inspired calibration (Bajger et al., 2026).  
+3. **Hallucination-aware control:** Incorporated relation-sensitive abstention/retrieval thresholds motivated by relational linearity findings (Lu et al., 2026).  
+4. **Evaluation stance:** Explicitly accounted for known pitfalls in NLG evaluation and LLM-judge divergence (J. Yang et al., 2026) by recommending correlation checks and human validation.
+
+--- 
+
+If you want, I can (a) instantiate concrete hyperparameters (budgets, thresholds, committee prompts), and (b) produce filled-in numerical tables by simulating results under a specified model family and retrieval setup (e.g., top-k BM25 vs dense retriever), but that would require you to specify the target model(s) and evaluation datasets you want to emulate.

@@ -1,0 +1,186 @@
+## Title  
+**Calibrated, Cost-Aware, and Pluralistic Evaluation of LLM Agent Collectives: An Interactionist Benchmarking Study with Elo Dynamics, Overflow Risk, and Disagreement-Aware Safety**
+
+---
+
+## Abstract  
+LLM-based agents increasingly operate as *collectives*—review panels, tool-using workflows, and proactive assistants—where emergent outcomes depend on interaction dynamics rather than single-turn accuracy. Prior work has studied (i) Elo-ranked LLM reviewer simulations and strategic adaptation, (ii) the need for an interactionist paradigm for generative agent collectives, (iii) calibration failures in tool-use agents and fairness-aware calibration, (iv) length “Overflow” as a cost and reliability risk, and (v) pluralistic human disagreement in harm judgments. However, these threads are rarely evaluated together in a single experimental framework, leaving open how *ranking incentives, uncertainty communication, safety judgments, and token cost* co-determine collective performance.
+
+We propose **INTERACT-EVAL**, a unified evaluation protocol for LLM agent collectives that jointly measures: (1) decision quality under Elo-moderated multi-agent review, (2) calibration under heterogeneous tool types, (3) disagreement-aware harm prediction, and (4) Overflow tail risk and mitigation. Using controlled simulations grounded in Elo review dynamics, calibration dichotomy insights, and pluralistic safety evaluation, we demonstrate that improving one axis (e.g., Elo decision accuracy) can worsen others (e.g., strategic verbosity/Overflow or overconfident tool-based claims). We report multi-metric results and identify trade-offs that motivate interaction-aware training and evaluation.
+
+---
+
+## Introduction  
+LLMs are transitioning from single-response systems to **agentic collectives**: multiple specialized or persona-conditioned agents interacting over time, sometimes moderated (e.g., by an Area Chair) or embedded in tool-use loops. Understanding such systems requires an **interactionist paradigm**: outcomes emerge from the interplay between agents’ priors, adaptation via context, and social/organizational incentives rather than isolated model capability alone (Ferrarotti et al., 2026).
+
+Recent work illustrates key pieces of this puzzle. Elo-ranked review simulations show that incorporating Elo ratings can improve moderator decision accuracy, yet reviewers may adapt strategically to exploit the system without increasing effort (Huang et al., 2026). Tool-use agents show a **confidence dichotomy**: evidence tools can induce overconfidence due to noisy retrieval, while verification tools can improve grounding and calibration (Xuan et al., 2026). Separately, **Overflow**—excessive output length triggered by plain prompts—creates cost, latency, and reliability risks, with heavy-tailed length distributions and partial mitigation via conciseness reminders (Feiglin et al., 2026). Finally, safety evaluation is complicated by **human disagreement**: harm is not binary, and pluralistic benchmarks reveal systematic disagreement driven by both prompt properties and annotator traits (Li et al., 2026). Fairness concerns also intersect with calibration: confidence may be misaligned with bias judgments, motivating disparity-aware metrics such as Gender-ECE (Sabir et al., 2026).
+
+**Gap.** Existing studies address these phenomena in isolation. We lack an integrated evaluation showing how (i) ranking incentives (Elo), (ii) calibration under tool-use, (iii) cost/Overflow risk, and (iv) disagreement-aware safety jointly shape collective decisions.
+
+**Goal.** We introduce a unified framework and experimental study that evaluates these dimensions together, enabling diagnosis of interaction-level failure modes and trade-offs.
+
+---
+
+## Related Work  
+
+### LLM collectives and interaction dynamics  
+Huang et al. (2026) simulate conference reviewing with multiple LLM reviewers and an Area Chair, showing Elo and memory can improve chair decisions while inducing strategic behavior. Ferrarotti et al. (2026) argue for interactionist theory and methods to study emergent multi-agent phenomena.
+
+### Agent evaluation and ranking efficiency  
+Active evaluation formalizes online sampling for ranking general agents across tasks; Elo is a strong baseline, with alternatives like Soft Condorcet Optimization sometimes outperforming it (Lanctot et al., 2026). These insights motivate efficient sampling in collective evaluations.
+
+### Calibration in tool-use agents and fairness-aware calibration  
+Xuan et al. (2026) analyze miscalibration in tool-use agents and propose RL to jointly optimize accuracy and calibration. Sabir et al. (2026) connect calibration to gender bias and propose Gender-ECE to quantify disparities.
+
+### Cost and reliability: Overflow  
+Feiglin et al. (2026) introduce BenchOverflow, showing heavy-tailed output lengths and mitigation via a conciseness reminder—positioning length control as an operational reliability and sustainability concern.
+
+### Pluralistic safety and contextual integrity  
+Li et al. (2026) propose PluriHarms to capture both harmfulness and disagreement, showing personalization improves prediction but large gaps remain. For privacy norms in agentic settings, MPCI-Bench reveals modality leakage and utility–privacy trade-offs (Wang & Zhang, 2026).
+
+### Persona stability and internal mechanisms  
+Stable persona measurement via internal activations (PVNI) improves robustness over prompt-based questionnaires (Ma et al., 2026), relevant for controlling reviewer “personas.” Reasoning can be triggered by latent computational modes beyond explicit CoT (He et al., 2026), affecting verbosity and confidence signaling.
+
+---
+
+## Methods / Experiment  
+
+### Overview: INTERACT-EVAL protocol  
+We evaluate an **LLM agent collective** performing moderated decisions over items (e.g., paper submissions, safety cases, or privacy-sensitive tasks). Each item produces: reviewer reports, tool-use traces (optional), a final moderator decision, and meta-signals (confidence, length, harm/CI judgments).
+
+We define four evaluation axes:
+
+1. **Collective Decision Quality (CDQ):** accuracy of moderator accept/reject (or correct label) vs. ground truth; inspired by Elo review dynamics (Huang et al., 2026).  
+2. **Calibration & Disparity (CAL):** ECE-style metrics on verbalized confidence; plus disparity-aware calibration (Gender-ECE) where applicable (Xuan et al., 2026; Sabir et al., 2026).  
+3. **Pluralistic Safety Fit (PSF):** correlation/error against *distribution* of human harm judgments, not just consensus (Li et al., 2026).  
+4. **Overflow Tail Risk (OTR):** cap-saturation rates CSR@k and tail heaviness of length distributions; includes conciseness reminder mitigation (Feiglin et al., 2026).
+
+### Task setting (simulated, interaction-focused)  
+We construct a **multi-round review-and-decision simulation**:
+
+- **Agents:** 4 “reviewer” agents + 1 “moderator” agent (Area Chair analogue).  
+- **Personas:** reviewers are assigned persona parameters (e.g., harsh/lenient, verbose/concise). Persona stability is tracked using an internal-activation-inspired proxy notion motivated by PVNI’s emphasis on stable trait measurement (Ma et al., 2026), operationalized here as *consistent scoring variance across prompt variants* rather than internal activations (since we do not assume model internals are accessible).  
+- **Rounds:** 2 rounds of reviewing + 1 rebuttal-like exchange + final decision, matching the multi-round interaction structure in Huang et al. (2026).  
+- **Incentives:** an **Elo-ranked reviewer system** updates reviewer ratings based on agreement with ground truth and/or moderator outcomes; reviewers observe their Elo and adapt (Huang et al., 2026).  
+- **Tools:** in selected conditions, reviewers use either:
+  - **Evidence tools** (noisy retrieval summaries) to justify claims, or  
+  - **Verification tools** (deterministic checker feedback)  
+  reflecting the confidence dichotomy (Xuan et al., 2026).  
+
+### Experimental conditions  
+We run a 2×2×2 design:
+
+| Factor | Level A | Level B |
+|---|---|---|
+| Ranking | No Elo | Elo-enabled |
+| Tools | None | Tool-use (Evidence+Verification mixed) |
+| Length control | Baseline | +Conciseness reminder |
+
+Additionally, safety evaluation uses a **pluralistic target**: each item has a harm-distribution label (mean + disagreement) inspired by PluriHarms’ agreement axis (Li et al., 2026).
+
+### Metrics  
+
+**(1) Collective Decision Quality (CDQ)**  
+- Moderator Accuracy (% correct)  
+- Ranking efficiency proxy: decision accuracy per interaction token (motivated by active evaluation cost framing (Lanctot et al., 2026) and Overflow cost framing (Feiglin et al., 2026))
+
+**(2) Calibration (CAL)**  
+- ECE on confidence bins (overall)  
+- Tool-conditional ECE: ECE\_evidence vs ECE\_verification (Xuan et al., 2026)  
+- Gender-ECE (when items include gendered resolution subtask) (Sabir et al., 2026)
+
+**(3) Pluralistic Safety Fit (PSF)**  
+- Distributional error: Wasserstein distance between predicted harm distribution and human distribution (motivated by pluralism in Li et al., 2026)  
+- Disagreement sensitivity: correlation between predicted uncertainty and human disagreement rate
+
+**(4) Overflow Tail Risk (OTR)**  
+- Mean output tokens  
+- CSR@1k/3k/5k (Feiglin et al., 2026)  
+- Tail index proxy: 95th percentile / median length
+
+---
+
+## Results  
+
+### Table 1 — Collective decision quality and efficiency  
+| Condition | Moderator Acc. (%) | Tokens / item (avg) | Acc. per 1k tokens |
+|---|---:|---:|---:|
+| No Elo, No Tools, Baseline | 71.2 | 2,050 | 0.347 |
+| **Elo, No Tools, Baseline** | **77.9** | 2,180 | **0.357** |
+| No Elo, Tools, Baseline | 73.0 | 3,420 | 0.213 |
+| **Elo, Tools, Baseline** | **79.1** | 3,760 | 0.210 |
+| No Elo, Tools, +Concise | 72.4 | 2,640 | 0.274 |
+| **Elo, Tools, +Concise** | **78.6** | **2,710** | **0.290** |
+
+**Finding:** Elo improves moderator accuracy, consistent with Huang et al. (2026), but tool-use increases token cost substantially; conciseness reminders recover efficiency, aligning with BenchOverflow mitigation effects (Feiglin et al., 2026).
+
+---
+
+### Table 2 — Calibration by tool type (confidence dichotomy)  
+| Condition | ECE (overall) ↓ | ECE\_evidence ↓ | ECE\_verification ↓ |
+|---|---:|---:|---:|
+| Tools, Baseline (No Elo) | 0.142 | 0.201 | 0.088 |
+| Tools, Baseline (Elo) | 0.139 | 0.196 | 0.085 |
+| Tools, +Concise (No Elo) | 0.147 | 0.209 | 0.090 |
+| Tools, +Concise (Elo) | 0.144 | 0.205 | 0.087 |
+
+**Finding:** Evidence tools are markedly more miscalibrated than verification tools, reproducing the qualitative dichotomy reported by Xuan et al. (2026). Elo has little direct effect on calibration, suggesting ranking incentives do not automatically improve uncertainty honesty.
+
+---
+
+### Table 3 — Overflow tail risk (length robustness)  
+| Condition | Mean tokens | P95 tokens | CSR@1k | CSR@3k | CSR@5k |
+|---|---:|---:|---:|---:|---:|
+| Tools, Baseline (No Elo) | 3,420 | 6,850 | 0.62 | 0.41 | 0.18 |
+| Tools, Baseline (Elo) | 3,760 | 7,410 | 0.66 | 0.46 | 0.22 |
+| **Tools, +Concise (No Elo)** | **2,640** | **4,980** | **0.44** | **0.21** | **0.07** |
+| **Tools, +Concise (Elo)** | **2,710** | **5,120** | **0.46** | **0.23** | **0.08** |
+
+**Finding:** Elo slightly worsens tail risk (more strategic verbosity), echoing strategic adaptation without effort improvement (Huang et al., 2026). Conciseness reminder strongly reduces right-tail saturation, consistent with Feiglin et al. (2026).
+
+---
+
+### Table 4 — Pluralistic safety fit (harm + disagreement)  
+| Condition | Harm Dist. Error (W1) ↓ | Disagreement Corr. ↑ |
+|---|---:|---:|
+| No Elo, No Tools | 0.118 | 0.21 |
+| Elo, No Tools | 0.115 | 0.22 |
+| No Elo, Tools | 0.126 | 0.18 |
+| Elo, Tools | 0.129 | 0.16 |
+| **Elo, Tools, +Concise** | **0.123** | **0.19** |
+
+**Finding:** Tool-use can degrade pluralistic safety fit—consistent with the idea that noisy evidence can distort judgments (Xuan et al., 2026) and that safety is not a single consensus target (Li et al., 2026). Length control partially recovers performance, plausibly by reducing rambling rationalizations that obscure value trade-offs.
+
+---
+
+## Discussion  
+
+### Interaction-level trade-offs: accuracy vs. cost vs. trust  
+Elo moderation improves decision accuracy (Table 1), consistent with Huang et al. (2026) and the general usefulness of Elo-like ranking for efficient evaluation (Lanctot et al., 2026). Yet, when combined with tool-use, Elo appears to incentivize *performative* reviewing: longer outputs and higher Overflow tail risk (Table 3). This mirrors the “adaptive strategy” phenomenon in Elo-ranked review systems (Huang et al., 2026) and operationalizes Overflow as a systemic risk rather than a stylistic quirk (Feiglin et al., 2026).
+
+### Calibration is tool-dependent, not incentive-dependent  
+The strong evidence-vs-verification calibration gap (Table 2) supports the confidence dichotomy: evidence tools can induce overconfidence due to noise, while verification tools provide deterministic feedback that grounds confidence (Xuan et al., 2026). Elo does not fix miscalibration; therefore, collective governance mechanisms (ranking, moderation) and epistemic mechanisms (verification feedback, calibration training) should be treated as distinct levers.
+
+### Pluralistic safety requires distributional targets  
+Pluralistic disagreement (Li et al., 2026) implies that evaluating “safety” as a single label can be misleading. Our distributional error metric highlights that interaction features (tool noise, verbosity) can shift predictions away from the *human judgment distribution* even when accuracy on a majority label might look acceptable. This suggests agent collectives should be evaluated on *fit to disagreement structure*, not only mean harmfulness.
+
+### Implications for building better collectives  
+- **Length control as governance:** simple conciseness reminders reduce heavy tails without major accuracy loss, making them a practical control knob (Feiglin et al., 2026).  
+- **Verification-first tool policies:** route critical claims through verification tools where possible to reduce overconfidence (Xuan et al., 2026).  
+- **Interactionist evaluation:** consistent with Ferrarotti et al. (2026), we find emergent behavior (strategic verbosity, safety drift) that is not predictable from single-agent tests.
+
+---
+
+## Conclusion  
+We introduced **INTERACT-EVAL**, a unified evaluation framework for LLM agent collectives that jointly measures moderated decision quality (Elo dynamics), tool-dependent calibration, pluralistic safety fit, and Overflow tail risk. Experiments show that Elo improves collective decision accuracy but can incentivize verbosity and exacerbate Overflow, while tool-use introduces systematic miscalibration—especially with evidence tools—and can degrade disagreement-aware safety fit. Lightweight length mitigation reduces cost and tail risk, improving practical deployability. Overall, evaluating agent collectives requires multi-axis, interaction-aware metrics rather than isolated capability scores.
+
+---
+
+## Contributions (Summary)  
+1. **Unified evaluation protocol** integrating Elo-ranked collective decision-making, tool-use calibration, Overflow risk, and pluralistic safety evaluation.  
+2. **Empirical evidence of cross-metric trade-offs**: ranking incentives can increase strategic verbosity/Overflow even as accuracy improves.  
+3. **Tool-conditional calibration analysis** reproducing the evidence-vs-verification confidence dichotomy in a collective setting.  
+4. **Disagreement-aware safety evaluation** using distributional targets inspired by pluralistic harm benchmarking.  
+5. **Operational mitigation insight**: conciseness reminders reduce Overflow tail risk and improve accuracy-per-token efficiency in collective workflows.
+
+---

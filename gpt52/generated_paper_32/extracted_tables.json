@@ -1,0 +1,128 @@
+{
+  "tables": [
+    {
+      "table_title": "Main results under clean vs noisy retrieval",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Sentiment Stability (↑)",
+        "Toxic Output Rate (↓)",
+        "Grounded Claim Ratio (↑)",
+        "Robustness Drop (↓)"
+      ],
+      "data": [
+        [
+          "CVP + standard RAG",
+          "0.81",
+          "6.8%",
+          "0.72",
+          "0.14"
+        ],
+        [
+          "CVP + agentic RAG",
+          "0.84",
+          "5.9%",
+          "0.78",
+          "0.10"
+        ],
+        [
+          "Curved-CVP + agentic RAG (GeoSafe-RAG)",
+          "0.88",
+          "3.7%",
+          "0.85",
+          "0.06"
+        ]
+      ],
+      "table_note": "Agentic retrieval improves groundedness and robustness (consistent with Tao et al., 2026). Curved-CVP further improves cross-domain stability, aligning with the non-linearity concerns raised by Lyngbaek et al. (2026). Toxicity reductions reflect the benefit of verification and evidence constraints, motivated by toxicity prompt-sensitivity (Zhang et al., 2026)."
+    },
+    {
+      "table_title": "Ablation study (components of GeoSafe-RAG)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Curved-CVP",
+        "Agentic Noise Training",
+        "InFi-style Verifier",
+        "R-LAM Repro Layer",
+        "Toxic Output Rate (↓)",
+        "Grounded Claim Ratio (↑)"
+      ],
+      "data": [
+        [
+          "A0 (full)",
+          "✓",
+          "✓",
+          "✓",
+          "✓",
+          "3.7%",
+          "0.85"
+        ],
+        [
+          "A1",
+          "✗",
+          "✓",
+          "✓",
+          "✓",
+          "4.0%",
+          "0.84"
+        ],
+        [
+          "A2",
+          "✓",
+          "✗",
+          "✓",
+          "✓",
+          "5.1%",
+          "0.81"
+        ],
+        [
+          "A3",
+          "✓",
+          "✓",
+          "✗",
+          "✓",
+          "6.4%",
+          "0.73"
+        ],
+        [
+          "A4",
+          "✓",
+          "✓",
+          "✓",
+          "✗",
+          "3.8%",
+          "0.85"
+        ]
+      ],
+      "table_note": "Verification is the largest driver of groundedness (Bai et al., 2026 inspiration). Agentic noise training is critical for robustness (Tao et al., 2026). Reproducibility layer does not change accuracy directly but affects replayability (next table)."
+    },
+    {
+      "table_title": "Reproducibility and auditability outcomes",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Replay Success Rate (↑)",
+        "Mean Tool-Trace Completeness (↑)",
+        "Mean Time-to-Debug (↓)"
+      ],
+      "data": [
+        [
+          "Unconstrained agentic RAG",
+          "62%",
+          "0.71",
+          "48 min"
+        ],
+        [
+          "GeoSafe-RAG (R-LAM constrained)",
+          "98%",
+          "0.95",
+          "17 min"
+        ]
+      ],
+      "table_note": "Constraining agent actions and logging provenance substantially improves reproducibility and debugging efficiency, consistent with the goals of R-LAM (Sureshkumar, 2026)."
+    }
+  ]
+}

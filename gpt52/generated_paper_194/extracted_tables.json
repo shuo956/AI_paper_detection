@@ -1,0 +1,163 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance across three evaluation settings",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "RealMem Task Success ↑",
+        "Cross-Session Contradiction ↓",
+        "Novel Multi-hop QA Acc ↑",
+        "Multilingual 2-Hop Acc ↑"
+      ],
+      "data": [
+        [
+          "Base LLM",
+          "52.1",
+          "18.7",
+          "41.3",
+          "22.4"
+        ],
+        [
+          "Edit-only (HORSE-style)",
+          "61.0",
+          "14.2",
+          "43.0",
+          "23.1"
+        ],
+        [
+          "RAG-only (k=8)",
+          "58.4",
+          "16.9",
+          "55.6",
+          "35.8"
+        ],
+        [
+          "RAG + SUBQ",
+          "59.1",
+          "16.1",
+          "56.2",
+          "60.7"
+        ],
+        [
+          "Reflect-Edit-RAG (ours)",
+          "**68.9**",
+          "**10.3**",
+          "**58.4**",
+          "**66.1**"
+        ]
+      ],
+      "table_note": "Editing improves RealMem consistency, RAG strongly improves novel QA and multilingual reasoning, and reflection yields further gains and reduces contradictions."
+    },
+    {
+      "table_title": "Effect of retrieved context volume (k) on novelty and domain shift robustness",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "k retrieved examples",
+        "Novel Multi-hop QA Acc ↑",
+        "Multilingual 2-Hop Acc ↑",
+        "Unsupported-Claim Rate ↓"
+      ],
+      "data": [
+        [
+          "2",
+          "49.8",
+          "44.0",
+          "14.6"
+        ],
+        [
+          "4",
+          "53.7",
+          "52.3",
+          "12.1"
+        ],
+        [
+          "8",
+          "55.6",
+          "60.7",
+          "10.9"
+        ],
+        [
+          "16",
+          "**56.0**",
+          "**62.1**",
+          "**10.7**"
+        ]
+      ],
+      "table_note": "Performance increases with context volume and saturates, matching the 'context volume drives performance' conclusion."
+    },
+    {
+      "table_title": "Multilingual reasoning diagnostics (composition failures and step faithfulness)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Step-1 Bridge Correct ↑",
+        "Step-2 Answer-Span Correct ↑",
+        "Composition Failure ↓"
+      ],
+      "data": [
+        [
+          "Base LLM",
+          "28.5",
+          "35.2",
+          "21.4"
+        ],
+        [
+          "RAG-only",
+          "46.9",
+          "51.7",
+          "18.9"
+        ],
+        [
+          "RAG + SUBQ",
+          "71.3",
+          "74.0",
+          "12.7"
+        ],
+        [
+          "Reflect-Edit-RAG (ours)",
+          "**74.8**",
+          "**76.2**",
+          "**9.4**"
+        ]
+      ],
+      "table_note": "SUBQ-style decomposition substantially improves intermediate correctness, and reflection further reduces composition failures."
+    },
+    {
+      "table_title": "Atomic fact consistency probe (faithfulness/explainability)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Atomic Fact Entailment Rate ↑",
+        "Atomic Contradiction Rate ↓"
+      ],
+      "data": [
+        [
+          "Base LLM",
+          "62.0",
+          "11.8"
+        ],
+        [
+          "Edit-only",
+          "66.4",
+          "10.9"
+        ],
+        [
+          "RAG + SUBQ",
+          "70.1",
+          "9.7"
+        ],
+        [
+          "Reflect-Edit-RAG (ours)",
+          "**75.6**",
+          "**7.4**"
+        ]
+      ],
+      "table_note": "Atomic-level checks reveal improvements not always visible in sentence-level accuracy, aligning with Atomic-SNLI’s motivation."
+    }
+  ]
+}

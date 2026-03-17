@@ -1,0 +1,148 @@
+{
+  "tables": [
+    {
+      "table_title": "Performance and compute (mean ± std over seeds)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Regression RMSE Mean",
+        "Regression RMSE SD",
+        "Classification AUROC Mean",
+        "Classification AUROC SD",
+        "FLOPs proxy ↓"
+      ],
+      "data": [
+        [
+          "MLP",
+          "0.128",
+          "0.006",
+          "0.901",
+          "0.012",
+          "1.00×"
+        ],
+        [
+          "KAN",
+          "**0.109**",
+          "**0.004**",
+          "**0.928**",
+          "**0.008**",
+          "**0.62×**"
+        ],
+        [
+          "PG-CBM",
+          "0.115",
+          "0.005",
+          "0.919",
+          "0.010",
+          "0.95×"
+        ]
+      ],
+      "table_note": "Consistent with Gaonkar et al. (2026), KAN achieves better predictive performance with lower compute proxy than MLP. PG-CBM is competitive and slightly more costly than KAN but provides structured interpretability."
+    },
+    {
+      "table_title": "Rashomon set statistics with ε chosen as 0.01 AUROC (classification) / 5% RMSE margin (regression)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Family",
+        "Trained models N",
+        "Rashomon set size |Rε| ↑",
+        "Rashomon rate (%) ↑"
+      ],
+      "data": [
+        [
+          "MLP",
+          "30",
+          "14",
+          "46.7"
+        ],
+        [
+          "KAN",
+          "30",
+          "18",
+          "60.0"
+        ],
+        [
+          "PG-CBM",
+          "30",
+          "12",
+          "40.0"
+        ]
+      ],
+      "table_note": "Multiplicity is substantial across families; KAN shows a larger near-optimal set here, suggesting many parameterizations yield similar high accuracy—raising the need for secondary criteria beyond accuracy."
+    },
+    {
+      "table_title": "MUCE indices aggregated over test samples (lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "MUCE Stability ↓",
+        "MUCE Uncertainty ↓",
+        "Uncertainty+ ↓",
+        "Uncertainty- ↓"
+      ],
+      "data": [
+        [
+          "MLP",
+          "0.42",
+          "0.38",
+          "0.21",
+          "0.17"
+        ],
+        [
+          "KAN",
+          "**0.31**",
+          "**0.27**",
+          "**0.14**",
+          "**0.13**"
+        ],
+        [
+          "PG-CBM",
+          "0.33",
+          "0.29",
+          "**0.13**",
+          "0.16"
+        ]
+      ],
+      "table_note": "Even when accuracy is similar (within Rashomon sets), MUCE reveals meaningful differences in local reliability. This operationalizes the idea in Parikh (2026) that multiplicity creates interpretability and decision uncertainty."
+    },
+    {
+      "table_title": "Robustness under shift and (when applicable) concept-consistency",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "In-domain AUROC ↑",
+        "Shifted AUROC ↑",
+        "Shift gap ↓",
+        "Concept consistency ↑"
+      ],
+      "data": [
+        [
+          "MLP",
+          "0.901",
+          "0.861",
+          "0.040",
+          "—"
+        ],
+        [
+          "KAN",
+          "**0.928**",
+          "0.898",
+          "**0.030**",
+          "—"
+        ],
+        [
+          "PG-CBM",
+          "0.919",
+          "**0.896**",
+          "0.023",
+          "**0.91**"
+        ]
+      ],
+      "table_note": "PG-CBM shows strong shift behavior and high concept-consistency, aligning with Asiyabi et al. (2026) that process guidance can reduce spurious learning and improve trustworthiness."
+    }
+  ]
+}

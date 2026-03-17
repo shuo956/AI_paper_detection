@@ -1,0 +1,111 @@
+{
+  "tables": [
+    {
+      "table_title": "Multi-hop QA performance and retrieval efficiency",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "QASC Accuracy (%)",
+        "Novel-2024 Accuracy (%)",
+        "Avg. Retrieval Steps",
+        "Avg. Context Tokens"
+      ],
+      "data": [
+        [
+          "Always-retrieve RAG",
+          "—",
+          "—",
+          "High (fixed)",
+          "High"
+        ],
+        [
+          "ACE (agentic retrieve/think)",
+          "—",
+          "—",
+          "Medium",
+          "Medium"
+        ],
+        [
+          "PR-CoT (reflection only)",
+          "—",
+          "—",
+          "N/A–Low",
+          "Low"
+        ],
+        [
+          "ReaCE (ours)",
+          "**—**",
+          "**—**",
+          "**Low–Medium**",
+          "**Low–Medium**"
+        ]
+      ],
+      "table_note": "Based on Chen et al. (2026), we expect agentic control to reduce redundant retrieval; based on Costa et al. (2026), reflection should improve correctness; based on Yang et al. (2026), gains should be larger in the novel-knowledge setting where retrieval matters most."
+    },
+    {
+      "table_title": "Hallucination vs abstention on unknown entities (relation-aware)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Hallucination Rate ↓",
+        "Abstention Rate ↑",
+        "Correct “Unknown” Identification ↑"
+      ],
+      "data": [
+        [
+          "Always-retrieve RAG",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "ACE",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "PR-CoT",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "ReaCE (ours)",
+          "**—**",
+          "**—**",
+          "**—**"
+        ]
+      ],
+      "table_note": "Lu et al. (2026) show hallucinations depend on relational linearity; ReaCE explicitly uses a relation-aware threshold to reduce hallucinations when self-assessment is unreliable."
+    },
+    {
+      "table_title": "Calibration quality of “support sufficiency” probability",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "ECE (Support) ↓",
+        "Brier Score ↓",
+        "Overconfidence on Unsupported Answers ↓"
+      ],
+      "data": [
+        [
+          "Uncalibrated reflection score",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "Platt-style calibrated (ReaCE)",
+          "**—**",
+          "**—**",
+          "**—**"
+        ]
+      ],
+      "table_note": "Inspired by MLPlatt’s post-hoc calibration benefits (Bajger et al., 2026), we expect a calibrated mapping to reduce overconfident unsupported answers."
+    }
+  ]
+}

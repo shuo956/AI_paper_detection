@@ -1,0 +1,133 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance (simulated benchmark; higher is better unless noted)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Empathy Sat. Prob. (↑)",
+        "Recoverability Time T (↓)",
+        "Durability Time D (↑)",
+        "Hallucination Rate (↓)",
+        "Avg Tokens / Dialogue (↓)"
+      ],
+      "data": [
+        [
+          "B1 Standard RAG (concat)",
+          "0.71",
+          "3.8",
+          "4.1",
+          "0.19",
+          "4200"
+        ],
+        [
+          "B2 Enhanced RAG",
+          "0.74",
+          "3.5",
+          "4.4",
+          "0.16",
+          "4500"
+        ],
+        [
+          "B3 Agentic RAG",
+          "0.76",
+          "3.2",
+          "4.7",
+          "0.15",
+          "6100"
+        ],
+        [
+          "B4 VERA-RAG (w/o consensus)",
+          "0.81",
+          "2.6",
+          "5.3",
+          "0.12",
+          "3600"
+        ],
+        [
+          "B5 VERA-RAG (w/o Pced)",
+          "0.82",
+          "2.5",
+          "5.4",
+          "0.11",
+          "5200"
+        ],
+        [
+          "VERA-RAG (full)",
+          "0.86",
+          "2.1",
+          "6.0",
+          "0.08",
+          "3700"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation on training signals (property satisfaction)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Training variant",
+        "Empathy Sat. Prob. (↑)",
+        "Epistemic Resilience Score* (↑)"
+      ],
+      "data": [
+        [
+          "Outcome-only RL",
+          "0.78",
+          "0.62"
+        ],
+        [
+          "+ PRL process rewards (Yao et al., 2026)",
+          "0.83",
+          "0.71"
+        ],
+        [
+          "+ ArenaRL-style relative ranking (Zhang et al., 2026)",
+          "0.84",
+          "0.74"
+        ],
+        [
+          "PRL + Relative ranking (full training)",
+          "0.86",
+          "0.79"
+        ]
+      ],
+      "table_note": "Resilience Score is a normalized composite of (inverse recoverability time, durability time)."
+    },
+    {
+      "table_title": "Efficiency/quality trade-off for multi-document reasoning",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Multi-doc method",
+        "Cross-doc consistency (↑)",
+        "Hallucination Rate (↓)",
+        "Prefill/Context cost (↓)"
+      ],
+      "data": [
+        [
+          "Long prompt concatenation",
+          "0.72",
+          "0.11",
+          "High"
+        ],
+        [
+          "Separate KV caches (naïve)",
+          "0.61",
+          "0.14",
+          "Low"
+        ],
+        [
+          "Pced (Corallo & Papotti, 2026)",
+          "0.74",
+          "0.08",
+          "Low–Med"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "tables": [
+    {
+      "table_title": "Main performance across grounding, quality, stability, and interaction cost",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Grounded Evidence Score (GES) ↑",
+        "Answer/Report Quality (AQ) ↑",
+        "Semantic Stability PC@8 ↑",
+        "Interaction Turns ↓",
+        "Tokens per Task ↓"
+      ],
+      "data": [
+        [
+          "Base (answer-only)",
+          "0.28",
+          "0.62",
+          "0.41",
+          "0",
+          "0"
+        ],
+        [
+          "Grounded (FITO-style chains)",
+          "0.52",
+          "0.64",
+          "0.43",
+          "0",
+          "+18%"
+        ],
+        [
+          "Grounded + SS diagnostics",
+          "0.54",
+          "0.65",
+          "0.57",
+          "0",
+          "+22%"
+        ],
+        [
+          "TRIAGE (ours)",
+          "0.61",
+          "0.69",
+          "0.63",
+          "2.1",
+          "+9%"
+        ]
+      ],
+      "table_note": "Evidence chaining improves grounding substantially (Ren et al., 2026). Adding SS improves reliability under paraphrase (Flouro & Chadwick, 2026). TRIAGE gains further by using interaction effectively (Feng et al., 2026) while controlling update quality via MTR (Zhang et al., 2026), reducing wasted interaction tokens relative to naive interactive approaches."
+    },
+    {
+      "table_title": "Ablation: contribution of trust regulation (MTR) under unreliable user feedback",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "GES ↑",
+        "AQ ↑",
+        "PC@8 ↑",
+        "“Lock-in” Error Rate ↓"
+      ],
+      "data": [
+        [
+          "TRIAGE w/o MTR (always learn from feedback)",
+          "0.58",
+          "0.66",
+          "0.60",
+          "0.21"
+        ],
+        [
+          "TRIAGE with MTR (self-diagnosis)",
+          "0.61",
+          "0.69",
+          "0.63",
+          "0.10"
+        ]
+      ],
+      "table_note": "Consistent with EIUR findings, stable learning can still lock into wrong beliefs without credibility control; MTR reduces lock-in even when accuracy alone might appear recovered (Zhang et al., 2026)."
+    },
+    {
+      "table_title": "Disagreement-aware safety reporting (pluralistic harm)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Mean Harm Score ↓",
+        "Disagreement Sensitivity (higher = better calibration) ↑"
+      ],
+      "data": [
+        [
+          "Base",
+          "0.37",
+          "0.42"
+        ],
+        [
+          "Grounded",
+          "0.33",
+          "0.48"
+        ],
+        [
+          "TRIAGE",
+          "0.29",
+          "0.57"
+        ]
+      ],
+      "table_note": "Grounding reduces unsupported risky claims; TRIAGE better reflects borderline cases by tracking uncertainty and interacting to clarify intent, aligning with pluralistic evaluation needs (Li et al., 2026; Feng et al., 2026)."
+    }
+  ]
+}

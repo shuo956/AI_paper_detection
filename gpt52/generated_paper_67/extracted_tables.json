@@ -1,0 +1,130 @@
+{
+  "tables": [
+    {
+      "table_title": "Main performance on future-verifiable idea forecasting (PoT-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Accuracy ↑",
+        "Macro-F1 ↑",
+        "Brier ↓",
+        "Avg. judge calls ↓"
+      ],
+      "data": [
+        [
+          "Single Judge (best)",
+          "0.612",
+          "0.598",
+          "0.214",
+          "1.00"
+        ],
+        [
+          "Majority Vote (3 judges)",
+          "0.624",
+          "0.607",
+          "0.209",
+          "3.00"
+        ],
+        [
+          "Consensus Meta-Learner (no calibration)",
+          "0.651",
+          "0.639",
+          "0.196",
+          "3.00"
+        ],
+        [
+          "Calibrated Cascading only",
+          "0.635",
+          "0.621",
+          "0.201",
+          "1.62"
+        ],
+        [
+          "C3-PoT (Consensus + Calib + Robustness)",
+          "0.673",
+          "0.661",
+          "0.183",
+          "1.74"
+        ]
+      ],
+      "table_note": "Supervised consensus improves over majority vote (as in Kallem, 2026), and calibrated cascading reduces cost (Hao et al., 2026). The combined system yields the best accuracy and Brier score with modest extra calls."
+    },
+    {
+      "table_title": "Confidence quality under language variation (Xia et al., 2026-inspired)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Prompt-robustness variance ↓",
+        "Equivalent-answer stability ↑",
+        "Meaning-change sensitivity ↑"
+      ],
+      "data": [
+        [
+          "Single Judge (raw confidence)",
+          "0.041",
+          "0.71",
+          "0.54"
+        ],
+        [
+          "Single Judge (calibrated only)",
+          "0.038",
+          "0.73",
+          "0.55"
+        ],
+        [
+          "Consensus (no robustness gate)",
+          "0.033",
+          "0.77",
+          "0.58"
+        ],
+        [
+          "C3-PoT (robustness gate)",
+          "0.021",
+          "0.84",
+          "0.63"
+        ]
+      ],
+      "table_note": "Calibration alone yields limited gains on robustness, consistent with 'Calibration Is Not Enough' (Xia et al., 2026). Explicit robustness gating materially improves stability and sensitivity."
+    },
+    {
+      "table_title": "Ablation study",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Accuracy ↑",
+        "Brier ↓",
+        "Avg. judge calls ↓"
+      ],
+      "data": [
+        [
+          "Full C3-PoT",
+          "0.673",
+          "0.183",
+          "1.74"
+        ],
+        [
+          "– remove robustness gate",
+          "0.660",
+          "0.191",
+          "1.72"
+        ],
+        [
+          "– remove calibrated routing (fixed 3 judges)",
+          "0.675",
+          "0.182",
+          "3.00"
+        ],
+        [
+          "– remove consensus (use best calibrated judge)",
+          "0.635",
+          "0.201",
+          "1.62"
+        ]
+      ],
+      "table_note": "Consensus drives most accuracy gains (Kallem, 2026). Routing drives cost reduction (Hao et al., 2026). Robustness gating improves reliability metrics and slightly improves accuracy by preventing misrouting from unstable confidence (Xia et al., 2026)."
+    }
+  ]
+}

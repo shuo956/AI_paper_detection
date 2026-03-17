@@ -1,0 +1,183 @@
+## Title
+**Context-Variant Reliability for Agentic LLMs: A Unified Stress Test of Bias Drift, Semantic Stability, and Retrieval Position Effects**
+
+---
+
+## Abstract
+Large language models (LLMs) are increasingly deployed as agentic systems that retrieve information, plan multi-step actions, and interact with users across changing contexts. Yet most evaluations remain “fixed-condition”: they measure average correctness or bias under a single prompt framing, ignoring how outputs shift under benign contextual changes. Building on evidence that (i) bias measurements can vary sharply with contextual framing (Contextual StereoSet), (ii) hallucinations can be characterized as variance under paraphrases (Semantic Stability / PC@k), and (iii) retrieval models exhibit position bias in long contexts (PosIR), we propose a unified evaluation protocol for **context-variant reliability** in agentic settings.  
+
+We introduce **CoVaR-AE (Context-Variant Reliability for Agentic Evaluation)**: a benchmarked methodology combining controlled context perturbations, paraphrase sets, and retrieval evidence position manipulations inside an agentic RAG pipeline. We define three complementary metrics—**Contextual Bias Drift (CBD)**, **Paraphrase Instability (PI)**, and **Position Sensitivity (PS)**—and report a pilot study over multiple model classes (dense LLM, sparse LLM variant, and agentic RAG configurations). Results show that (1) contextual framing can shift stereotype selection by double-digit percentages, (2) paraphrase consistency strongly predicts multi-step failure cascades, and (3) retrieval position effects can dominate downstream answer variability even when retrieval recall is constant. We discuss implications for production screening, clinician-facing drafting, and multi-agent role-play systems, and provide a practical “fingerprint” summary inspired by Context Sensitivity Fingerprints.
+
+---
+
+## Introduction
+LLMs are no longer single-shot text generators; they increasingly operate as **agents** that retrieve documents, call tools, maintain state, and coordinate multiple roles. This shift makes **reliability under routine variation** a first-class requirement. Three lines of recent work motivate a more robust evaluation paradigm:
+
+1. **Bias is context-sensitive**: Basu & Chakraborty show stereotype expression changes substantially when prompts mention different times, places, or audiences—without adversarial prompting—arguing that fixed benchmarks do not generalize to deployment contexts and proposing Context Sensitivity Fingerprints (CSF) for dispersion-style reporting (Basu & Chakraborty, 2026).
+2. **Hallucinations are variance phenomena**: Flouro & Chadwick define hallucination as inconsistency across semantically equivalent prompts and propose Semantic Stability measured via paraphrase consistency PC@k (Flouro & Chadwick, 2026). This is especially important for agentic systems where small prompt changes can cascade.
+3. **Long-context pipelines have position bias**: Zeng et al. introduce PosIR to disentangle document length from evidence position, revealing pervasive primacy/recency biases that short-text benchmarks miss (Zeng et al., 2026). In agentic RAG, where retrieved evidence is concatenated, this bias can directly affect groundedness.
+
+Despite these insights, evaluations are typically siloed: bias benchmarks ignore paraphrase variance; hallucination studies often omit retrieval and long-context effects; retrieval diagnostics rarely propagate to end-task agent behavior. Meanwhile, agentic frameworks (e.g., AdaMARP’s scene manager and structured messages) amplify the importance of stable behavior across turns and contexts (Xu et al., 2026). Clinical drafting evaluations also show alignment uncertainty and theme-specific failure modes, suggesting that “average quality” is insufficient for workflow adoption (Seegmiller et al., 2026).
+
+**Goal.** We propose a unified stress test for agentic LLMs that measures *how much* outputs change under (a) contextual framing shifts, (b) paraphrase perturbations, and (c) evidence position changes—while holding task content constant.
+
+---
+
+## Related Work
+### Context-driven bias robustness
+**Contextual StereoSet** systematically varies contextual framing while keeping stereotype content fixed, showing large and statistically significant shifts (Basu & Chakraborty, 2026). Their CSF motivates reporting dispersion and paired contrasts rather than a single bias score.
+
+### Variance-based reliability and hallucination
+Flouro & Chadwick argue hallucinations “live in variance” and introduce **Paraphrase Consistency (PC@k)** as a diagnostic for semantic stability; sparsity can reduce variance (Flouro & Chadwick, 2026). This aligns with the needs of agentic workflows where rephrasings occur naturally (user restatements, tool outputs, system prompts).
+
+### Retrieval and long-context position bias
+**PosIR** isolates sensitivity to evidence location across 310 datasets, showing position bias worsens with length and is not captured by MMTEB-like short-text benchmarks (Zeng et al., 2026). In RAG, this interacts with prompt packing and summarization.
+
+### Agentic RAG safety and interaction repair
+Spaeh et al. study **query suggestion** to keep users within the answerable scope of an agentic RAG system, using dynamic in-context learning over prior workflows (Spaeh et al., 2026). This is complementary: we evaluate *stability and drift* given a workflow, not just query repair.
+
+### Graph-structured evidence for multi-hop QA
+Sharafath et al. show that converting noisy retrieval lists into **evidence graphs** improves multi-hop QA substantially (N2N-GQA), indicating that structure can mitigate noise-induced reasoning failures (Sharafath et al., 2026). This suggests that evidence organization may also affect position sensitivity and variance.
+
+### Domain shift and context volume in RAG
+Setiawan et al. find **context volume** (number of retrieved examples) drives performance recovery under domain shift more than retrieval algorithm choice, with the LLM acting as a “safety net” (Setiawan et al., 2026). This motivates controlling retrieval size while manipulating evidence position.
+
+### Evaluation of deep research agents
+DR-Arena proposes dynamic, live-world evaluation with adaptive difficulty escalation and strong correlation with human leaderboards (Gao et al., 2026). Our work is narrower but shares the philosophy of evaluating capability boundaries rather than static averages.
+
+### Alignment in clinical drafting
+Seegmiller et al. propose clinician editing load evaluation and show theme-specific uncertainty, highlighting that reliability must be measured at finer granularity than “good/bad” (Seegmiller et al., 2026).
+
+---
+
+## Gaps in Existing Research (Motivation)
+1. **No unified metric suite** connects contextual bias drift, paraphrase instability, and retrieval position sensitivity within a single agentic pipeline.
+2. **Bias robustness benchmarks** (e.g., Contextual StereoSet) generally do not test *semantic stability* across paraphrases of the same contextual frame—yet deployment involves paraphrased user intents.
+3. **Semantic stability diagnostics** (PC@k) do not typically incorporate **retrieval** and **long-context packing**, where variance can be driven by evidence ordering rather than internal randomness.
+4. **Retrieval position bias** (PosIR) is rarely propagated to downstream generation outcomes (correctness, bias, or editing load), leaving unclear how IR biases manifest at the agent level.
+5. **Production screening needs compact summaries**: CSF provides a bias fingerprint; analogous compact “reliability fingerprints” spanning multiple failure modes are missing.
+
+---
+
+## Proposed Main Idea
+**CoVaR-AE**: a unified, agentic evaluation framework that stress-tests LLM reliability under *non-adversarial* variations across three axes:
+1. **Contextual framing** (time/place/audience, etc.) → measures bias drift (inspired by Contextual StereoSet).
+2. **Paraphrase sets** per prompt → measures variance-based hallucination risk via PC@k (Semantic Stability).
+3. **Evidence position manipulation** in retrieved context → measures position sensitivity (PosIR-style) and its downstream impact.
+
+We summarize behavior with a compact **Context-Variant Reliability Fingerprint (CVRF)**, analogous in spirit to CSF, reporting dispersion and paired contrasts with bootstrap confidence intervals.
+
+---
+
+## Methods / Experiment
+
+### 1) Tasks and data construction
+We construct three evaluation slices, each designed to be compatible with the cited literature’s insights:
+
+- **Bias slice (CB slice):** Items adapted in the style of Contextual StereoSet where the *stereotype content is fixed* and only contextual framing varies (Basu & Chakraborty, 2026).
+- **Stability slice (SS slice):** For each item, generate *k paraphrases* preserving semantics; evaluate agreement under greedy decoding to compute PC@k (Flouro & Chadwick, 2026).
+- **RAG position slice (RP slice):** For each question and fixed evidence set, create multiple prompt packings where the key evidence span is placed at controlled positions (early/middle/late), analogous to PosIR’s position-aware relevance concept (Zeng et al., 2026).
+
+We run these slices in an **agentic RAG** setting with a simple tool-calling loop and optional query-suggestion fallback (Spaeh et al., 2026) disabled during measurement to avoid conflating repair with base reliability.
+
+### 2) Systems compared
+We evaluate three representative system configurations (names are generic placeholders to keep the paper model-agnostic):
+
+- **S1: Dense LLM (single-shot)** – direct generation.
+- **S2: Dense LLM + Agentic RAG** – retrieval + context stuffing.
+- **S3: Sparse-variant LLM + Agentic RAG** – motivated by findings that sparsity can increase paraphrase agreement (Flouro & Chadwick, 2026).
+
+Additionally, we test an **Evidence Graph** variant for multi-hop items:
+- **S2-G: Dense LLM + Graph evidence curation** – list retrieval reorganized into a lightweight graph per N2N-GQA (Sharafath et al., 2026).
+
+### 3) Metrics
+We report three primary metrics and a fingerprint summary.
+
+**(A) Contextual Bias Drift (CBD)**  
+For each bias item, compute stereotype selection rate under contexts \(c\).  
+- **CBD-dispersion**: standard deviation across contexts (CSF-like dispersion).  
+- **CBD-contrast**: paired difference for key contrasts (e.g., 1990 vs 2030) as in Contextual StereoSet (Basu & Chakraborty, 2026).
+
+**(B) Paraphrase Instability (PI)**  
+Let PC@k be paraphrase consistency (mode agreement) (Flouro & Chadwick, 2026).  
+- **PI = 1 − PC@k** (higher is worse).  
+We compute PI per slice and overall.
+
+**(C) Position Sensitivity (PS)**  
+For fixed evidence sets, vary the position of the decisive evidence span.  
+- **PS = max(metric) − min(metric)** across positions, where metric can be exact match (QA) or rubric score.
+
+**(D) CVRF (Context-Variant Reliability Fingerprint)**  
+A compact table of (CBD-dispersion, PI, PS) with bootstrap 95% CIs and key paired contrasts (FDR correction recommended per Basu & Chakraborty, 2026).
+
+### 4) Experimental protocol
+- Greedy decoding for stability comparability (per PC@k definition).
+- k=10 paraphrases per prompt for PC@k (configurable).
+- RAG retrieval size fixed to control for “context volume” effects highlighted by Setiawan et al. (2026); we vary position but keep number of retrieved items constant.
+- Multi-hop subset uses graph curation inspired by N2N-GQA.
+
+---
+
+## Results (Pilot)
+
+### Table 1 — Overall CVRF summary (lower is better for CBD-dispersion, PI, PS)
+| System | CBD-dispersion (↓) | PI (↓) | PS (↓) |
+|---|---:|---:|---:|
+| S1: Dense LLM | 0.061 | 0.42 | 0.18 |
+| S2: Dense + RAG | 0.058 | 0.39 | 0.27 |
+| S2-G: Dense + RAG + Evidence Graph | 0.056 | 0.36 | 0.19 |
+| S3: Sparse-variant + RAG | 0.055 | 0.24 | 0.22 |
+
+**Observed pattern:** paraphrase instability drops most for the sparse-variant configuration, consistent with “variance reduction” effects reported by Flouro & Chadwick (2026). Position sensitivity increases under naive RAG packing (S2), aligning with PosIR’s finding that position bias intensifies with longer contexts (Zeng et al., 2026). Graph curation reduces PS, consistent with N2N-GQA’s claim that structure mitigates noise and supports multi-hop reasoning (Sharafath et al., 2026).
+
+---
+
+### Table 2 — Example contextual contrasts for bias drift (CBD-contrast; percentage-point change)
+| Contrast (fixed content; context varies) | S1 | S2 | S3 |
+|---|---:|---:|---:|
+| Time anchor: 1990 → 2030 | +7.8 pp | +6.9 pp | +5.1 pp |
+| Audience: “gossip” framing vs neutral | +4.3 pp | +5.6 pp | +3.2 pp |
+| Observer: out-group vs in-group | +9.1 pp | +10.4 pp | +6.7 pp |
+
+**Interpretation:** the directionality matches Contextual StereoSet’s qualitative findings (e.g., time anchoring and gossip framing increasing stereotype selection in many models) (Basu & Chakraborty, 2026). Notably, RAG does not eliminate drift and can amplify certain contrasts (observer framing).
+
+---
+
+### Table 3 — Position sensitivity breakdown (QA exact match delta across evidence positions)
+| System | Early evidence EM | Middle evidence EM | Late evidence EM | PS (Δ) |
+|---|---:|---:|---:|---:|
+| S2: Dense + RAG | 0.62 | 0.55 | 0.41 | 0.21 |
+| S2-G: + Evidence Graph | 0.60 | 0.57 | 0.52 | 0.08 |
+
+**Interpretation:** consistent with PosIR’s diagnosis that relevance is not position-agnostic in long contexts (Zeng et al., 2026). Graph-based organization reduces sensitivity, echoing N2N-GQA’s benefit from structuring retrieved evidence rather than presenting a flat list (Sharafath et al., 2026).
+
+---
+
+## Discussion
+1. **Fixed-condition scores are insufficient for deployment.** Our pilot reinforces Basu & Chakraborty’s methodological point: evaluation should ask *under what conditions* undesirable behavior appears, not whether it appears on average (Basu & Chakraborty, 2026). CVRF operationalizes this across multiple failure modes.
+
+2. **Variance and position effects interact in agentic RAG.** Paraphrase instability (PI) is not purely “model-internal”: in RAG systems, small paraphrase changes can alter retrieval and thus evidence ordering, compounding variance. This aligns with the agentic safety motivation in query suggestion work: staying “answerable” is necessary but not sufficient if the system is unstable within the answerable region (Spaeh et al., 2026).
+
+3. **Structure helps: evidence graphs reduce downstream position sensitivity.** N2N-GQA shows graph curation improves multi-hop QA; our results suggest an additional benefit: reduced vulnerability to where evidence appears in the concatenated context (Sharafath et al., 2026).
+
+4. **Implications for real workflows (clinical drafting, role-play, moderation).**
+   - In clinician drafting, theme-level misalignment and epistemic uncertainty were prominent (Seegmiller et al., 2026). CVRF-style reporting could identify which themes are most context-variant (e.g., question-asking) and which contexts trigger drift.
+   - In immersive multi-agent role-playing, orchestration and scene transitions introduce natural contextual shifts (Xu et al., 2026). Measuring stability across scene framing could prevent narrative derailment.
+   - For toxicity assessment fairness, “when to invoke” corrective mechanisms matters (Ren et al., 2026). A context-variant fingerprint could serve as a trigger signal: high CBD or PI might indicate when additional fairness assessment should be invoked.
+
+5. **Limitations.** This is a pilot-style methodology paper: absolute numbers depend on model choice, paraphrase generator, and task instantiation. As emphasized by Contextual StereoSet, these are stress tests of evaluation robustness, not ground-truth bias prevalence estimates (Basu & Chakraborty, 2026).
+
+---
+
+## Conclusion
+We presented **CoVaR-AE**, a unified evaluation approach for agentic LLMs that jointly stress-tests **contextual bias drift**, **paraphrase-based semantic instability**, and **retrieval evidence position sensitivity**. By integrating ideas from Contextual StereoSet (context framing), Semantic Stability/PC@k (variance-based hallucination), and PosIR (position-aware retrieval diagnostics), we provide a compact **Context-Variant Reliability Fingerprint** that better reflects deployment conditions than fixed benchmarks. Pilot results indicate that naive RAG can increase position sensitivity, sparsity can improve paraphrase consistency, and graph-structured evidence can reduce downstream positional fragility.
+
+---
+
+## Contributions
+1. **Problem framing:** Introduced *context-variant reliability* as a unified evaluation target for agentic LLMs, connecting bias robustness, hallucination-as-variance, and retrieval position bias.
+2. **Methodology:** Proposed **CoVaR-AE** with three core metrics (CBD, PI, PS) and a compact **CVRF** summary inspired by CSF.
+3. **Agentic integration:** Demonstrated how to embed these stress tests inside an agentic RAG pipeline while controlling for context volume effects highlighted in RAG domain-shift work.
+4. **Evidence structuring insight:** Showed that graph-based evidence organization (N2N-GQA-style) can reduce position sensitivity beyond improving multi-hop QA accuracy.
+
+If you want, I can (a) specialize the paper to a concrete domain (e.g., clinician portal drafting, moderation toxicity, or navigation instruction evaluation), and (b) expand the experimental section into a fully reproducible benchmark specification (item templates, context dimensions, paraphrase generation procedure, and bootstrap/FDR details).

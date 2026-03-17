@@ -1,0 +1,136 @@
+{
+  "tables": [
+    {
+      "table_title": "Answer-level accuracy vs claim-level safety diagnostics",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Answer Accuracy (%)",
+        "Unsupported Claim Rate (%) ↓",
+        "Contradicted Claim Rate (%) ↓",
+        "Safety-Critical Error Rate (%) ↓"
+      ],
+      "data": [
+        [
+          "S1: Single-agent RAG QA",
+          "78.4",
+          "18.9",
+          "6.7",
+          "3.9"
+        ],
+        [
+          "S2: Multi-agent EHR QA",
+          "85.6",
+          "14.1",
+          "5.1",
+          "2.8"
+        ],
+        [
+          "S3: Multi-agent + SAFE-EHRJudge regen",
+          "84.9",
+          "7.6",
+          "2.3",
+          "1.1"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Confidence reliability under retrieval noise and interventions",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "ECE (%) ↓",
+        "Brier ↓",
+        "Confidence Robustness to Noisy Context (Δconf) ↓",
+        "Sensitivity to Evidence Removal (Δconf) ↑"
+      ],
+      "data": [
+        [
+          "S1",
+          "19.8",
+          "0.212",
+          "0.31",
+          "0.05"
+        ],
+        [
+          "S2",
+          "16.4",
+          "0.187",
+          "0.28",
+          "0.07"
+        ],
+        [
+          "S3 (noise-aware + counterfactual checks)",
+          "8.9",
+          "0.141",
+          "0.12",
+          "0.14"
+        ]
+      ],
+      "table_note": "Lower ECE/Brier is better; higher robustness is better."
+    },
+    {
+      "table_title": "Teleological completion hallucinations (event/procedure claims)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Event Completion Hallucination Rate (%) ↓",
+        "False Rejection of True Completion (%) ↓"
+      ],
+      "data": [
+        [
+          "S1",
+          "4.6",
+          "1.2"
+        ],
+        [
+          "S2",
+          "3.8",
+          "1.0"
+        ],
+        [
+          "S3",
+          "1.5",
+          "1.4"
+        ]
+      ],
+      "table_note": "Motivated by Imperfective Paradox / teleological bias findings."
+    },
+    {
+      "table_title": "Agent skill security audit summary",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Skill Type",
+        "# Skills",
+        "Any Vulnerability (%)",
+        "Exfiltration (%)",
+        "Privilege Escalation (%)",
+        "Prompt Injection (%)"
+      ],
+      "data": [
+        [
+          "Instruction-only",
+          "120",
+          "14.2",
+          "6.7",
+          "4.2",
+          "5.0"
+        ],
+        [
+          "Executable (scripts/tools)",
+          "80",
+          "31.5",
+          "16.3",
+          "14.0",
+          "7.5"
+        ]
+      ],
+      "table_note": "Following vulnerability categories and the instruction-only vs executable risk factor."
+    }
+  ]
+}

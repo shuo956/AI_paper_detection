@@ -1,0 +1,182 @@
+{
+  "tables": [
+    {
+      "table_title": "ReasonTabQA performance and calibration (higher EM better; lower ECE/Brier better).",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "EM (%)",
+        "ECE ↓",
+        "Brier ↓",
+        "Avg. tool calls ↓"
+      ],
+      "data": [
+        [
+          "Base Agent",
+          "41.2",
+          "0.164",
+          "0.221",
+          "7.8"
+        ],
+        [
+          "ITP-only (adaptive imagination)",
+          "46.9",
+          "0.151",
+          "0.213",
+          "8.5"
+        ],
+        [
+          "RLVR-GR (group-relative adv.)",
+          "48.1",
+          "0.173",
+          "0.235",
+          "7.6"
+        ],
+        [
+          "RLVR + HA-DW",
+          "50.4",
+          "0.158",
+          "0.219",
+          "7.7"
+        ],
+        [
+          "Calib-RL (accuracy+calibration)",
+          "49.6",
+          "0.121",
+          "0.192",
+          "7.9"
+        ],
+        [
+          "CAIM-RL (full)",
+          "54.3",
+          "0.098",
+          "0.176",
+          "7.2"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "AstroReason-Bench planning success and calibration.",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Success Rate (%)",
+        "Constraint Violations ↓",
+        "ECE ↓",
+        "Mean steps ↓"
+      ],
+      "data": [
+        [
+          "Base Agent",
+          "18.7",
+          "2.9",
+          "0.202",
+          "34.1"
+        ],
+        [
+          "ITP-only",
+          "25.4",
+          "2.1",
+          "0.187",
+          "31.8"
+        ],
+        [
+          "RLVR-GR",
+          "23.9",
+          "2.6",
+          "0.210",
+          "33.5"
+        ],
+        [
+          "RLVR + HA-DW",
+          "27.1",
+          "2.0",
+          "0.193",
+          "32.7"
+        ],
+        [
+          "Calib-RL",
+          "24.8",
+          "2.3",
+          "0.142",
+          "33.0"
+        ],
+        [
+          "CAIM-RL (full)",
+          "31.6",
+          "1.6",
+          "0.118",
+          "29.4"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Memory retrieval latency and accuracy trade-off.",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Memory module",
+        "Retrieval time (ms) ↓",
+        "ReasonTabQA EM (%)",
+        "AstroReason Success (%)"
+      ],
+      "data": [
+        [
+          "Naive exhaustive memory search",
+          "112.4",
+          "53.9",
+          "31.2"
+        ],
+        [
+          "Query-aware indexing (SwiftMem)",
+          "7.1",
+          "54.3",
+          "31.6"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Robustness under corrupted verifiable rewards (reward corruption rate = 30%).",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "ΔEM (pp) ↓",
+        "ΔECE ↑",
+        "Notes"
+      ],
+      "data": [
+        [
+          "RLVR-GR",
+          "-6.8",
+          "+0.051",
+          "Largest degradation; consistent with shortcut susceptibility"
+        ],
+        [
+          "RLVR + HA-DW",
+          "-4.1",
+          "+0.033",
+          "Debiasing improves stability"
+        ],
+        [
+          "Calib-RL",
+          "-3.7",
+          "+0.019",
+          "Calibration objective helps"
+        ],
+        [
+          "CAIM-RL (full)",
+          "-2.2",
+          "+0.011",
+          "Best robustness via combined constraints + imagination consistency"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

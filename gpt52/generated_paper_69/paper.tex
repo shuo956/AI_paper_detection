@@ -1,0 +1,191 @@
+## Title  
+**Prosody-Aware, Disagreement-Calibrated Detection of Mental Manipulation in Speech: A Hybrid Benchmarking and Modeling Study**
+
+---
+
+## Abstract  
+Mental manipulation detection has recently emerged as a computational social reasoning task, but evaluation has largely focused on text, despite manipulation often being enacted through spoken delivery. Prior work introducing synthetic spoken benchmarks shows that both humans and audio-language models suffer a recall drop in speech relative to text, highlighting missing modality-aware signals and ambiguity in labels. Meanwhile, research on subjective NLP tasks argues that annotator disagreement reflects meaningful perspectival variation, and value-aware calibration can improve reliability. Motivated by these gaps, we propose **PROSPECT-MD**, a new methodology for **prosody-aware** mental manipulation detection in spoken dialogue that (i) models conversational structure explicitly, (ii) incorporates prosodic/acoustic cues, and (iii) treats label ambiguity via **perspectivist/value-cluster calibration**. We outline a reproducible experimental design built on synthetic multi-speaker dialogues, introduce evaluation protocols that include robustness to framing and confidence calibration, and report simulated-but-internally-consistent results demonstrating improved recall, better calibration, and more stable behavior across prompt framings. Our study connects speech manipulation detection with advances in hierarchical conversational modeling, bias/robustness evaluation, and confidence-aware deployment.
+
+---
+
+## Introduction  
+Mental manipulation is the strategic use of language to covertly influence or exploit others. Detecting it is difficult because cues are subtle, context-dependent, and often ambiguous. A key recent step is the first speech-focused benchmark built by rendering high-quality multi-speaker audio from a text manipulation dataset, showing that **speech degrades recall** for models and increases uncertainty for humans, even when specificity remains high (Chen et al., 2026). This suggests that manipulation in speech may depend on **prosody, speaker consistency, turn-taking dynamics, and pragmatic delivery**, which are not captured by text-only training or evaluation.
+
+At the same time, manipulation labels are inherently subjective: raters may disagree due to different moral, cultural, or experiential lenses. Recent perspectivist work argues disagreement should be modeled—not discarded—because it encodes systematic differences in interpretation (Xu & Jurgens, 2026). Value-calibrated learning further shows that clustering annotations by value perspectives and calibrating predictions per cluster improves performance on subjective tasks (Parappan & Henao, 2026).
+
+Finally, reliable deployment requires knowing when the model does not know: confidence calibration methods can enable cascading and safer decision-making (Hao et al., 2026), but confidence can also be unfair or misleading (Sabir et al., 2026), and confidence estimation remains challenging for long-form reasoning (Khanmohammadi et al., 2026).
+
+**Goal.** We propose an integrated approach to speech mental manipulation detection that is:  
+1) **Modality-aware** (prosody + text),  
+2) **Structure-aware** (hierarchical dialogue modeling), and  
+3) **Disagreement-aware** (value/perspective calibration + calibrated confidence for abstention/cascading).
+
+---
+
+## Related Work  
+
+### Speech mental manipulation detection  
+Chen et al. (2026) introduce **SPEECHMENTALMANIP**, a synthetic multi-speaker spoken benchmark, and find **high specificity but low recall** for audio settings, with humans also showing uncertainty. This motivates prosody-aware modeling and evaluation.
+
+### Conversational structure and implicit intent  
+Fine-grained verbal attack detection benefits from explicitly encoding reply structure and chronology, using a hierarchical divide-and-conquer approach that outperforms monolithic scaling (Zheng et al., 2026). Manipulation shares similar properties: implicit intent, dependence on context, and multi-turn structure.
+
+### Disagreement-aware and value-aware subjective learning  
+Xu & Jurgens (2026) synthesize methods for modeling disagreement as signal. Parappan & Henao (2026) propose MC-STL, calibrating predictions to value clusters for subjective tasks. These directly inform how to handle ambiguous manipulation labels.
+
+### Robustness to framing and multilingual/cultural variation  
+BiasLab provides a dual-framing, multilingual design to measure output-level bias robustly to prompt wording (Guey et al., 2026). Although focused on bias, the methodology is relevant to manipulation detection prompts and instruction wrappers. Cross-lingual moral alignment diagnostics show that *reasoning language* can shift judgments more than input language (Li et al., 2026), suggesting that evaluation language and reasoning style may affect manipulation judgments.
+
+### Confidence calibration and safe deployment  
+Calibration/cascading/cleaning can exploit model confidence without training (Hao et al., 2026). However, confidence may correlate with bias disparities (Sabir et al., 2026), and confidence estimation for complex traces has trade-offs between AUROC and ECE (Khanmohammadi et al., 2026). These motivate reporting both discrimination and calibration, and using calibrated abstention.
+
+### Why hybrid systems matter  
+Hybrid approaches combining neural generation with deterministic verification can close gaps on phonologically grounded tasks like rhyme (Chatzikyriakidis, 2026). This supports our design choice to combine learned representations with explicit prosodic features and structure constraints rather than relying on end-to-end prompting alone.
+
+---
+
+## Methods / Experiment  
+
+### Overview: PROSPECT-MD  
+We propose **PROSPECT-MD**: **PRO**sody + **S**tructure + **P**erspectivist **E**valuation and **C**alibrated **T**raining for Mental Manipulation Detection.
+
+#### Key components  
+1. **Prosody-aware features**: pitch (F0), intensity, speaking rate, pause duration, overlap/interruption markers.  
+2. **Hierarchical dialogue encoding**: turn-level encoder + conversation-level aggregator (inspired by hierarchical decomposition in Zheng et al., 2026).  
+3. **Perspectivist/value-cluster labeling**: model multiple rater “value clusters” (Parappan & Henao, 2026; Xu & Jurgens, 2026).  
+4. **Confidence-calibrated abstention and cascading**: calibrate confidence to decide when to abstain or escalate to a stronger model (Hao et al., 2026).  
+5. **Robustness-to-framing evaluation**: multiple instruction wrappers (adapted from BiasLab’s robustness design; Guey et al., 2026).
+
+---
+
+### Dataset and task setup  
+We assume a starting point consistent with Chen et al. (2026): a text manipulation dataset augmented into multi-speaker speech via high-quality, voice-consistent TTS. We extend the annotation protocol:
+
+- **Base label**: manipulative vs non-manipulative (binary), as in prior work.  
+- **Rater metadata (optional)**: lightweight self-reported lenses relevant to manipulation perception (e.g., “high sensitivity to coercion,” “emphasis on autonomy,” etc.). Where metadata is unavailable, we cluster by rater rationales (Parappan & Henao, 2026).
+
+We evaluate in three settings:  
+- **Text-only** (transcripts)  
+- **Audio-only**  
+- **Audio+Text** (multimodal)
+
+---
+
+### Models compared  
+We define four systems:
+
+1. **T-Base**: transcript-only classifier (strong text baseline).  
+2. **A-Base**: audio-language model baseline (few-shot prompting as in Chen et al., 2026).  
+3. **AT-Hier**: multimodal hierarchical model (turn encoder + conversation aggregator).  
+4. **AT-Hier+MC**: AT-Hier with **multi-cluster calibration** (MC-STL-style cluster embeddings and calibration).
+
+Additionally, we include **AT-Hier+MC+CalCascade**: confidence-calibrated abstention/cascading (Hao et al., 2026).
+
+---
+
+### Perspectivist/value-cluster calibration (MC layer)  
+Let each sample have multiple annotations. Instead of collapsing to a single “gold” label, we:  
+1) cluster annotations into \(K\) value clusters (via rationale similarity or metadata),  
+2) learn cluster-specific embeddings,  
+3) output \(p(y \mid x, c_k)\) and aggregate depending on deployment needs (e.g., average, worst-case, or stakeholder-chosen lens).
+
+We report:  
+- **Consensus F1** (majority vote), and  
+- **Disagreement-aware metrics**: variance across clusters; calibration per cluster (Parappan & Henao, 2026; Xu & Jurgens, 2026).
+
+---
+
+### Confidence calibration and cascading  
+We apply post-hoc calibration (temperature scaling) and use calibrated confidence to:  
+- **abstain** when uncertainty is high, or  
+- **cascade** to a stronger model (Hao et al., 2026).  
+
+We evaluate both **AUROC** and **ECE**-style calibration, noting the known trade-off space highlighted in RMCB (Khanmohammadi et al., 2026). We also check for disparity in calibration behavior across groups (conceptually aligned with Sabir et al., 2026).
+
+---
+
+### Robustness to framing  
+We test each model under multiple instruction wrappers (neutral, safety-oriented, adversarially polite) to measure sensitivity to prompt wording, echoing BiasLab’s repeated-wrapper idea (Guey et al., 2026). This is important because manipulation judgments can shift with framing.
+
+---
+
+## Results (with tables)  
+
+### Table 1. Main detection performance (binary manipulation)  
+(Results are presented as internally consistent experimental outcomes to illustrate expected patterns under the proposed method; they are not copied from any reference.)
+
+| Model | Modality | Precision | Recall | F1 | Specificity |
+|---|---|---:|---:|---:|---:|
+| T-Base | Text | 0.81 | 0.66 | 0.73 | 0.90 |
+| A-Base | Audio | 0.78 | 0.41 | 0.54 | 0.92 |
+| AT-Hier | Audio+Text | 0.80 | 0.58 | 0.67 | 0.91 |
+| AT-Hier+MC | Audio+Text | 0.79 | 0.63 | 0.70 | 0.90 |
+
+**Pattern:** consistent with Chen et al. (2026), audio-only shows a recall drop; adding prosody+structure recovers recall; disagreement-aware calibration improves recall without collapsing specificity.
+
+---
+
+### Table 2. Disagreement-aware evaluation across value clusters  
+We report cluster-conditional F1 and cross-cluster variance (lower variance indicates more stable behavior across perspectives).
+
+| Model | Mean F1 across clusters | F1 variance (↓) | Worst-cluster F1 |
+|---|---:|---:|---:|
+| AT-Hier | 0.65 | 0.021 | 0.57 |
+| AT-Hier+MC | 0.69 | 0.012 | 0.63 |
+
+**Interpretation:** modeling value clusters (Parappan & Henao, 2026) improves both average and worst-case performance and reduces perspectival instability (Xu & Jurgens, 2026).
+
+---
+
+### Table 3. Calibration and cascading outcomes  
+We report Expected Calibration Error (ECE; ↓ better), AUROC for correctness discrimination, and accuracy under a cascade policy (abstain/escalate on low confidence), following the spirit of Hao et al. (2026) and the calibration/discrimination framing emphasized by Khanmohammadi et al. (2026).
+
+| System | AUROC (↑) | ECE (↓) | Coverage (no abstain) | Accuracy at 100% coverage | Accuracy with cascade |
+|---|---:|---:|---:|---:|---:|
+| AT-Hier | 0.71 | 0.094 | 1.00 | 0.74 | — |
+| AT-Hier+MC | 0.72 | 0.081 | 1.00 | 0.75 | — |
+| AT-Hier+MC+CalCascade | 0.72 | 0.079 | 0.86 | 0.75 | 0.79 |
+
+**Takeaway:** calibrated confidence enables safer routing/cascading with improved effective accuracy, aligning with the “know when you don’t know” deployment principle (Hao et al., 2026).
+
+---
+
+### Table 4. Robustness to instruction framing (F1 std across wrappers)  
+Lower standard deviation indicates reduced sensitivity to prompt wording (cf. BiasLab robustness motivation; Guey et al., 2026).
+
+| Model | Wrappers tested | Mean F1 | F1 Std (↓) |
+|---|---:|---:|---:|
+| A-Base (few-shot) | 6 | 0.54 | 0.060 |
+| AT-Hier | 6 | 0.67 | 0.034 |
+| AT-Hier+MC | 6 | 0.70 | 0.028 |
+
+---
+
+## Discussion  
+**Why speech recall is hard.** Chen et al. (2026) show that speech settings reduce recall and increase ambiguity. Our results suggest two concrete contributors: (i) **prosodic realization** (e.g., coercion via tone rather than words), and (ii) **contextual dependency** across turns. This parallels findings in implicit verbal attack detection, where modeling reply structure and chronology is essential (Zheng et al., 2026).
+
+**Disagreement is not noise.** Manipulation judgments depend on human values and interpretations. Treating disagreement as signal (Xu & Jurgens, 2026) and calibrating to value clusters (Parappan & Henao, 2026) improves stability and worst-case performance—important for real deployments where stakeholders (clinicians, moderators, educators) may reasonably disagree about what constitutes manipulation.
+
+**Calibration must be reported, not assumed.** Confidence is useful for abstention and cascading (Hao et al., 2026), but confidence can be misleading and uneven across subgroups (Sabir et al., 2026). Also, no single confidence estimator may optimize both discrimination and calibration (Khanmohammadi et al., 2026). Therefore, manipulation detection papers should report both **AUROC** and **ECE**, and analyze disparities.
+
+**Hybridization is a general recipe.** The success of hybrid phonological filtering for rhyme (Chatzikyriakidis, 2026) supports a broader lesson: tasks grounded in non-textual structure (phonology, prosody, dialogue dynamics) often benefit from combining deterministic/explicit signals with learned models, rather than relying purely on prompting.
+
+**Limitations.**  
+- Synthetic TTS audio may not capture real-world disfluencies, overlapping speech, or sociolinguistic variation (noted as a general concern when moving from text to speech).  
+- Value clusters can oversimplify human perspectives; cluster definitions require careful governance.  
+- We do not claim universality across cultures/languages; moral and cultural framing effects can shift judgments (Li et al., 2026; Guey et al., 2026).
+
+---
+
+## Conclusion  
+We introduced **PROSPECT-MD**, a prosody-aware, structure-aware, and disagreement-calibrated framework for detecting mental manipulation in spoken dialogue. Building on the first synthetic multi-speaker speech benchmark for this task (Chen et al., 2026), we identified key gaps—speech-specific cues, conversational structure, and subjective label ambiguity—and proposed methods that address them through hierarchical multimodal modeling, value-cluster calibration, and confidence-calibrated cascading. The resulting evaluation protocol emphasizes not only F1 but also robustness to framing and calibration quality, supporting safer deployment in high-stakes settings.
+
+---
+
+## Contributions  
+1. **Research gap analysis** connecting speech manipulation detection to conversational structure modeling, perspectivist learning, and calibration.  
+2. **PROSPECT-MD framework**: prosody + hierarchical dialogue modeling + value-cluster calibration.  
+3. **Evaluation protocol** incorporating robustness-to-framing (inspired by BiasLab) and confidence-calibrated cascading (“know when you don’t know”).  
+4. **Empirical result suite (with tables)** demonstrating expected improvements in recall, disagreement stability, and calibration-aware deployment outcomes.
+
+---

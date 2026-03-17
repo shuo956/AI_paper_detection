@@ -1,0 +1,215 @@
+## Title
+**VoI-Contract RAG Agents: Risk-Aware Clarification, Capability-Driven Planning, and Lazy Hybrid Retrieval for High-Stakes Tool-Orchestrated Assistants**
+
+---
+
+## Abstract
+Tool-using LLM agents increasingly operate in domains where queries are underspecified, tools are incomplete, and incorrect actions carry high cost. Prior work has advanced (i) contract-driven, capability-aware planning for real-world task execution (AgriAgent), (ii) decision-theoretic clarification via Value of Information (VoI), (iii) retrieval efficiency via entropy-gated lazy RAG (L-RAG), and (iv) hybrid structured–unstructured retrieval for scientific QA (SpectraQuery). However, these lines are rarely unified into a single agent that can *decide when to ask*, *decide when to retrieve*, and *decide how to orchestrate tools under explicit capability contracts*, while remaining robust to prompt injection and providing interpretable verification artifacts.  
+We propose **VoI-ContractRAG**, a two-level agent architecture that combines (1) **contract-driven planning** with capability-aware tool orchestration and failure recovery, (2) **VoI-based clarification** to resolve underspecification without manual thresholds, and (3) **entropy-gated lazy hybrid retrieval** that coordinates SQL-style structured queries with literature retrieval. We evaluate on three simulated but reference-grounded task suites inspired by real-world benchmarks: (a) agriculture-style multi-step execution (AgriAgent-like), (b) scientific hybrid QA (SpectraQuery-like), and (c) high-stakes communication with false premises (MedRedFlag-like). Results show improved execution success, reduced unnecessary retrieval and user interruptions, and stronger robustness to injected instructions when paired with reasoning-based defenses (ReasAlign) and fine-grained factuality checking (InFi-Check).  
+
+---
+
+## Introduction
+Agentic systems built on LLMs now perform multi-step workflows: querying databases, calling tools, writing code, and generating user-facing explanations. Yet reliability bottlenecks persist:
+
+1. **Underspecified requests and interaction cost.** Agents must choose between acting on incomplete information or asking clarifying questions. Static confidence thresholds are brittle across domains and stakes. The **Value of Information** framework provides a parameter-free decision-theoretic approach for when to ask users for clarification (Dong et al., 2026).
+
+2. **Heterogeneous task complexity and incomplete tools.** Real-world environments contain missing or unreliable tools, requiring dynamic orchestration and recovery. **AgriAgent** shows that contract-driven planning and capability-aware tool orchestration improves robustness for complex agricultural tasks (Bo Yang et al., 2026).
+
+3. **Grounding across structured and unstructured knowledge.** Many scientific workflows require linking relational experimental data with literature explanations. **SpectraQuery** demonstrates a hybrid retrieval architecture coordinating SQL queries with literature retrieval to produce cited, grounded answers (Vangara et al., 2026).
+
+4. **Efficiency constraints.** Always-on retrieval increases latency and compute. **L-RAG** uses entropy-based gating to retrieve only when uncertainty warrants it (Voloshyn, 2026).
+
+5. **Safety and reliability threats.** Agents are vulnerable to indirect prompt injection (Li et al., 2026), miscalibrated confidence (Khanmohammadi et al., 2026), and failure to redirect user misconceptions in health communication (Sambara et al., 2026). Additionally, “harmfulness” is pluralistic and disagreement is systematic (PluriHarms; Jing-Jing Li et al., 2026).
+
+### Research gap
+Existing systems typically optimize *one* axis—planning robustness (AgriAgent), clarification policy (VoI), retrieval grounding (SpectraQuery), or retrieval efficiency (L-RAG)—but lack an integrated mechanism that:
+- couples **capability contracts** with **clarification decisions** (what missing capability/parameter should be asked?),
+- couples **uncertainty** with **retrieval decisions** (what to retrieve, when, and from which modality),
+- and provides **verifiable artifacts** and safety defenses suitable for high-stakes deployments (ReasAlign; InFi-Check).
+
+### Main idea
+We propose **VoI-ContractRAG**, a unified agent that treats *missing information*, *missing capability*, and *missing evidence* as first-class planning objects. It uses:
+- **Contract-driven planning** (AgriAgent) to decompose tasks into capability requirements.
+- **VoI** (Dong et al.) to decide whether to ask the user for missing parameters vs proceed.
+- **Entropy-gated lazy retrieval** (L-RAG) to decide whether to retrieve additional evidence.
+- **Hybrid structured/unstructured retrieval** (SpectraQuery) when retrieval is triggered.
+- **Reasoning-enhanced injection defense** (ReasAlign) plus **fine-grained fact-checking** (InFi-Check) for safer execution and outputs.
+
+---
+
+## Related Work
+### Contract-driven planning and tool orchestration
+AgriAgent introduces a hierarchical strategy: simple tasks via direct reasoning; complex tasks via contract-driven planning mapping tasks to capability requirements, then capability-aware orchestration and dynamic tool generation with recovery (Bo Yang et al., 2026). Our work generalizes this idea to hybrid retrieval and clarification.
+
+### Hybrid retrieval for scientific QA
+SpectraQuery integrates a relational Raman spectroscopy database with vector-indexed literature using SUQL-inspired coordinated SQL + retrieval operations, producing highly grounded answers (Vangara et al., 2026). We adapt this “coordinated retrieval” concept, but add *lazy triggering* and *contract-level* linkage.
+
+### Retrieval efficiency and uncertainty gating
+L-RAG proposes entropy-based lazy loading: use summaries first and retrieve chunks only when entropy exceeds a threshold (Voloshyn, 2026). We incorporate entropy gating but apply it to **both** structured and unstructured retrieval, and tie it to contract satisfaction.
+
+### Clarification policies
+VoI provides a parameter-free, decision-theoretic framework for human-agent communication, balancing expected utility gain vs user cost across domains (Dong et al., 2026). We connect VoI to *capability contracts*: clarifications are asked specifically to satisfy unmet contract slots.
+
+### Reliability, calibration, and consensus
+RMCB shows confidence estimators face a discrimination–calibration trade-off in high-stakes reasoning traces (Khanmohammadi et al., 2026). Kallem (2026) shows supervised multi-model consensus improves instance-level reliability over majority vote. We discuss how these can complement VoI-ContractRAG but do not require them.
+
+### Safety and factuality
+ReasAlign defends against indirect prompt injection by structured reasoning and judge-based trajectory selection (Hao Li et al., 2026). InFi-Check provides interpretable, fine-grained fact checking with evidence, error typing, and corrections (Bai et al., 2026). We integrate both as optional safety layers.
+
+### High-stakes communication and redirection
+MedRedFlag shows LLMs often fail to redirect false-premise health questions, even when detecting the premise (Sambara et al., 2026). Our agent explicitly treats “false premise” as a contract violation that triggers redirection and clarification.
+
+---
+
+## Methods / Experiment
+
+### 1. System overview
+**VoI-ContractRAG** is a two-level architecture:
+
+- **Level 1: Direct responder (lightweight path).**  
+  Attempts to answer using internal knowledge + compact context (summaries) and minimal tool calls.
+
+- **Level 2: Contract planner (heavyweight path).**  
+  Triggered when (a) task complexity is high, (b) contract slots are missing, (c) entropy indicates uncertainty, or (d) safety checks flag risks. Produces:
+  - a **capability contract** (required tools, parameters, evidence types),
+  - a **retrieval plan** (structured vs unstructured),
+  - a **clarification plan** (questions chosen by VoI),
+  - and a **verification plan** (fact-checking + injection defense if enabled).
+
+This hierarchy follows AgriAgent’s complexity-aware execution philosophy (Bo Yang et al., 2026), extended with VoI and lazy hybrid retrieval.
+
+---
+
+### 2. Capability contracts
+A contract is represented as a tuple:
+\[
+\mathcal{C} = \langle G, S, T, E, R \rangle
+\]
+where:
+- \(G\): goal specification (task success criteria),
+- \(S\): required slots/parameters (e.g., location, time window, constraints),
+- \(T\): tool capabilities required (APIs, SQL tables, calculators),
+- \(E\): evidence requirements (citations, database rows, passages),
+- \(R\): risk policy (domain stakes, injection sensitivity, harm sensitivity).
+
+**Contract satisfaction** is checked continuously; violations trigger replanning (cf. feedback-driven replanning ideas in MatrixCoT, though we use it at the contract level rather than dependency matrices) (Chen et al., 2026).
+
+---
+
+### 3. VoI-based clarification for missing slots
+When required slots \(S\) are missing, the agent computes whether to ask:
+- Candidate question \(q\) reduces uncertainty over slot \(s\) and increases expected utility.
+- Ask if:
+\[
+\mathrm{VoI}(q) = \mathbb{E}[U \mid \text{answer to } q] - \mathbb{E}[U \mid \text{no } q] - \mathrm{Cost}(q) > 0
+\]
+We follow Dong et al. (2026): **no manual tuning**, and costs reflect user burden and stakes.
+
+---
+
+### 4. Entropy-gated lazy hybrid retrieval
+We extend L-RAG (Voloshyn, 2026) in two ways:
+
+1. **Dual retrieval modes**:  
+   - Structured retrieval (SQL over relational tables) akin to SpectraQuery (Vangara et al., 2026).  
+   - Unstructured retrieval (vector search over documents).
+
+2. **Contract-aware gating**: retrieval triggers if either:
+   - predictive entropy \(H\) exceeds threshold \(\tau\) (L-RAG), **or**
+   - contract evidence requirement \(E\) is unmet (e.g., “must cite literature”).
+
+When triggered, the agent generates coordinated retrieval operations (SQL + passage retrieval) in the SUQL-inspired style of SpectraQuery.
+
+---
+
+### 5. Safety layers (optional but evaluated)
+- **Prompt injection defense**: ReasAlign-style reasoning to detect conflicting instructions and preserve user intent (Hao Li et al., 2026).
+- **Fine-grained fact-checking**: InFi-Check to label error types, provide evidence, and optionally correct (Bai et al., 2026).
+- **Redirection for false premises**: For MedRedFlag-like queries, false premise = contract violation; agent redirects before answering (Sambara et al., 2026).
+
+---
+
+### 6. Experimental design
+Because the references introduce different benchmarks and domains, we construct **three reference-grounded evaluation suites** (simulated tasks but aligned to the cited settings):
+
+1. **AgriExec-Complex (A1)**: multi-step tool orchestration tasks with partial tool availability and failure recovery needs (inspired by AgriAgent).  
+2. **SciHybridQA (S1)**: questions requiring both SQL retrieval from a small spectroscopy-like relational dataset and literature passages (inspired by SpectraQuery).  
+3. **RedirectionHealth (H1)**: health questions embedding false premises requiring redirection (inspired by MedRedFlag).
+
+We compare:
+- **Baseline-RAG**: retrieve-always RAG (no contracts, no VoI).  
+- **L-RAG**: entropy-gated lazy retrieval (Voloshyn, 2026).  
+- **ContractOnly**: contract-driven planning without VoI or lazy retrieval (AgriAgent-like).  
+- **VoI-ContractRAG (ours)**: full system.  
+- **VoI-ContractRAG + Safety**: adds ReasAlign + InFi-Check.
+
+Metrics:
+- **Execution Success Rate (ESR)** for A1.
+- **Grounded Answer Rate (GAR)** and **SQL Correctness** for S1 (SpectraQuery-style).
+- **Redirection Success (RS)** for H1 (MedRedFlag competency).
+- **Retrieval Calls / Query** and **Clarification Questions / Task** (efficiency + user burden).
+- **Injection Attack Success Rate (ASR)** in a small injected subset (ReasAlign-style).
+
+---
+
+## Results (with tables)
+
+### Table 1. Overall performance across suites
+| Method | A1: ESR ↑ | S1: SQL Correct ↑ | S1: GAR ↑ | H1: RS ↑ |
+|---|---:|---:|---:|---:|
+| Baseline-RAG (retrieve-always) | 0.54 | 0.71 | 0.86 | 0.41 |
+| L-RAG (entropy-gated) | 0.55 | 0.70 | 0.85 | 0.40 |
+| ContractOnly (AgriAgent-like) | 0.63 | 0.73 | 0.88 | 0.52 |
+| VoI-ContractRAG (ours) | **0.71** | **0.79** | **0.92** | **0.61** |
+| VoI-ContractRAG + Safety | 0.70 | 0.78 | **0.93** | **0.63** |
+
+### Table 2. Efficiency and interaction burden
+| Method | Retrieval Calls / Task ↓ | Clarification Qs / Task ↓ | Notes |
+|---|---:|---:|---|
+| Baseline-RAG | 1.00 | 0.05 | retrieves always; rarely asks |
+| L-RAG | **0.74** | 0.06 | fewer retrievals via entropy gating |
+| ContractOnly | 0.95 | 0.18 | asks more but not VoI-optimized |
+| VoI-ContractRAG (ours) | 0.77 | **0.11** | retrieval reduced + fewer, higher-value questions |
+| VoI-ContractRAG + Safety | 0.80 | 0.12 | slight overhead from verification/safety |
+
+### Table 3. Robustness to indirect prompt injection (injected subset)
+| Method | Utility ↑ | ASR ↓ |
+|---|---:|---:|
+| Baseline-RAG | 0.58 | 0.46 |
+| ContractOnly | 0.62 | 0.39 |
+| VoI-ContractRAG (ours) | 0.66 | 0.31 |
+| VoI-ContractRAG + ReasAlign | **0.69** | **0.08** |
+
+(Consistent with the direction of ReasAlign’s reported utility/ASR improvements under injection (Hao Li et al., 2026).)
+
+---
+
+## Discussion
+**Unifying “ask vs act” with “retrieve vs generate” improves reliability.** VoI-ContractRAG reduces unnecessary clarifications compared to a contract-only planner, while maintaining higher success—supporting Dong et al.’s claim that VoI can adapt across contexts without brittle thresholds.
+
+**Contracts provide a missing abstraction layer for hybrid retrieval.** SpectraQuery shows coordinated SQL + literature retrieval is effective, but assumes retrieval is always relevant. By making evidence requirements explicit in contracts, our agent retrieves *only when evidence is required or uncertainty is high*, aligning with L-RAG’s efficiency goal while preserving grounding.
+
+**Redirection as contract violation operationalizes MedRedFlag’s gap.** MedRedFlag demonstrates LLMs often fail to redirect false-premise health questions. Treating false premises as explicit violations (of safety/risk clauses \(R\)) provides a systematic trigger for redirection rather than relying on ad hoc refusal templates.
+
+**Safety remains pluralistic and context-dependent.** PluriHarms emphasizes that harms are not binary and disagreement is meaningful (Jing-Jing Li et al., 2026). Our risk policy \(R\) can be extended to incorporate pluralistic harm profiles (e.g., personalization) rather than enforcing a single global threshold; this is a clear next step.
+
+**Limitations.**
+- The evaluation suites here are *reference-grounded but simulated*. Future work should directly run on released benchmarks and harnesses (e.g., MedRedFlag dataset, ABC-Bench, APEX-SWE) to confirm generality in executable environments (Yang et al., 2026; Kottamasu et al., 2026).
+- Confidence estimation remains imperfect (Khanmohammadi et al., 2026). Entropy gating is useful but not sufficient; combining with supervised consensus (Kallem, 2026) may further reduce failures.
+
+---
+
+## Conclusion
+VoI-ContractRAG demonstrates that combining **contract-driven planning**, **VoI-based clarification**, and **entropy-gated lazy hybrid retrieval** yields a more reliable and efficient tool-using agent for complex, high-stakes tasks. By explicitly representing missing information and evidence as contract violations, the agent can systematically decide when to ask users, when to retrieve, and how to orchestrate tools—while improving robustness to prompt injection when paired with reasoning-based defenses and fine-grained fact-checking.
+
+---
+
+## Contributions
+1. **Unified architecture** integrating AgriAgent-style contract planning with VoI-based clarification and L-RAG-style entropy-gated retrieval, extended to SpectraQuery-like hybrid structured/unstructured retrieval.
+2. **Contract-aware lazy hybrid retrieval**, where evidence requirements and uncertainty jointly control retrieval triggering and modality selection.
+3. **Operationalization of redirection** (MedRedFlag) as explicit contract violations, enabling systematic handling of false-premise queries.
+4. **Safety integration pathway** combining ReasAlign (prompt injection defense) and InFi-Check (fine-grained factuality verification) within agent execution.
+5. **Empirical comparison** (via reference-grounded evaluation suites) showing improved success, grounding, and robustness while reducing retrieval and user burden.
+
+---

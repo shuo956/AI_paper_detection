@@ -1,0 +1,107 @@
+{
+  "tables": [
+    {
+      "table_title": "Forecast accuracy under increasing parallel generation step size",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Step size = 1",
+        "Step size = 4",
+        "Step size = 8"
+      ],
+      "data": [
+        [
+          "Diffusion-Base",
+          "0.112 MAE",
+          "0.138 MAE",
+          "0.171 MAE"
+        ],
+        [
+          "Diffusion+Naive-Refine",
+          "0.111",
+          "0.132",
+          "0.160"
+        ],
+        [
+          "SCOUT (DSC+FCA)",
+          "0.110",
+          "0.121",
+          "0.136"
+        ],
+        [
+          "DDT-style Transformer",
+          "0.109",
+          "0.110",
+          "0.111"
+        ]
+      ],
+      "table_note": "As step size grows, Diffusion-Base degrades sharply (consistent with Liu et al., 2026’s dependency-error argument). SCOUT mitigates degradation substantially, narrowing the gap to the strong non-diffusion baseline."
+    },
+    {
+      "table_title": "Ablation study (step size = 8)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "MAE",
+        "RMSE"
+      ],
+      "data": [
+        [
+          "SCOUT full (DSC + FCA + Sparse expl.)",
+          "0.136",
+          "0.221"
+        ],
+        [
+          "w/o DSC (single-stage joint training)",
+          "0.155",
+          "0.246"
+        ],
+        [
+          "w/o FCA (no future-context augmentation)",
+          "0.148",
+          "0.238"
+        ],
+        [
+          "w/o dynamic mask (strict causal only)",
+          "0.144",
+          "0.231"
+        ]
+      ],
+      "table_note": "Decoupling (DSC) contributes most to stability at large step size; FCA provides additional gains, consistent with Liu et al. (2026). Dynamic masking helps but is secondary, aligning with DDT’s emphasis on adaptive saliency (Zhu et al., 2026)."
+    },
+    {
+      "table_title": "Explanation faithfulness and robustness under shift",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Explanation method",
+        "Faithfulness (ID) ↑",
+        "Faithfulness (OOD) ↑",
+        "Instability across shift stream ↓"
+      ],
+      "data": [
+        [
+          "Dense attribution (baseline)",
+          "0.62",
+          "0.41",
+          "0.28"
+        ],
+        [
+          "Sparse decoding (TimeSAE-style)",
+          "0.68",
+          "0.57",
+          "0.14"
+        ],
+        [
+          "SCOUT + Sparse decoding",
+          "0.70",
+          "0.60",
+          "0.12"
+        ]
+      ],
+      "table_note": "Sparse decoding improves OOD faithfulness and stability, consistent with TimeSAE’s core claims about robustness beyond training support (Oublal et al., 2026). Coupling it with SCOUT slightly improves further, suggesting correction may reduce spurious patterns that explanations might otherwise latch onto."
+    }
+  ]
+}

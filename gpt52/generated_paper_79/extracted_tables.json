@@ -1,0 +1,172 @@
+{
+  "tables": [
+    {
+      "table_title": "Main predictive performance (federated, non-IID partitions)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Temporal Alignment",
+        "Privacy",
+        "Imbalance Control",
+        "C-index Mean",
+        "C-index SD",
+        "td-AUC@12m Mean",
+        "td-AUC@12m SD",
+        "IBS Mean",
+        "IBS SD"
+      ],
+      "data": [
+        [
+          "FSL (non-private)",
+          "No",
+          "None",
+          "None",
+          "0.701",
+          "0.006",
+          "0.734",
+          "0.008",
+          "0.182",
+          "0.004"
+        ],
+        [
+          "FSL-BDP (Amed et al.)",
+          "No",
+          "BDP",
+          "None",
+          "0.692",
+          "0.007",
+          "0.724",
+          "0.010",
+          "0.188",
+          "0.005"
+        ],
+        [
+          "Aligned-Stack (Didkovskyi et al.-style, centralized)",
+          "Yes",
+          "None",
+          "BOOT",
+          "0.715",
+          "0.005",
+          "0.746",
+          "0.007",
+          "0.176",
+          "0.004"
+        ],
+        [
+          "TAPAS (ours)",
+          "Yes",
+          "BDP",
+          "BOOT",
+          "0.707",
+          "0.006",
+          "0.739",
+          "0.008",
+          "0.180",
+          "0.004"
+        ],
+        [
+          "TAPAS (ours)",
+          "Yes",
+          "BDP",
+          "SMOTE-like",
+          "0.701",
+          "0.007",
+          "0.731",
+          "0.009",
+          "0.184",
+          "0.005"
+        ],
+        [
+          "TAPAS w/o TAD",
+          "No",
+          "BDP",
+          "BOOT",
+          "0.695",
+          "0.007",
+          "0.726",
+          "0.010",
+          "0.187",
+          "0.006"
+        ],
+        [
+          "TAPAS w/o stacking",
+          "Yes",
+          "BDP",
+          "BOOT",
+          "0.703",
+          "0.006",
+          "0.735",
+          "0.008",
+          "0.182",
+          "0.004"
+        ]
+      ],
+      "table_note": "Values shown as mean ± std over 5 runs; higher is better for C-index/td-AUC; lower is better for IBS."
+    },
+    {
+      "table_title": "Privacy–utility comparison (ranking sensitivity to federation)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "Mechanism",
+        "Utility trend vs non-private",
+        "Note"
+      ],
+      "data": [
+        [
+          "Centralized",
+          "Classical DP",
+          "Moderate degradation",
+          "Often preferred centrally"
+        ],
+        [
+          "Centralized",
+          "Bayesian DP",
+          "Larger degradation",
+          "Data-dependent noise can hurt centrally"
+        ],
+        [
+          "Federated",
+          "Classical DP",
+          "Small-to-moderate degradation",
+          "Improves slightly with federation"
+        ],
+        [
+          "Federated",
+          "Bayesian DP",
+          "Small degradation (near parity)",
+          "Ranking reversal observed in practice (Amed et al.)"
+        ]
+      ],
+      "table_note": "Qualitative summary aligned with Amed et al.: Bayesian DP benefits more from federation than expected from centralized intuition."
+    },
+    {
+      "table_title": "Representation drift monitoring: similarity vs geometric stability",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Period comparison",
+        "CKA similarity (latent)",
+        "Geometric stability",
+        "Predictive metric change (td-AUC@12m)"
+      ],
+      "data": [
+        [
+          "T1 vs T1 (control)",
+          "0.92",
+          "0.90",
+          "+0.00"
+        ],
+        [
+          "T1 vs T2 (shift)",
+          "0.88",
+          "0.62",
+          "-0.01"
+        ]
+      ],
+      "table_note": "Stability detects drift more clearly, reflecting Raju’s findings that similarity and stability can be weakly correlated."
+    }
+  ]
+}

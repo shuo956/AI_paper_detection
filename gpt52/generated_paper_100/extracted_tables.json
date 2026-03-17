@@ -1,0 +1,184 @@
+{
+  "tables": [
+    {
+      "table_title": "Forecast accuracy (mean ± std over 5 seeds)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "S1 MSE Mean ↓",
+        "S1 MSE SD ↓",
+        "S1 MAE Mean ↓",
+        "S1 MAE SD ↓",
+        "S2 MSE Mean ↓",
+        "S2 MSE SD ↓",
+        "S2 MAE Mean ↓",
+        "S2 MAE SD ↓",
+        "S3 MSE Mean ↓",
+        "S3 MSE SD ↓"
+      ],
+      "data": [
+        [
+          "Transformer-PE",
+          "0.118",
+          "0.006",
+          "0.271",
+          "0.008",
+          "0.164",
+          "0.010",
+          "0.315",
+          "0.012",
+          "0.092",
+          "0.005"
+        ],
+        [
+          "MLP-Exo (XLinear-like)",
+          "0.104",
+          "0.005",
+          "0.255",
+          "0.007",
+          "0.151",
+          "0.009",
+          "0.302",
+          "0.010",
+          "0.088",
+          "0.004"
+        ],
+        [
+          "Hawkes-Attn-Only",
+          "0.097",
+          "0.004",
+          "0.246",
+          "0.006",
+          "0.141",
+          "0.008",
+          "0.295",
+          "0.009",
+          "0.085",
+          "0.004"
+        ],
+        [
+          "HawkX (ours)",
+          "0.082",
+          "0.003",
+          "0.228",
+          "0.005",
+          "0.118",
+          "0.006",
+          "0.268",
+          "0.007",
+          "0.073",
+          "0.003"
+        ],
+        [
+          "HawkX + Koopman reg (ours)",
+          "0.079",
+          "0.003",
+          "0.224",
+          "0.004",
+          "0.110",
+          "0.005",
+          "0.259",
+          "0.006",
+          "0.069",
+          "0.003"
+        ],
+        [
+          "HawkX + Koopman + physics (ours)",
+          "0.078",
+          "0.003",
+          "0.223",
+          "0.004",
+          "0.109",
+          "0.005",
+          "0.258",
+          "0.006",
+          "0.064",
+          "0.002"
+        ]
+      ],
+      "table_note": "Hawkes-modulated event conditioning improves over positional-time transformer handling, supporting Tan et al. (2026). Exogenous hub improves efficiency/accuracy consistent with Chen et al. (2026). Koopman-inspired regularization improves shifted-regime robustness (Miñoza, 2026 motivation)."
+    },
+    {
+      "table_title": "Robustness under distribution shift (S2)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Shifted-event MSE ↓",
+        "Relative degradation vs S1 (MSE) ↓"
+      ],
+      "data": [
+        [
+          "Transformer-PE",
+          "0.164",
+          "+39%"
+        ],
+        [
+          "MLP-Exo (XLinear-like)",
+          "0.151",
+          "+45%"
+        ],
+        [
+          "Hawkes-Attn-Only",
+          "0.141",
+          "+45%"
+        ],
+        [
+          "HawkX",
+          "0.118",
+          "+44%"
+        ],
+        [
+          "HawkX + Koopman reg",
+          "0.110",
+          "+39%"
+        ]
+      ],
+      "table_note": "Adding stability bias reduces degradation, consistent with the generalization benefits targeted by Koopman-regularized dynamics (Miñoza, 2026) and concerns about amortized inference under shift (Shreshtth et al., 2026)."
+    },
+    {
+      "table_title": "Ablation study (S1 MSE)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Event Hawkes modulation",
+        "Exogenous hub",
+        "Koopman reg",
+        "S1 MSE ↓"
+      ],
+      "data": [
+        [
+          "A1",
+          "✗",
+          "✓",
+          "✗",
+          "0.104"
+        ],
+        [
+          "A2",
+          "✓",
+          "✗",
+          "✗",
+          "0.097"
+        ],
+        [
+          "A3",
+          "✓",
+          "✓",
+          "✗",
+          "0.082"
+        ],
+        [
+          "A4",
+          "✓",
+          "✓",
+          "✓",
+          "0.079"
+        ]
+      ],
+      "table_note": "The best performance requires both event-aware time modulation (Tan et al., 2026) and efficient exogenous interaction (Chen et al., 2026), with stability regularization providing additional gains (Miñoza, 2026)."
+    }
+  ]
+}

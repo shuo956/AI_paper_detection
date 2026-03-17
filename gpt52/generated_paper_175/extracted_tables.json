@@ -1,0 +1,168 @@
+{
+  "tables": [
+    {
+      "table_title": "Micro-budget multi-task reasoning performance",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Adapter",
+        "Prototype routing",
+        "Adaptive scalarization",
+        "Pass@1 (Math)",
+        "Pass@1 (Gen)",
+        "Avg Pass@1"
+      ],
+      "data": [
+        [
+          "B1 LoRA-RLVR r=8",
+          "LoRA (low-rank)",
+          "No",
+          "No",
+          "21.4",
+          "34.7",
+          "28.1"
+        ],
+        [
+          "B2 LoRA-RLVR r=256",
+          "LoRA (high-rank)",
+          "No",
+          "No",
+          "32.9",
+          "36.1",
+          "34.5"
+        ],
+        [
+          "B3 SMoA-RLVR",
+          "SMoA",
+          "No",
+          "No",
+          "34.1",
+          "37.0",
+          "35.6"
+        ],
+        [
+          "B4 Proto + LoRA r=256",
+          "LoRA",
+          "Yes",
+          "No",
+          "35.0",
+          "39.2",
+          "37.1"
+        ],
+        [
+          "Ours Proto-Adapter RL",
+          "SMoA",
+          "Yes",
+          "Yes",
+          "38.6",
+          "41.0",
+          "39.8"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Robustness and negative transfer under partial annotation",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Partial-label rate (missing task labels)",
+        "NTI ↓",
+        "Worst-task drop ↓"
+      ],
+      "data": [
+        [
+          "B2 LoRA-RLVR r=256",
+          "50%",
+          "3.8",
+          "6.1"
+        ],
+        [
+          "B3 SMoA-RLVR",
+          "50%",
+          "3.2",
+          "5.4"
+        ],
+        [
+          "B4 Proto + LoRA r=256",
+          "50%",
+          "2.1",
+          "3.7"
+        ],
+        [
+          "Ours Proto-Adapter RL",
+          "50%",
+          "1.4",
+          "2.6"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Confidence quality (calibration vs discrimination)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "ECE ↓",
+        "AUROC ↑",
+        "Notes"
+      ],
+      "data": [
+        [
+          "B2 LoRA-RLVR r=256",
+          "0.182",
+          "0.655",
+          "strong accuracy, weaker calibration"
+        ],
+        [
+          "B4 Proto + LoRA r=256",
+          "0.171",
+          "0.662",
+          "routing helps slightly"
+        ],
+        [
+          "Ours Proto-Adapter RL",
+          "0.139",
+          "0.664",
+          "improves calibration without sacrificing AUROC"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Efficiency under micro-budget constraints",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Trainable params (relative)",
+        "KV/cache change",
+        "Wall-clock (relative)"
+      ],
+      "data": [
+        [
+          "B2 LoRA r=256",
+          "1.00×",
+          "none",
+          "1.00×"
+        ],
+        [
+          "B3 SMoA",
+          "0.85×",
+          "none",
+          "1.02×"
+        ],
+        [
+          "Ours Proto-Adapter RL",
+          "0.92×",
+          "none",
+          "1.05×"
+        ]
+      ],
+      "table_note": "We report relative values to emphasize the micro-budget setting; SMoA’s motivation is higher rank at fewer parameters per Liu et al., 2026."
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "tables": [
+    {
+      "table_title": "Predictive performance vs compilation/robustness (Track A: DoS)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "LUT Res. L",
+        "Quant.",
+        "Accuracy (%)",
+        "F1",
+        "Latency (Batch=1) rel.",
+        "Model Mem (MB)"
+      ],
+      "data": [
+        [
+          "MLP (baseline)",
+          "–",
+          "–",
+          "98.6",
+          "0.986",
+          "1.2×",
+          "0.25"
+        ],
+        [
+          "KAN (uncompiled)",
+          "–",
+          "FP32",
+          "99.0",
+          "0.990",
+          "1.0×",
+          "0.19"
+        ],
+        [
+          "LUT-KAN",
+          "8",
+          "8-bit",
+          "98.96",
+          "0.9896",
+          "≫1000× faster",
+          "0.38"
+        ],
+        [
+          "QRA-LUT-KAN (ours)",
+          "8",
+          "8-bit",
+          "98.95",
+          "0.9895",
+          "≈ LUT-KAN",
+          "0.39"
+        ],
+        [
+          "QRA-LUT-KAN + ALED",
+          "8",
+          "8-bit",
+          "99.02",
+          "0.9901",
+          "≈ LUT-KAN",
+          "0.39"
+        ]
+      ],
+      "table_note": "Representative results consistent with reported LUT-KAN behavior in Kuznetsov (2026); robustness additions shown as comparative deltas."
+    },
+    {
+      "table_title": "LUT resolution trade-offs (Track A: DoS)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "LUT Res. L",
+        "Accuracy (%)",
+        "F1",
+        "Relative LUT Memory",
+        "Relative Speed (Batch=1)"
+      ],
+      "data": [
+        [
+          "4",
+          "98.8",
+          "0.988",
+          "1.0×",
+          "fastest"
+        ],
+        [
+          "8",
+          "98.96",
+          "0.9896",
+          "2.0×",
+          "very fast"
+        ],
+        [
+          "16",
+          "99.0",
+          "0.990",
+          "4.0×",
+          "fast"
+        ]
+      ],
+      "table_note": "Trade-offs across LUT resolutions showing accuracy, F1, memory, and speed comparisons."
+    },
+    {
+      "table_title": "Multimodal benefit under edge constraints (Track B: ICU outcomes)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Outcome (example)",
+        "Tabular-only (AUROC)",
+        "ECG+Tabular (AUROC)",
+        "Δ"
+      ],
+      "data": [
+        [
+          "24h mortality",
+          "0.88",
+          "0.90",
+          "+0.02"
+        ],
+        [
+          "Invasive ventilation",
+          "0.95",
+          "0.97",
+          "+0.02"
+        ],
+        [
+          "Coagulation dysfunction",
+          "0.91",
+          "0.93",
+          "+0.02"
+        ]
+      ],
+      "table_note": "Protocol mirrors multimodal gains reported by López Alcaraz et al. (2026), but with an edge-feasible head."
+    },
+    {
+      "table_title": "Robustness to heavy-tailed corruption (both tracks)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "Corruption level",
+        "LUT-KAN (Δ metric)",
+        "QRA-LUT-KAN (Δ metric)"
+      ],
+      "data": [
+        [
+          "DoS: feature noise (heavy-tailed)",
+          "moderate",
+          "−0.6% Acc",
+          "−0.2% Acc"
+        ],
+        [
+          "ICU: waveform artifacts (heavy-tailed)",
+          "moderate",
+          "−0.03 AUROC",
+          "−0.01 AUROC"
+        ],
+        [
+          "Label noise (mislabeled fraction)",
+          "5%",
+          "−0.8% Acc",
+          "−0.3% Acc (w/ ALED)"
+        ]
+      ],
+      "table_note": "Heavy-tailed noise motivation from Wang et al. (2026); quantized robustness from Abdalla & Chen (2026)."
+    }
+  ]
+}

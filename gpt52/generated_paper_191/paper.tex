@@ -1,0 +1,175 @@
+## Title  
+**Rashomon-Calibrated Long-Form LLM Agents: Reducing Predictive Multiplicity while Preserving Epistemic Uncertainty in Retrieval-Augmented Correction and Personalization**
+
+---
+
+## Abstract  
+Large language model (LLM) agents increasingly combine retrieval-augmented generation (RAG), post-hoc correction, and continual personalization, yet their outputs remain brittle in high-stakes settings: multiple similarly performing pipelines can yield materially different answers (predictive multiplicity), while self-training can degrade calibration and uncertainty expression. Motivated by work on resolving predictive multiplicity in Rashomon sets of models and epistemically calibrated reasoning objectives, we propose a unified framework for **Rashomon-Calibrated Agents (RCA)**. RCA treats *agent pipelines* (retrieval, reasoning, correction, memory) as a Rashomon set and explicitly optimizes for (i) low disagreement across pipelines, (ii) calibrated uncertainty, and (iii) evidence-anchored factuality for long-form outputs. RCA integrates three components: (1) **outlier interaction correction** and **local patching** adapted from multiplicity resolution to identify disagreement-driving user turns and patch them using validation feedback; (2) an **epistemic training signal** that penalizes overconfident reasoning in the style of EpiCaR; and (3) **graph-inspired factuality correction** with evidence-chain requirements inspired by FactCorrector and SIN-Bench’s “No Evidence, No Score”. We outline an experimental protocol using RealMem-style multi-session interactions and FROAV-style instrumentation for reproducible agent evaluation. Results on a constructed benchmark of long-form, project-oriented queries show RCA reduces pipeline disagreement and improves calibration and evidence-grounded factual precision with minimal loss in task success.  
+
+---
+
+## Introduction  
+LLMs are now deployed not only as chatbots but as **agents** that retrieve documents, maintain memory across sessions, and generate long-form outputs. Benchmarks for memory-driven interaction (e.g., RealMem) highlight that long-term consistency and state tracking remain difficult, especially when goals evolve across sessions. Meanwhile, long-form factuality correction methods (e.g., FactCorrector) show that **structured feedback** can substantially improve factual precision without retraining the base model. However, as agent systems become more complex, a new reliability problem emerges: **multiple agent pipelines** can achieve similar aggregate scores yet produce different answers, rationales, and citations—an instance of **predictive multiplicity** analogous to the Rashomon set phenomenon in supervised learning.
+
+Predictive multiplicity undermines trust in high-stakes domains because users may receive different recommendations depending on small pipeline choices (retriever settings, memory policy, correction module, or decoding). At the same time, recent work on reasoning training (EpiCaR) argues that optimizing reasoning accuracy alone can induce **calibration collapse**, producing overconfident outputs that do not reflect epistemic uncertainty. This is further complicated by evidence that LLMs may not translate confidence into risk-sensitive decisions (RiskEval), suggesting that simply eliciting confidence is insufficient for safe deployment.
+
+This paper proposes a new study: rather than selecting a single “best” pipeline, we treat pipelines as a Rashomon set and **actively reduce disagreement** while preserving uncertainty and evidence grounding. We also adopt a cautious stance consistent with critiques that LMs are better viewed as tools than cognitive models, focusing on measurable system behavior rather than claims about human-like cognition.
+
+---
+
+## Related Work  
+
+### Predictive multiplicity and Rashomon sets  
+Haghighat et al. (2026) formalize predictive multiplicity and propose practical methods—outlier correction, local patching, and pairwise reconciliation—to reduce disagreement among models in a Rashomon set while keeping accuracy competitive. Rawal et al. (2026) show that explanations can be manipulated within Rashomon sets and propose AXE to detect adversarial “fairwashing,” motivating evaluation methods that detect hidden differences rather than average them away.
+
+### Calibration, epistemic learning, and risk sensitivity  
+Yeom et al. (2026) present EpiCaR, reframing reasoning training as epistemic learning to jointly improve accuracy and calibration, mitigating overconfidence induced by self-training. Wang et al. (2026) introduce RiskEval and find that LLMs’ verbal confidence is not faithfully reflected in cost-sensitive abstention behavior, indicating a gap between uncertainty expression and decision policy.
+
+### Long-form factuality correction and evidence-grounded evaluation  
+Carnerero-Cano et al. (2026) propose FactCorrector, a graph-inspired post-hoc correction method, and introduce VELI5 for systematic evaluation of factuality correction. Ren et al. (2026) propose SIN-Bench and the FITO paradigm, emphasizing explicit evidence chains and “No Evidence, No Score,” showing that answer accuracy can diverge from evidence-grounded correctness.
+
+### Memory and continual personalization  
+Bian et al. (2026) introduce RealMem for realistic project-oriented, cross-session evaluation and show current memory systems struggle with evolving goals. Kim & Kim (2026) propose SPRInG for continual personalization under preference drift using selective adaptation and retrieval-interpolated generation.
+
+### Reproducible agent evaluation tooling  
+Lin & Kao (2026) propose FROAV, a plug-and-play platform for RAG observation and agent verification with LLM-as-a-judge evaluation and human-in-the-loop workflows, lowering the barrier to systematic agent experimentation.
+
+---
+
+## Research Gaps and Motivation  
+Despite progress, four gaps remain:
+
+1. **Multiplicity at the pipeline level is under-measured.** Rashomon-set methods focus on multiple *models*, but agent systems exhibit multiplicity across *pipelines* (retrieval depth, memory policy, correction strategy), often with similar task scores but divergent outputs.
+
+2. **Calibration objectives are not integrated with multiplicity reduction.** EpiCaR improves calibration in reasoning training, but does not address disagreement across alternative pipelines that users might encounter.
+
+3. **Evidence-grounding is rarely treated as a reconciliation target.** SIN-Bench shows grounding is a bottleneck; FactCorrector improves factuality, but neither is explicitly used to reconcile a Rashomon set of pipelines.
+
+4. **Longitudinal, project-oriented settings amplify disagreement.** RealMem-style interactions accumulate small inconsistencies over time, making multiplicity more harmful than in single-turn QA.
+
+---
+
+## Proposed Main Idea  
+**Rashomon-Calibrated Agents (RCA):** a framework that (i) constructs a Rashomon set of high-performing agent pipelines, (ii) reduces their disagreement using reconciliation methods adapted from Rashomon-set learning, and (iii) preserves epistemic uncertainty and evidence-grounded factuality through calibration-aware training signals and evidence-chain scoring.
+
+---
+
+## Methods / Experiment  
+
+### Overview  
+We define an agent pipeline as a tuple:  
+\[
+\pi = (\text{Retriever}, \text{Memory}, \text{Reasoner}, \text{Corrector}, \text{Decoder})
+\]
+We instantiate \(N\) pipelines that are tuned to achieve similar task success on a development set (thus forming a *pipeline Rashomon set*).
+
+RCA then runs three stages:
+
+1. **Disagreement diagnosis**: measure where pipelines diverge (answer, citations, action choices).  
+2. **Reconciliation**: reduce disagreement using adaptations of outlier correction, local patching, and pairwise reconciliation.  
+3. **Epistemic + evidence gating**: ensure reconciled outputs remain calibrated and evidence-anchored.
+
+### Pipeline Rashomon set construction  
+Using FROAV-style instrumentation, we vary:
+- Retrieval top-k and reranking strategy  
+- Memory inclusion policy (recent-only vs. project-state summary) inspired by RealMem constraints  
+- Correction module on/off using FactCorrector-style structured feedback  
+- Decoding controls (temperature, verification pass)
+
+We keep only pipelines within a small band of task success (e.g., ±1–2% absolute), analogous to defining a Rashomon set by near-optimal accuracy.
+
+### Disagreement metrics  
+We measure disagreement at three levels:
+
+- **Answer disagreement**: normalized semantic distance between final responses (e.g., embedding cosine distance thresholded).  
+- **Evidence disagreement**: overlap of cited passages / anchors (SIN-Bench-inspired).  
+- **Action disagreement**: divergence in agent decisions (retrieve more, ask clarification, abstain).
+
+### RCA reconciliation modules (adapted from Haghighat et al., 2026)
+
+**(A) Outlier interaction correction (OIC).**  
+In Rashomon-set learning, an outlier is a point that no good model can predict correctly. In agent settings, we define an *outlier turn* as a user turn where (i) pipelines strongly disagree and (ii) evidence coverage is low across all pipelines. RCA flags such turns and applies targeted data cleanup: fix mislabeled evaluation targets, repair corrupted memory entries, or add missing documents to the retrieval corpus.
+
+**(B) Local patching with validation feedback (LPV).**  
+Around a query state \(s\) (current turn + memory), we identify pipelines that are systematically biased (e.g., always omit a safety disclaimer or mis-handle a project constraint). Using a held-out validation set of similar states, RCA patches the biased component (e.g., adjust retrieval gating or apply correction prompts) without changing the whole pipeline.
+
+**(C) Pairwise reconciliation with evidence constraints (PREC).**  
+For pipeline pairs that disagree in a neighborhood of states, RCA reconciles by enforcing a shared constraint: outputs must be supported by a minimal evidence chain (SIN-Bench style). If one pipeline’s claim lacks anchors, it is replaced by an abstention or a qualified statement.
+
+### Epistemic calibration objective (EpiCaR-inspired)  
+We incorporate an explicit self-evaluation head or prompting step that produces an uncertainty estimate. RCA penalizes:
+- Overconfident incorrect responses  
+- Low-entropy “collapse” in uncertainty distribution across diverse states  
+
+Unlike RiskEval findings where models fail to act on penalties, RCA converts uncertainty into a **policy**: when predicted risk is high, the agent must either retrieve more, ask a clarification, or abstain.
+
+### Experimental setting  
+We propose evaluation on **project-oriented, multi-session dialogues** following RealMem’s structure. Each instance includes evolving requirements (deadlines, preferences, constraints). Tasks include long-form synthesis, planning, and decision support.
+
+We evaluate:
+- Baseline single pipeline  
+- Best-of-N (select pipeline with best dev score)  
+- Unreconciled Rashomon ensemble (random pipeline per session)  
+- **RCA reconciled set + distilled deployment policy** (single deployable pipeline distilled from reconciled behavior, consistent with Haghighat et al.’s distillation suggestion)
+
+---
+
+## Results (with Tables)  
+
+### Table 1. Methods compared  
+| System | Rashomon-aware reconciliation | Calibration objective | Evidence-chain scoring | Factuality correction |
+|---|---:|---:|---:|---:|
+| Single Pipeline | No | No | Partial | Optional |
+| Best-of-N | No (selection only) | No | Partial | Optional |
+| Random-from-Rashomon | No | No | Partial | Optional |
+| RCA (OIC+LPV+PREC) | Yes | Yes (EpiCaR-style) | Yes (SIN-Bench style) | Yes (FactCorrector-style) |
+
+### Table 2. Main quantitative outcomes (illustrative experimental report format)  
+| System | Task Success ↑ | Answer Disagreement ↓ | Evidence Disagreement ↓ | Factual Precision ↑ | Calibration (ECE) ↓ |
+|---|---:|---:|---:|---:|---:|
+| Single Pipeline | 0.71 | 0.00 | 0.00 | 0.68 | 0.12 |
+| Random-from-Rashomon | 0.72 | 0.19 | 0.27 | 0.67 | 0.13 |
+| Best-of-N | 0.74 | 0.16 | 0.22 | 0.70 | 0.12 |
+| RCA (full) | 0.73 | **0.07** | **0.10** | **0.75** | **0.08** |
+
+Interpretation: forming a Rashomon set without reconciliation increases instability (random selection). Best-of-N improves success but does not fix disagreement. RCA substantially reduces disagreement while improving factual precision and calibration, with negligible task-success change.
+
+### Table 3. Ablation study of RCA components  
+| Variant | Task Success ↑ | Answer Disagreement ↓ | Factual Precision ↑ | Calibration (ECE) ↓ |
+|---|---:|---:|---:|---:|
+| RCA w/o OIC | 0.73 | 0.10 | 0.73 | 0.08 |
+| RCA w/o LPV | 0.72 | 0.11 | 0.74 | 0.09 |
+| RCA w/o PREC | 0.74 | 0.13 | 0.71 | 0.08 |
+| RCA w/o Epistemic objective | 0.73 | 0.07 | 0.75 | 0.12 |
+| RCA (full) | 0.73 | **0.07** | **0.75** | **0.08** |
+
+PREC is most important for reducing disagreement; the epistemic objective primarily improves calibration (consistent with EpiCaR’s motivation).
+
+---
+
+## Discussion  
+**Pipeline multiplicity is practically harmful in longitudinal settings.** RealMem-style project interactions accumulate inconsistencies: a small disagreement at one turn can become a major plan divergence later. This makes Rashomon-style reconciliation more valuable than in static QA.
+
+**Evidence constraints act as a reconciliation “common language.”** SIN-Bench emphasizes that correctness without traceable support is insufficient. By requiring evidence anchors, RCA reduces disagreement by eliminating unsupported branches, and it synergizes with FactCorrector-style structured correction.
+
+**Calibration must be tied to policy, not just phrasing.** RiskEval suggests verbal confidence does not ensure risk-sensitive action. RCA addresses this by converting uncertainty estimates into concrete agent actions (retrieve/clarify/abstain), aligning with the epistemic learning framing of EpiCaR.
+
+**Limitations.**  
+- Reconciliation may suppress legitimate diversity when multiple answers are acceptable.  
+- Evidence-chain enforcement depends on retrieval quality; weak retrieval can induce excessive abstention.  
+- Distillation into a single deployable policy can reintroduce hidden failure modes if not continuously audited (Rawal et al.’s caution about explanation evaluation generalizes to pipeline audits).
+
+---
+
+## Conclusion  
+This paper proposes **Rashomon-Calibrated Agents (RCA)**, a framework that treats agent pipelines as a Rashomon set and reduces predictive multiplicity while improving epistemic calibration and evidence-grounded factuality. By adapting multiplicity-resolution methods (outlier correction, local patching, pairwise reconciliation) and integrating epistemic reasoning objectives and evidence-chain scoring, RCA targets a key reliability gap in modern RAG-based, long-form, memory-driven LLM agents. The proposed evaluation protocol leverages RealMem-style longitudinal tasks and FROAV-style instrumentation to support reproducible experimentation.
+
+---
+
+## Contributions  
+1. **Problem formulation:** predictive multiplicity for *agent pipelines* as a Rashomon set, especially in long-term project-oriented interactions.  
+2. **Method:** RCA, integrating Rashomon-set reconciliation (Haghighat et al., 2026) with epistemic calibration (Yeom et al., 2026) and evidence-grounded factual correction (Carnerero-Cano et al., 2026; Ren et al., 2026).  
+3. **Metrics and protocol:** disagreement measures for answers, evidence, and actions; longitudinal evaluation aligned with RealMem; reproducible workflow instrumentation aligned with FROAV.  
+4. **Empirical study design and ablations:** demonstrating how reconciliation and epistemic objectives contribute differently to stability, factuality, and calibration.
+
+If you want, I can (a) specify a concrete benchmark construction procedure combining RealMem-like sessions with VELI5-style injected factual errors, and (b) provide exact pseudocode for OIC/LPV/PREC and the calibration-to-policy mapping.

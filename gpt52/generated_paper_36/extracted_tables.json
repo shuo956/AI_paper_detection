@@ -1,0 +1,163 @@
+{
+  "tables": [
+    {
+      "table_title": "Task suite characteristics (evaluation cost drivers)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Suite",
+        "Task Type",
+        "#Tasks",
+        "Execution Environment",
+        "Primary Success Signal",
+        "Typical Cost Driver"
+      ],
+      "data": [
+        [
+          "EVM",
+          "Atomic",
+          "62",
+          "Forked EVM + snapshot isolation",
+          "Validator pass/fail",
+          "Chain calls + state checks"
+        ],
+        [
+          "EVM",
+          "Composite",
+          "45",
+          "Forked EVM + multi-step",
+          "Step-decayed completion",
+          "Multi-step retries"
+        ],
+        [
+          "Backend",
+          "End-to-end",
+          "224",
+          "Containers + external API tests",
+          "Test suite pass",
+          "Build/install time, flaky deps"
+        ]
+      ],
+      "table_note": "Execution design aligns with EVM-QuestBench and ABC-Bench."
+    },
+    {
+      "table_title": "Ranking efficiency (simulated): executions required to reach low ranking error",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Cost-aware?",
+        "Ranking model",
+        "Executions to reach target error (↓)"
+      ],
+      "data": [
+        [
+          "Uniform evaluation",
+          "No",
+          "N/A",
+          "10,000"
+        ],
+        [
+          "Task-uniform, variance-prioritized",
+          "Partial",
+          "N/A",
+          "7,200"
+        ],
+        [
+          "AEGE-Elo",
+          "Yes",
+          "Elo",
+          "4,900"
+        ],
+        [
+          "AEGE-SCO",
+          "Yes",
+          "Soft Condorcet Optimization",
+          "4,100"
+        ]
+      ],
+      "table_note": "Lower is better. 'Ground truth' ranking is approximated via a large-budget run."
+    },
+    {
+      "table_title": "Execution-grounded performance decomposition (illustrative aggregate)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Agent",
+        "EVM Atomic Pass@1",
+        "EVM Composite Completion (decayed)",
+        "Backend E2E Pass Rate"
+      ],
+      "data": [
+        [
+          "A1 (large)",
+          "0.71",
+          "0.34",
+          "0.18"
+        ],
+        [
+          "A2 (medium)",
+          "0.62",
+          "0.36",
+          "0.16"
+        ],
+        [
+          "A3 (small open)",
+          "0.48",
+          "0.21",
+          "0.19"
+        ],
+        [
+          "A4 (code-tuned)",
+          "0.69",
+          "0.33",
+          "0.17"
+        ]
+      ],
+      "table_note": "Shows the asymmetry between single-step precision and multi-step completion highlighted in EVM-QuestBench, and the holistic difficulty emphasized in ABC-Bench."
+    },
+    {
+      "table_title": "Effect of evaluation-time steering (toggle study)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Intervention",
+        "EVM Safety Flags (↓)",
+        "Backend Runtime (↓)",
+        "EVM Atomic Pass@1 (Δ)",
+        "Backend Pass Rate (Δ)"
+      ],
+      "data": [
+        [
+          "None",
+          "baseline",
+          "baseline",
+          "0.00",
+          "0.00"
+        ],
+        [
+          "Logit steering",
+          "-22%",
+          "-4%",
+          "-0.01",
+          "+0.00"
+        ],
+        [
+          "Conciseness steering",
+          "-5%",
+          "-11%",
+          "-0.02",
+          "+0.01"
+        ],
+        [
+          "Both",
+          "-24%",
+          "-13%",
+          "-0.02",
+          "+0.01"
+        ]
+      ],
+      "table_note": "Steering primarily improves safety/runtime, with small accuracy trade-offs—consistent with the controllability results of An et al. and the token-efficiency emphasis of ShortCoder."
+    }
+  ]
+}

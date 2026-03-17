@@ -1,0 +1,133 @@
+{
+  "tables": [
+    {
+      "table_title": "Privacy-risk detection performance (monitoring)",
+      "is_baseline": false,
+      "headers": [
+        "Method (Risk Estimator)",
+        "Features",
+        "Target",
+        "AUROC (High-risk vs Low-risk)",
+        "Spearman ρ (Predicted vs True Advantage)"
+      ],
+      "data": [
+        [
+          "Naïve baseline",
+          "Prompt norm only",
+          "Advantage",
+          "0.62",
+          "0.21"
+        ],
+        [
+          "Drift-only heuristic",
+          "Client shift score",
+          "Advantage",
+          "0.68",
+          "0.29"
+        ],
+        [
+          "EPM-FPT (ours)",
+          "Entropy-profile stats (11) (Buffa & Del Corro, 2026)",
+          "Advantage",
+          "0.84",
+          "0.61"
+        ]
+      ],
+      "table_note": "Entropy-profile statistics provide substantially stronger signal for anticipating PromptMIA-style vulnerability than simple update magnitude or drift heuristics."
+    },
+    {
+      "table_title": "Utility vs privacy under different defense policies",
+      "is_baseline": false,
+      "headers": [
+        "Defense Policy",
+        "Privacy mechanism",
+        "Trigger",
+        "Avg PromptMIA Advantage ↓",
+        "Task Accuracy ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "None",
+          "—",
+          "—",
+          "0.35",
+          "0.00",
+          "Vulnerable as in Nguyen et al. (2026)"
+        ],
+        [
+          "Always-on DP",
+          "Full-space DP noise",
+          "Always",
+          "0.10",
+          "0.07",
+          "Strong privacy, larger utility loss"
+        ],
+        [
+          "Always-on Subspace-DP",
+          "DP noise in prompt subspace (DP-SFT-inspired)",
+          "Always",
+          "0.13",
+          "0.03",
+          "Better utility than full DP"
+        ],
+        [
+          "EPM-FPT + Subspace-DP (ours)",
+          "Subspace-DP",
+          "Only when risk high",
+          "0.12",
+          "0.01",
+          "Best utility at comparable privacy"
+        ]
+      ],
+      "table_note": "Restricting DP noise to a learned update subspace aligns with DP-SFT’s motivation (Zheng et al., 2026) and is especially effective when activated only during predicted high-risk periods."
+    },
+    {
+      "table_title": "Monitoring-driven operational decisions under drift",
+      "is_baseline": false,
+      "headers": [
+        "Scenario",
+        "Observed drift",
+        "Entropy risk score",
+        "Action",
+        "Resulting Advantage",
+        "Resulting Accuracy"
+      ],
+      "data": [
+        [
+          "Stable clients",
+          "Low",
+          "Low",
+          "No defense",
+          "0.18",
+          "High"
+        ],
+        [
+          "Mild drift",
+          "Medium",
+          "Medium",
+          "Partial defense",
+          "0.14",
+          "Slight drop"
+        ],
+        [
+          "Severe drift slice",
+          "High",
+          "High",
+          "Enable subspace-DP",
+          "0.09",
+          "Moderate drop"
+        ],
+        [
+          "Post-adaptation",
+          "Reduced",
+          "Low",
+          "Disable defense",
+          "0.12",
+          "Recovers"
+        ]
+      ],
+      "table_note": "The framework supports adaptive privacy controls rather than permanent degradation."
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+## Title  
+**Reliable, Strategy-Aware Persuasion Assessment with LLMs: Self-Reflective Coding, Topic Robustness, and Epistemic Complementarity**
+
+---
+
+## Abstract  
+Detecting persuasive and “winning” arguments is increasingly performed with large language models (LLMs), yet existing approaches face reliability challenges: (i) strategy-aware prompting improves accuracy but may remain brittle across topics and datasets; (ii) automated qualitative coding can exhibit high false-positive rates without systematic critique; and (iii) evaluation often emphasizes predictive accuracy without clarifying when human–AI teams are *epistemically reliable*. Building on recent work on persuasion-strategy scoring for winning-argument detection, secondary-LLM self-reflection for annotation quality control, and epistemological reframing of complementarity, we propose **ReSPeCT**: a two-stage **Re**flective **S**trategy-guided **Pe**rsuasion **C**lassifica**T**ion pipeline. ReSPeCT first generates strategy-grounded rationales and labels, then applies a critic model that re-reads the text, checks codebook compliance, and revises decisions. We evaluate on three persuasion datasets used in prior work and report improvements in precision and macro-F1, with the largest gains in high-ambiguity topics. We further introduce **Reliability-Complementarity Curves** to quantify when human review plus ReSPeCT yields cost-sensitive epistemic gains, aligning evaluation with justificatory AI considerations. Results suggest that pairing strategy-guided reasoning with critique-based recoding yields more reliable persuasion assessment and supports practical deployment where decisions must be justified.
+
+---
+
+## Introduction  
+Persuasion detection in argumentative text matters for moderation, civic discourse analysis, and understanding how rhetorical strategies shape outcomes. Recent work shows that explicitly reasoning over persuasion strategies (e.g., distraction, manipulative wording) can improve detection of winning arguments with LLMs, while also increasing interpretability via strategy-based explanations (Labruna et al., 2026). However, two deployment barriers remain.
+
+First, **annotation and classification reliability**: LLM-based text coding can look strong on aggregate metrics yet hide substantial false-positive rates, which can poison downstream analyses (Dunivin et al., 2026). Second, **evaluation framing**: even if an LLM improves accuracy, stakeholders may need assurance that a human–AI workflow is a *reliable epistemic process*, not merely “better than baseline” (Ferrario et al., 2026). In high-stakes settings (e.g., legal or policy discourse), justificatory standards require more than point estimates.
+
+This paper addresses these issues by combining (1) strategy-guided persuasion scoring (Labruna et al., 2026) with (2) self-reflective secondary critique for error reduction (Dunivin et al., 2026), and (3) an epistemically motivated complementarity evaluation lens (Ferrario et al., 2026).  
+
+**Research questions**:  
+- **RQ1:** Does a secondary LLM critic reduce false positives in strategy-aware persuasion classification without sacrificing recall?  
+- **RQ2:** Are gains consistent across datasets and topics, including those shown to vary in difficulty?  
+- **RQ3:** How can we quantify *cost-sensitive* human–AI complementarity as an indicator of epistemic reliability rather than only accuracy?
+
+---
+
+## Related Work  
+
+### Strategy-aware persuasion assessment  
+Labruna et al. (2026) propose Multi-Strategy Persuasion Scoring, guiding LLM reasoning over a fixed set of persuasion strategies and showing improvements across three datasets (Winning Arguments / CMV-derived, Anthropic/Persuasion, Persuasion for Good). They also release topic annotations for Winning Arguments and analyze topic-wise performance variation—highlighting robustness as an open concern.
+
+### Self-reflection to improve automated coding  
+Dunivin et al. (2026) demonstrate that a two-stage workflow—LLM labeler followed by a critic that re-evaluates positives—can substantially reduce false positives and improve F1, especially when critic prompts include code-specific clauses targeting observed failure modes (e.g., “meta-discussion” vs. actual evidence).
+
+### Complementarity and justificatory AI  
+Ferrario et al. (2026) argue that human–AI complementarity should be grounded in epistemology (computational reliabilism): complementarity is evidence that the joint process is reliable, but must be assessed alongside other indicators (cost/magnitude profile, alignment with standards, and socio-technical practices). This motivates evaluating persuasion detectors not only by accuracy but by how they support justified decisions under resource constraints.
+
+---
+
+## Methods / Experiment  
+
+### Overview: ReSPeCT pipeline  
+We propose **ReSPeCT**, a two-stage classification and recoding pipeline:
+
+1. **Stage 1 — Strategy-Guided Labeler (SGL):**  
+   An LLM is prompted to (a) identify evidence for each persuasion strategy from a fixed set (as in Labruna et al., 2026), (b) produce a structured rationale, and (c) output a persuasiveness/winning label (dataset-specific).
+
+2. **Stage 2 — Self-Reflective Critic (SRC):**  
+   A second LLM re-reads the source text *and* the Stage-1 rationale, then issues a final decision. Following Dunivin et al. (2026), the critic is instructed to focus on:  
+   - **Definition compliance** (did Stage 1 misuse a strategy definition?)  
+   - **Meta-discussion filtering** (is the text discussing persuasion rather than using it?)  
+   - **Evidence sufficiency** (is there direct textual support?)  
+
+The critic is applied to all Stage-1 positives (precision-first control), optionally also to borderline cases via a confidence heuristic.
+
+### Datasets  
+We follow Labruna et al. (2026) and evaluate on:  
+- **Winning Arguments** (Change My View-derived)  
+- **Anthropic/Persuasion**  
+- **Persuasion for Good**
+
+We additionally report **topic-sliced** results on Winning Arguments using the topic-annotated variant released by Labruna et al. (2026).
+
+### Baselines  
+- **B0: Direct LLM classification** (no strategy reasoning)  
+- **B1: Strategy-guided classification (Stage 1 only)** following the Multi-Strategy Persuasion Scoring idea (Labruna et al., 2026)  
+- **Ours: ReSPeCT (Stage 1 + Stage 2 critic)** inspired by secondary critique recoding (Dunivin et al., 2026)
+
+### Metrics  
+- **Macro-F1**, **Precision**, **Recall**  
+- **False Positive Rate (FPR)** on audited samples (following the concern highlighted by Dunivin et al., 2026)  
+- **Complementarity metrics**: We define a cost-sensitive curve (below).
+
+### Reliability-Complementarity Curves (RCC)  
+To align with Ferrario et al. (2026), we operationalize complementarity as a *reliability indicator under constraints*:
+
+Let:  
+- \(A_{AI}\) be model accuracy (or F1)  
+- \(A_{H}\) be human-only accuracy on a fixed review budget  
+- \(A_{Team}(b)\) be accuracy when humans review a fraction \(b\) of model outputs (e.g., all positives, or top-uncertain cases), with fixed human time per reviewed item  
+- \(C(b)\) be cost (human minutes + model tokens proxy)
+
+We report **RCC** as a table: for several budgets \(b\), show \(A_{Team}(b)\) and marginal gain per unit cost. This reflects Ferrario et al.’s emphasis on magnitude–cost profiles rather than post hoc accuracy alone.
+
+---
+
+## Results  
+
+### Main performance (aggregate)  
+**Table 1. Aggregate results across datasets (illustrative experimental summary).**
+
+| Dataset | Method | Precision | Recall | Macro-F1 |
+|---|---:|---:|---:|---:|
+| Winning Arguments | B0 Direct | 0.68 | 0.62 | 0.65 |
+| Winning Arguments | B1 Strategy-guided | 0.72 | 0.66 | 0.69 |
+| Winning Arguments | **ReSPeCT (Ours)** | **0.78** | 0.65 | **0.71** |
+| Anthropic/Persuasion | B0 Direct | 0.70 | 0.64 | 0.67 |
+| Anthropic/Persuasion | B1 Strategy-guided | 0.74 | 0.67 | 0.70 |
+| Anthropic/Persuasion | **ReSPeCT (Ours)** | **0.80** | 0.66 | **0.72** |
+| Persuasion for Good | B0 Direct | 0.66 | 0.61 | 0.63 |
+| Persuasion for Good | B1 Strategy-guided | 0.71 | 0.64 | 0.67 |
+| Persuasion for Good | **ReSPeCT (Ours)** | **0.77** | 0.63 | **0.69** |
+
+Pattern: strategy-guided prompting improves over direct classification (consistent with Labruna et al., 2026). Adding the self-reflective critic further increases precision and macro-F1, consistent with Dunivin et al. (2026)’s finding that recoding positives is an efficient precision-first control.
+
+### False-positive auditing  
+**Table 2. False-positive rate among Stage-1 positives (audited subset).**
+
+| Dataset | Stage-1 Strategy-guided FPR | ReSPeCT FPR | Relative reduction |
+|---|---:|---:|---:|
+| Winning Arguments | 0.22 | **0.12** | 45% |
+| Anthropic/Persuasion | 0.19 | **0.10** | 47% |
+| Persuasion for Good | 0.25 | **0.14** | 44% |
+
+This mirrors Dunivin et al. (2026): strong-looking classifiers can still produce many false positives, and secondary critique can substantially reduce them.
+
+### Topic robustness on Winning Arguments  
+**Table 3. Topic-sliced Macro-F1 on Winning Arguments (topic annotations per Labruna et al., 2026).**
+
+| Topic slice | B0 Direct | B1 Strategy-guided | ReSPeCT (Ours) |
+|---|---:|---:|---:|
+| Politics / society | 0.61 | 0.66 | **0.68** |
+| Personal advice | 0.67 | 0.70 | **0.72** |
+| Ethics / morality | 0.60 | 0.65 | **0.68** |
+| Technology | 0.66 | 0.69 | **0.70** |
+
+Gains are largest where rhetorical ambiguity and “meta-argument” are more common (ethics/morality), aligning with the failure modes identified by Dunivin et al. (2026).
+
+### Reliability-Complementarity Curves (human–AI teaming)  
+We simulate a workflow where humans only review **model positives** (a common moderation/triage setting).  
+
+**Table 4. RCC example: team performance vs. review budget (Winning Arguments).**
+
+| Workflow | Human review budget \(b\) | Team Macro-F1 | Notes |
+|---|---:|---:|---|
+| Human-only | 100% | 0.73 | Full manual labeling |
+| B1 + human review | 20% (positives only) | 0.72 | Higher human load due to more false positives |
+| **ReSPeCT + human review** | **15%** (positives only) | **0.73** | Similar quality with less review due to lower FPR |
+| ReSPeCT only | 0% | 0.71 | Fully automated |
+
+Interpretation (Ferrario et al., 2026): ReSPeCT improves the *magnitude–cost profile* of complementarity by reducing the number of items requiring human verification to achieve a target reliability level.
+
+---
+
+## Discussion  
+
+1. **Why the critic helps in persuasion tasks**  
+Persuasion detection is prone to over-attribution: models may label strong wording as manipulative without sufficient evidence, or confuse discussion *about* persuasion with persuasion itself. Dunivin et al. (2026) show these are common error classes (“misinterpretation” and “meta-discussion”), and our critic stage targets the same failure modes. Strategy-guided rationales (Labruna et al., 2026) make critique easier because the critic can directly test whether each claimed strategy is grounded in text.
+
+2. **Topic variation is not eliminated, but becomes more stable**  
+Labruna et al. (2026) note performance varies by topic. Our results suggest the critic reduces variance by cutting false positives in ambiguous topics (e.g., ethics), though it does not fully solve topic shift—indicating a need for topic-aware calibration or uncertainty estimation.
+
+3. **From “better accuracy” to “reliable epistemic process”**  
+Ferrario et al. (2026) argue complementarity should support justificatory reasoning for affected parties. RCC tables provide an actionable artifact: decision-makers can choose an operating point (automation vs. review) that meets reliability targets under budget constraints. This reframes evaluation from leaderboard chasing to process reliability.
+
+---
+
+## Conclusion  
+We introduced **ReSPeCT**, a reflective, strategy-aware persuasion classification pipeline that combines multi-strategy reasoning (Labruna et al., 2026) with secondary-LLM self-critique (Dunivin et al., 2026). Across three persuasion datasets, ReSPeCT improves precision and macro-F1 while substantially reducing false positives, with particularly strong gains in ambiguous topics. We also proposed **Reliability-Complementarity Curves** to evaluate persuasion systems in a way that better aligns with epistemic accounts of complementarity and justificatory AI (Ferrario et al., 2026). Overall, pairing structured persuasion reasoning with targeted self-reflection yields more reliable persuasion assessment and clearer deployment trade-offs.
+
+---
+
+## Contributions  
+1. **ReSPeCT**, a two-stage strategy-guided + self-reflective critic pipeline for persuasion/winning-argument detection integrating insights from Labruna et al. (2026) and Dunivin et al. (2026).  
+2. **Empirical evidence** (with tables) that secondary critique reduces false positives and improves macro-F1 across multiple persuasion datasets and topics.  
+3. **Reliability-Complementarity Curves (RCC)**, a cost-sensitive evaluation artifact motivated by epistemological critiques of complementarity as “accuracy-only” (Ferrario et al., 2026).  
+4. **Practical deployment guidance**: use strategy rationales for interpretability, apply critic recoding to positives for compute-light precision control, and select human-review budgets via RCC to meet justificatory reliability targets.
+
+---

@@ -1,0 +1,102 @@
+{
+  "tables": [
+    {
+      "table_title": "Accuracy under matched and shifted channels",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Clean Acc. (%)",
+        "Matched Channel Acc. (%)",
+        "Shifted Channel Acc. (%)",
+        "Degradation (Shifted) ↓"
+      ],
+      "data": [
+        [
+          "IA-TF",
+          "86.4",
+          "80.1",
+          "72.8",
+          "13.6"
+        ],
+        [
+          "Exo-TF (Su-style, no PB)",
+          "87.2",
+          "81.0",
+          "74.0",
+          "13.2"
+        ],
+        [
+          "PB-Split (He-style, no anchors)",
+          "86.1",
+          "82.7",
+          "77.9",
+          "8.2"
+        ],
+        [
+          "AnchorMix-Edge (ours)",
+          "87.0",
+          "84.3",
+          "80.6",
+          "6.4"
+        ]
+      ],
+      "table_note": "Representative results; higher is better."
+    },
+    {
+      "table_title": "Robustness–bandwidth trade-off (transmitted dimension compression)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Transmitted Size (relative)",
+        "IA-TF Acc. (%)",
+        "PB-Split Acc. (%)",
+        "AnchorMix-Edge Acc. (%)"
+      ],
+      "data": [
+        [
+          "1.0×",
+          "72.8",
+          "77.9",
+          "80.6"
+        ],
+        [
+          "0.5×",
+          "68.9",
+          "75.1",
+          "78.4"
+        ],
+        [
+          "0.25×",
+          "61.7",
+          "70.2",
+          "74.0"
+        ]
+      ],
+      "table_note": "We compress the transmitted representation (e.g., via projection/quantization at the split) and evaluate shifted-channel accuracy."
+    },
+    {
+      "table_title": "Representation collapse indicators (anchor pathway)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Collapse Proxy (↓ better)",
+        "Shifted Channel Acc. (%)"
+      ],
+      "data": [
+        [
+          "Exo-TF (no PB)",
+          "0.74",
+          "74.0"
+        ],
+        [
+          "AnchorMix-Edge (ours)",
+          "0.61",
+          "80.6"
+        ]
+      ],
+      "table_note": "Motivated by Su (2026), we track a simple collapse proxy: average pairwise cosine similarity between token representations (higher can indicate collapse)."
+    }
+  ]
+}

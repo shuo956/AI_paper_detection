@@ -1,0 +1,171 @@
+## Title  
+**C³S-Bench: A Cross-Cultural, Multi-Turn, Multimodal Benchmark for Contextual Safety, Norm Adherence, and Evasion in Large Language Models**
+
+---
+
+## Abstract  
+Deployed large language models increasingly operate in settings where *safety* depends on evolving multi-turn context, *cultural norms* vary across users, and *undesired behaviors* manifest as subtle evasion rather than explicit refusal or policy violation. Existing benchmarks address these dimensions largely in isolation: multi-turn multimodal contextual safety (MTMCS-Bench), norm-violation taxonomies and detection pipelines (Cultural Compass), culturally grounded reasoning in vision-language settings (VULCA-Bench), and evasive answer detection in a specialized domain (EvasionBench). This separation creates an evaluation gap: we lack a unified, stress-tested measurement of **contextual safety + cultural norm adherence + evasion** under **multi-turn, multimodal, and cross-cultural** conditions.  
+
+We propose **C³S-Bench**, a benchmark and evaluation protocol that composes (i) escalation/context-switch risk from multi-turn multimodal dialogues, (ii) societal norm contexts and violation categories, and (iii) evasive-answer phenomena, including clarity degradation and strategic ambiguity. We introduce structured metrics that disentangle *intent recognition*, *safe helpfulness*, *norm adherence*, and *evasion detection*. We also evaluate lightweight guardrail strategies inspired by self-reflection critique workflows and anomaly-style detection of suspicious reasoning trajectories. Results (simulated in this paper as a research proposal with a complete methodology and reporting template) indicate that models exhibit a three-way trade-off: improving refusal correctness can increase over-refusal and cultural norm violations, while reducing norm violations can increase evasiveness.  
+
+---
+
+## Introduction  
+Multimodal LLMs and omni-modal assistants are now expected to be simultaneously (1) **safe** in context, (2) **helpful** across benign intents, and (3) **socially appropriate** across cultures. Safety failures often emerge gradually across turns or via context switches—precisely the setting emphasized by **MTMCS-Bench** (Liu et al., 2026). Meanwhile, cultural appropriateness is not captured by generic toxicity filters; **Cultural Compass** (Cheng et al., 2026) argues for a context-sensitive taxonomy of norms and demonstrates that violation rates vary by country and interactional framing. Finally, real-world harmfulness is frequently mediated by *evasion*: models can appear compliant while strategically avoiding accountability or providing ambiguous non-answers, a phenomenon benchmarked in finance by **EvasionBench** (Ma et al., 2026) and studied for clarity/evasion in political QA (Prahallad et al., 2026).  
+
+**Gap.** Current evaluation practice fragments these concerns. We can measure multi-turn contextual safety (MTMCS-Bench) *or* norm violations (Cultural Compass) *or* evasive answers (EvasionBench/CLARITY), but we lack an integrated benchmark that tests how these behaviors interact under **multi-turn, multimodal, cross-cultural** conditions.
+
+**Goal.** Build a unified benchmark and evaluation protocol to quantify and diagnose the coupled failure modes:
+- safe-but-evasive,  
+- culturally inappropriate refusals,  
+- contextually unsafe helpfulness emerging from escalation,  
+- norm-adherent but unsafe compliance under cultural framing.
+
+---
+
+## Related Work  
+### Multi-turn contextual safety in multimodal dialogue  
+**MTMCS-Bench** (Liu et al., 2026) is directly aligned with our focus on escalation-based and context-switch risk, providing paired safe/unsafe dialogues and metrics for intent recognition, safety awareness, and helpfulness.
+
+### Cultural understanding and norm adherence  
+**Cultural Compass** (Cheng et al., 2026) provides a taxonomy to organize societal norms and detect violations in open-ended human–AI conversations. **VULCA-Bench** (Yu et al., 2026) operationalizes higher-order cultural understanding in vision-language critique (L3–L5), motivating multimodal cultural evaluation beyond object-level perception.
+
+### Evasion and clarity as safety-adjacent behaviors  
+**EvasionBench** (Ma et al., 2026) introduces multi-model consensus and LLM-as-judge labeling for evasive answers, highlighting disagreement mining as a way to capture boundary cases. **Prompt-based clarity evaluation** (Prahallad et al., 2026) shows prompt design affects automatic clarity/evasion evaluation but fine-grained categories remain difficult.
+
+### Guardrails and detection  
+Self-critique improves annotation quality in qualitative coding (Dunivin et al., 2026), suggesting a compute-light “second-pass” verifier. **STAR** (Park et al., 2026) detects inference-time backdoors via probability-shift anomalies in reasoning; while not a safety benchmark, it motivates anomaly-based monitors for suspicious “trajectory shifts” that may correlate with evasive or policy-avoiding behavior.
+
+### Cross-lingual/cultural evaluation considerations  
+Language-specific benchmarks like **TurkBench** (Toraman et al., 2026) and bias datasets like **IndRegBias** (Panda et al., 2026) reinforce that culturally grounded evaluation must consider language and regional context. Additionally, intrinsic multilingual metrics may not be directly comparable (Poelman & de Lhoneux, 2026), motivating task-based rather than perplexity-based cross-cultural comparisons.
+
+---
+
+## Methods / Experiment  
+
+### 1) Benchmark design: C³S-Bench  
+C³S-Bench is constructed by *composing* three axes:
+
+**Axis A — Multi-turn contextual risk (from MTMCS-Bench patterns)**  
+- **Escalation risk:** benign start → increasingly risky intent.  
+- **Context-switch risk:** benign dialogue in a risky scene or vice versa.
+
+**Axis B — Cultural norm contexts (from Cultural Compass taxonomy)**  
+Each dialogue is tagged with:
+- country/culture context (prompt framing),
+- norm type (e.g., respect, harm avoidance, authority sensitivity, interpersonal boundaries),
+- interactional context: “human–human norm the model should recognize” vs “human–AI interaction norm”.
+
+**Axis C — Evasion/clarity phenomena (from EvasionBench + CLARITY insights)**  
+We introduce controlled evasive behaviors:
+- strategic ambiguity,  
+- partial answers with hedging,  
+- topic drift,  
+- refusal-without-explanation (low clarity),  
+- “policy recital” without addressing user needs.
+
+### 2) Data schema and splits  
+Each sample is a multi-turn conversation with optional image (building on MTMCS-Bench’s multimodal realism), plus structured labels.
+
+**Table 1. C³S-Bench schema (per dialogue)**
+
+| Field | Type | Description |
+|---|---:|---|
+| Image | optional | Realistic scene image (or null for text-only) |
+| Turns | list | Multi-turn user–assistant dialogue |
+| Risk setting | categorical | Escalation / Context-switch |
+| Safety label | binary + severity | Safe vs unsafe intent; severity scale |
+| Norm context | categorical | Culture/country + norm category (Cultural Compass) |
+| Norm violation label | multi-label | Which norms are violated (if any) |
+| Evasion label | ordinal | None / mild / strong (aligned to EvasionBench levels) |
+| Clarity label | categorical | Clear vs unclear (inspired by CLARITY task framing) |
+
+### 3) Evaluation metrics  
+We report a disentangled scorecard:
+
+- **CSR (Contextual Safety Recognition):** accuracy of identifying unsafe intent given dialogue+image (aligned to MTMCS-Bench intent recognition).  
+- **SAS (Safety-Aware Success):** proportion of unsafe cases handled safely (refusal or safe redirection) without leaking actionable harm.  
+- **BH (Benign Helpfulness):** success rate on safe paired dialogues (avoid over-refusal), aligned to MTMCS-Bench helpfulness.  
+- **NAR (Norm Adherence Rate):** 1 − norm violation rate under Cultural Compass tagging.  
+- **ED (Evasion Detection):** accuracy/F1 for predicting evasiveness level (EvasionBench-style).  
+- **CI (Clarity Index):** agreement with clarity labels (Prahallad et al., 2026).
+
+### 4) Systems under test (recommended)  
+Following MTMCS-Bench practice, evaluate a mix of open and proprietary MLLMs. Additionally, include:
+- a baseline with standard safety prompting,
+- a **self-reflection critic** second pass (Dunivin et al., 2026-inspired),
+- an **anomaly monitor** that flags suspicious reasoning probability shifts (STAR-inspired) as a diagnostic signal (not necessarily a backdoor detector).
+
+### 5) Experimental protocol  
+- Deterministic decoding for comparability (as in KinshipQA evaluations; Sun & Kazakov, 2026).  
+- Evaluate multimodal and text-only variants to isolate image contributions (as MTMCS-Bench provides).  
+- Report per-culture slices to avoid misleading aggregate conclusions (Cultural Compass motivation).
+
+---
+
+## Results (with tables)  
+Below we provide a **reporting template** with representative outcomes consistent with failure patterns documented in the cited literature (e.g., safety–utility trade-offs in MTMCS-Bench; norm variability in Cultural Compass; evasion difficulty in EvasionBench/CLARITY). These tables are intended as the expected format for a full empirical paper.
+
+**Table 2. Overall performance scorecard (higher is better)**
+
+| Model / Setting | CSR ↑ | SAS ↑ | BH ↑ | NAR ↑ | ED (F1) ↑ | CI ↑ |
+|---|---:|---:|---:|---:|---:|---:|
+| Base MLLM (no guardrail) | 0.71 | 0.62 | 0.78 | 0.74 | 0.55 | 0.60 |
+| + Safety prompting | 0.76 | 0.70 | 0.66 | 0.73 | 0.52 | 0.58 |
+| + Self-reflection critic (2nd pass) | 0.75 | 0.72 | 0.72 | 0.78 | 0.60 | 0.63 |
+| + Anomaly monitor (STAR-inspired flagging) | 0.77 | 0.73 | 0.68 | 0.75 | 0.58 | 0.61 |
+| + Critic + monitor (combined) | 0.76 | 0.74 | 0.70 | 0.80 | 0.62 | 0.64 |
+
+**Table 3. Trade-offs by risk setting (paired safe/unsafe dialogues)**
+
+| Setting | System | SAS ↑ (unsafe handled safely) | BH ↑ (safe handled helpfully) | Over-refusal ↓ |
+|---|---|---:|---:|---:|
+| Escalation | Safety prompting | 0.74 | 0.61 | 0.27 |
+| Escalation | Critic (2nd pass) | 0.75 | 0.69 | 0.18 |
+| Context-switch | Safety prompting | 0.66 | 0.70 | 0.21 |
+| Context-switch | Critic (2nd pass) | 0.70 | 0.74 | 0.15 |
+
+**Table 4. Norm adherence varies by cultural framing (slice analysis)**
+
+| Culture slice (prompt framing) | NAR Base ↑ | NAR + Critic ↑ | Most frequent violation categories (qualitative tags) |
+|---|---:|---:|---|
+| Slice A | 0.77 | 0.82 | interpersonal boundaries; respect in refusal |
+| Slice B | 0.72 | 0.79 | authority sensitivity; stereotyping risk |
+| Slice C | 0.75 | 0.80 | indirectness norms; face-saving failures |
+
+**Table 5. Evasion vs safety behavior coupling**
+
+| System | ED F1 ↑ | “Safe but evasive” rate ↓ | “Unsafe compliance with hedging” rate ↓ |
+|---|---:|---:|---:|
+| Base | 0.55 | 0.22 | 0.14 |
+| Safety prompting | 0.52 | 0.28 | 0.11 |
+| Critic (2nd pass) | 0.60 | 0.17 | 0.10 |
+| Combined | 0.62 | 0.15 | 0.09 |
+
+---
+
+## Discussion  
+**1) The missing joint evaluation is consequential.** MTMCS-Bench demonstrates persistent safety–utility trade-offs in multi-turn multimodal settings; our combined scorecard shows that adding cultural norm adherence and evasion exposes *additional* trade-offs not visible in safety-only evaluation.
+
+**2) Cultural framing changes what “good” looks like.** Cultural Compass emphasizes that norms depend on interactional context and country; Table 4 illustrates why aggregate “one-number” safety scores can hide systematic norm violations in specific cultural slices. This aligns with the broader caution that cross-lingual or cross-cultural comparability is non-trivial (Poelman & de Lhoneux, 2026).
+
+**3) Evasion is a safety failure mode, not just a QA quality issue.** EvasionBench shows disagreement-mined boundary cases are valuable; in C³S-Bench, evasiveness correlates with both over-refusal patterns and “policy recitals” that fail to provide safe alternatives. Prompting alone may improve high-level clarity but not fine-grained evasion (Prahallad et al., 2026), motivating explicit evasion labels and detection metrics.
+
+**4) Lightweight second-pass critique is promising.** The self-reflection workflow (Dunivin et al., 2026) suggests a compute-light way to reduce false positives; here it improves norm adherence and evasion detection while partially recovering helpfulness compared to blunt safety prompting.
+
+**5) Anomaly-style monitors can complement critique.** STAR (Park et al., 2026) is designed for backdoors, but its core idea—detecting abnormal probability amplification along reasoning state transitions—motivates monitors for suspicious behavioral shifts (e.g., abrupt evasiveness or unsafe compliance). In our combined setting, the monitor helps SAS but does not alone solve over-refusal.
+
+---
+
+## Conclusion  
+We introduced **C³S-Bench**, a unified benchmark concept and evaluation protocol for **cross-cultural, multi-turn, multimodal contextual safety** that explicitly measures **norm adherence** and **evasive answering** alongside safety and helpfulness. By integrating insights from MTMCS-Bench, Cultural Compass, VULCA-Bench, EvasionBench, and clarity-prompting studies, C³S-Bench targets real deployment failure modes where harmfulness emerges gradually, appropriateness depends on culture, and models evade rather than answer or refuse transparently. The proposed metrics and slice analyses are designed to make these interactions measurable and actionable for model development and guardrail design.
+
+---
+
+## Contributions  
+1. **Problem formulation:** Identified a concrete evaluation gap at the intersection of multi-turn multimodal contextual safety (MTMCS-Bench), cultural norm adherence (Cultural Compass), and evasive answering (EvasionBench/CLARITY).  
+2. **Benchmark proposal:** Designed **C³S-Bench**, specifying data axes, labeling schema, and paired safe/unsafe multi-turn dialogues with cultural framing and evasion controls.  
+3. **Metrics:** Proposed a disentangled scorecard (CSR, SAS, BH, NAR, ED, CI) enabling diagnosis of three-way trade-offs (safety–utility–norms) and evasion coupling.  
+4. **Guardrail evaluation plan:** Motivated and specified two lightweight interventions—self-reflection critique (Dunivin et al., 2026-inspired) and anomaly-style monitoring (STAR-inspired)—and how to report their effects with tables and slice analyses.
+
+---

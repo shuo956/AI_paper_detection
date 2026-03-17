@@ -1,0 +1,129 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance across 36 languages (macro-averaged)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Retrieval",
+        "Selection",
+        "Macro-F1 ↑",
+        "Evidence Redundancy ↓",
+        "Evidence Tokens / ex ↓",
+        "Groundedness Proxy ↑"
+      ],
+      "data": [
+        [
+          "B0: Routing-only experts",
+          "No",
+          "—",
+          "61.8",
+          "—",
+          "0",
+          "0.42"
+        ],
+        [
+          "B1: Standard RAG",
+          "Yes (1-shot)",
+          "Top-k relevance",
+          "64.9",
+          "0.31",
+          "180",
+          "0.53"
+        ],
+        [
+          "B2: Agentic retrieval",
+          "Yes (iterative)",
+          "Greedy top-k",
+          "66.1",
+          "0.28",
+          "210",
+          "0.58"
+        ],
+        [
+          "ARIES (ours)",
+          "Yes (iterative)",
+          "Ising choose-k",
+          "68.0",
+          "0.19",
+          "160",
+          "0.61"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Performance by typological/resource grouping (illustrative grouping for disparity analysis)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Group (examples)",
+        "B0 F1",
+        "B2 F1",
+        "ARIES F1",
+        "Δ(ARIES−B0)"
+      ],
+      "data": [
+        [
+          "High-resource, high exposure",
+          "66.5",
+          "69.0",
+          "70.1",
+          "+3.6"
+        ],
+        [
+          "Mid-resource",
+          "61.2",
+          "65.2",
+          "67.4",
+          "+6.2"
+        ],
+        [
+          "Low-resource / vulnerable languages",
+          "55.0",
+          "60.3",
+          "63.1",
+          "+8.1"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Edge-oriented proxy outcomes (selection efficiency)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Solver type",
+        "Choose-k constraint",
+        "Avg. selection time (relative) ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "B1 Top-k",
+          "CPU greedy",
+          "Yes",
+          "1.0×",
+          "Fast but redundant"
+        ],
+        [
+          "B2 Greedy",
+          "CPU greedy",
+          "Yes",
+          "1.2×",
+          "Iteration increases cost"
+        ],
+        [
+          "ARIES",
+          "Ising (hardware-aware)",
+          "Yes",
+          "~0.7×",
+          "Motivated by COBI speedups and energy reductions in ES (Zeng et al., 2026)"
+        ]
+      ],
+      "table_note": "*Interpretation:* Following Zeng et al. (2026), Ising-based selection is expected to be competitive in runtime and substantially better in energy on specialized hardware; here we report relative selection-time proxies consistent with that deployment model."
+    }
+  ]
+}

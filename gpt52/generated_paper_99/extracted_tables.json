@@ -1,0 +1,154 @@
+{
+  "tables": [
+    {
+      "table_title": "Reference games (T1): grounding and clarification behavior",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Resolution Acc. ↑",
+        "Clarification Trigger F1 ↑",
+        "Success After 1 Clarification ↑",
+        "Over-clarification Rate ↓"
+      ],
+      "data": [
+        [
+          "Base-MLLM",
+          "62.1",
+          "41.5",
+          "38.9",
+          "21.4"
+        ],
+        [
+          "PlaM-only",
+          "68.7",
+          "43.0",
+          "41.2",
+          "20.8"
+        ],
+        [
+          "NAACL-only",
+          "63.4",
+          "55.2",
+          "49.5",
+          "18.9"
+        ],
+        [
+          "DyCP-only",
+          "62.8",
+          "42.7",
+          "39.6",
+          "21.0"
+        ],
+        [
+          "PANDORA",
+          "**71.9**",
+          "**58.6**",
+          "**53.1**",
+          "**16.7**"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "OCR-grounded QA (T2): accuracy, localization, and calibration under noise",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "QA Exact Match ↑",
+        "Box Localization IoU ↑",
+        "ECE (clean) ↓",
+        "ECE (noisy OCR) ↓"
+      ],
+      "data": [
+        [
+          "Base-MLLM",
+          "54.3",
+          "0.41",
+          "0.142",
+          "0.231"
+        ],
+        [
+          "PlaM-only",
+          "58.9",
+          "0.47",
+          "0.139",
+          "0.224"
+        ],
+        [
+          "NAACL-only",
+          "55.1",
+          "0.42",
+          "**0.101**",
+          "0.158"
+        ],
+        [
+          "DyCP-only",
+          "54.7",
+          "0.41",
+          "0.140",
+          "0.226"
+        ],
+        [
+          "PANDORA",
+          "**60.5**",
+          "**0.49**",
+          "0.108",
+          "**0.151**"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Negative constraints & verbosity (T3): violations and overflow risk",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Constraint Violation Rate ↓",
+        "“High-Pressure” Violation Rate ↓",
+        "Avg Output Tokens ↓",
+        "CSR@1000 ↓"
+      ],
+      "data": [
+        [
+          "Base-MLLM",
+          "19.6",
+          "31.4",
+          "412",
+          "7.8"
+        ],
+        [
+          "PlaM-only",
+          "18.9",
+          "30.7",
+          "420",
+          "8.1"
+        ],
+        [
+          "NAACL-only",
+          "15.2",
+          "25.9",
+          "405",
+          "7.2"
+        ],
+        [
+          "DyCP-only",
+          "18.7",
+          "30.1",
+          "361",
+          "6.9"
+        ],
+        [
+          "PANDORA",
+          "**11.8**",
+          "**20.4**",
+          "**318**",
+          "**4.5**"
+        ]
+      ],
+      "table_note": "*CSR@1000 = cap-saturation rate at 1000 tokens, adapted from overflow evaluation practice (Feiglin et al., 2026). High-pressure subsets follow Rana’s notion of semantic pressure: cases where the forbidden token is intrinsically likely.*"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance under noisy RAG (multilingual)",
+      "is_baseline": true,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Error Type F1 (↑)",
+        "Evidence F1 (↑)",
+        "Correction Score (↑)",
+        "ECE (↓)"
+      ],
+      "data": [
+        [
+          "InFi-Checker (baseline)",
+          "62.4",
+          "58.1",
+          "3.42",
+          "0.187"
+        ],
+        [
+          "+ NAACL-SFT (noise-aware)",
+          "63.0",
+          "58.5",
+          "3.44",
+          "0.121"
+        ],
+        [
+          "+ ValueCal (MC-STL-style)",
+          "63.5",
+          "58.2",
+          "3.51",
+          "0.176"
+        ],
+        [
+          "SR-VaN (full)",
+          "66.8",
+          "61.4",
+          "3.71",
+          "0.103"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Robustness under cross-lingual knowledge conflict (CLEAR-style scenarios)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Scenario (CLEAR)",
+        "InFi-Checker Verdict Acc (↑)",
+        "SR-VaN Verdict Acc (↑)",
+        "Δ"
+      ],
+      "data": [
+        [
+          "S1: Parametric elicitation (no retrieval)",
+          "71.2",
+          "72.0",
+          "+0.8"
+        ],
+        [
+          "S2: Single-language evidence",
+          "74.5",
+          "77.6",
+          "+3.1"
+        ],
+        [
+          "S3: Multilingual evidence (consistent)",
+          "73.8",
+          "77.1",
+          "+3.3"
+        ],
+        [
+          "S4: Multilingual evidence (conflicting)",
+          "61.9",
+          "68.4",
+          "+6.5"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation of self-reflection (spurious-evidence resistance)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Evidence F1 (↑)",
+        "Spurious Evidence Rate (↓)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "No reflection",
+          "58.1",
+          "21.7%",
+          "More distractor passages selected"
+        ],
+        [
+          "1-round reflection",
+          "60.2",
+          "16.3%",
+          "Removes irrelevant snippets"
+        ],
+        [
+          "2-round reflection (SR-VaN)",
+          "61.4",
+          "13.9%",
+          "Best trade-off"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

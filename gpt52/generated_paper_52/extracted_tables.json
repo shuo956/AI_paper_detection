@@ -1,0 +1,119 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance on misconception redirection and empathy",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Redirection F1 (↑)",
+        "Unsafe Compliance Rate (↓)",
+        "Empathy Appropriateness (↑)"
+      ],
+      "data": [
+        [
+          "Base LLM",
+          "0.41",
+          "0.27",
+          "0.58"
+        ],
+        [
+          "Prompt-only Redirection",
+          "0.53",
+          "0.19",
+          "0.61"
+        ],
+        [
+          "Probe-only (LongCtx-Probe)",
+          "0.57",
+          "0.12",
+          "0.60"
+        ],
+        [
+          "CF-Calibrate only",
+          "0.55",
+          "0.15",
+          "0.62"
+        ],
+        [
+          "CLEAR-Guard (full)",
+          "0.66",
+          "0.08",
+          "0.67"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Calibration and discrimination (confidence estimation)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "AUROC (↑)",
+        "ECE (↓)"
+      ],
+      "data": [
+        [
+          "Base LLM (self-reported confidence)",
+          "0.58",
+          "0.21"
+        ],
+        [
+          "Probe-only",
+          "0.61",
+          "0.19"
+        ],
+        [
+          "CF-Calibrate only",
+          "0.62",
+          "0.14"
+        ],
+        [
+          "Clarity-Reweight only",
+          "0.63",
+          "0.16"
+        ],
+        [
+          "CLEAR-Guard (full)",
+          "0.66",
+          "0.11"
+        ]
+      ],
+      "table_note": "Reported on health reasoning traces; metrics motivated by RMCB trade-offs."
+    },
+    {
+      "table_title": "Long-context robustness under production-style shifts",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Δ Redirection F1 (Long–Short) (↑ closer to 0)",
+        "Δ Unsafe Compliance (Long–Short) (↓)"
+      ],
+      "data": [
+        [
+          "Prompt-only Redirection",
+          "-0.14",
+          "+0.09"
+        ],
+        [
+          "Probe-only (LongCtx-Probe)",
+          "-0.06",
+          "+0.03"
+        ],
+        [
+          "CF-Calibrate only",
+          "-0.09",
+          "+0.05"
+        ],
+        [
+          "CLEAR-Guard (full)",
+          "-0.03",
+          "+0.01"
+        ]
+      ],
+      "table_note": "Short context: ≤1k tokens history; Long context: ≥16k tokens with multi-turn accumulation and distractors."
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "tables": [
+    {
+      "table_title": "Forecasting accuracy (1-hour ahead) under different feature selection strategies",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Feature Selection",
+        "RMSE (MW) ↓",
+        "MAE (MW) ↓"
+      ],
+      "data": [
+        [
+          "LSTM",
+          "None",
+          "14.8",
+          "10.9"
+        ],
+        [
+          "LSTM",
+          "Baseline unsupervised (linear redundancy)",
+          "14.1",
+          "10.4"
+        ],
+        [
+          "LSTM",
+          "**KAFUSE (Tan et al., 2026)**",
+          "**12.9**",
+          "**9.6**"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Interaction-only driver detection (synthetic ground truth)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Importance measure",
+        "Detection Rate ↑",
+        "False Discovery Rate ↓"
+      ],
+      "data": [
+        [
+          "Random Forest",
+          "permutation VIM",
+          "0.41",
+          "0.22"
+        ],
+        [
+          "**Unity Forest (Hornung & Hapfelmeier, 2026)**",
+          "**unity VIM**",
+          "**0.78**",
+          "**0.15**"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Uncertainty quantification: coverage and interval width by regime (target 90% coverage)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Regime",
+        "Empirical Coverage ↑",
+        "Avg Width (MW) ↓"
+      ],
+      "data": [
+        [
+          "Split Conformal",
+          "Low",
+          "0.93",
+          "38.2"
+        ],
+        [
+          "Split Conformal",
+          "Mid",
+          "0.90",
+          "35.1"
+        ],
+        [
+          "Split Conformal",
+          "High",
+          "0.86",
+          "41.5"
+        ],
+        [
+          "**CaCT (Marani et al., 2026)**",
+          "Low",
+          "**0.90**",
+          "**32.4**"
+        ],
+        [
+          "**CaCT (Marani et al., 2026)**",
+          "Mid",
+          "**0.90**",
+          "**33.8**"
+        ],
+        [
+          "**CaCT (Marani et al., 2026)**",
+          "High",
+          "**0.90**",
+          "**36.6**"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Example CRTR-style interaction rule summaries (UFO audit)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Rank",
+        "Representative interaction condition (CRTR-style)",
+        "Interpretation"
+      ],
+      "data": [
+        [
+          "1",
+          "Neighbor wind-speed high **AND** local wind-direction shift > threshold",
+          "Spatial coupling + directional change drives ramp risk"
+        ],
+        [
+          "2",
+          "Local generation mid **AND** temperature drop **AND** pressure rising",
+          "Weather front patterns correlate with forecast errors"
+        ],
+        [
+          "3",
+          "Calendar: evening peak **AND** neighbor generation ramping",
+          "Correlated ramps increase under-forecast probability"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

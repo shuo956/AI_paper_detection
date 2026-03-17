@@ -1,0 +1,164 @@
+{
+  "tables": [
+    {
+      "table_title": "DoNoR metrics",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Component",
+        "Metric",
+        "Definition",
+        "Inspired by"
+      ],
+      "data": [
+        [
+          "Value–Action (V–A)",
+          "Value agreement (VA)",
+          "Consistency of selected value across paraphrases",
+          "Huang et al. (2026)"
+        ],
+        [
+          "Value–Action (V–A)",
+          "Action consistency (AC)",
+          "Whether action aligns with selected value (binary or graded)",
+          "Huang et al. (2026)"
+        ],
+        [
+          "Norm Adherence (NA)",
+          "Norm violation rate (NVR)",
+          "% responses violating at least one norm category",
+          "Cultural Compass (Cheng et al., 2026)"
+        ],
+        [
+          "Risk/Deferral (RD)",
+          "Abstention rate (AR)",
+          "% instances where model abstains/defers",
+          "Wang et al. (2026)"
+        ],
+        [
+          "Risk/Deferral (RD)",
+          "Expected utility (EU)",
+          "Utility under penalty schedule using correctness proxy",
+          "Wang et al. (2026)"
+        ],
+        [
+          "Robustness",
+          "Paraphrase sensitivity (PS)",
+          "Δ metric between base and paraphrased",
+          "Kaneko (2026)"
+        ]
+      ],
+      "table_note": "Summary of metrics used in the DoNoR evaluation framework."
+    },
+    {
+      "table_title": "Aggregate results across conditions",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Condition",
+        "VA (↑)",
+        "AC (↑)",
+        "NVR (↓)",
+        "AR@HighPenalty (↑)",
+        "EU@HighPenalty (↑)"
+      ],
+      "data": [
+        [
+          "Base",
+          "0.94",
+          "0.61",
+          "0.18",
+          "0.07",
+          "0.22"
+        ],
+        [
+          "Benign Paraphrase",
+          "0.92",
+          "0.57",
+          "0.21",
+          "0.06",
+          "0.19"
+        ],
+        [
+          "Adversarial Paraphrase (PAA-style)",
+          "0.90",
+          "0.44",
+          "0.31",
+          "0.04",
+          "0.08"
+        ]
+      ],
+      "table_note": "Higher VA/AC/EU is better; lower NVR is better."
+    },
+    {
+      "table_title": "Effect of prompting conditions on Action Consistency (AC) and Norm Violation Rate (NVR)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Prompting condition",
+        "AC (↑)",
+        "NVR (↓)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Neutral",
+          "0.55",
+          "0.23",
+          "baseline"
+        ],
+        [
+          "“Hold this value”",
+          "0.50",
+          "0.25",
+          "consistent with role-play aversion (Huang et al., 2026)"
+        ],
+        [
+          "Concise style",
+          "0.47",
+          "0.27",
+          "style entanglement; conciseness may reduce “expert-like” hedging/deferral (Cho et al., 2026)"
+        ],
+        [
+          "Hold value + Concise",
+          "0.42",
+          "0.30",
+          "compounding degradation"
+        ]
+      ],
+      "table_note": "Effect of style and instruction prompts on model behavior."
+    },
+    {
+      "table_title": "Paraphrase Sensitivity by Task Axis",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Metric",
+        "PS"
+      ],
+      "data": [
+        [
+          "VA",
+          "-0.04"
+        ],
+        [
+          "AC",
+          "-0.17"
+        ],
+        [
+          "NVR",
+          "+0.13"
+        ],
+        [
+          "AR@HighPenalty",
+          "-0.03"
+        ],
+        [
+          "EU@HighPenalty",
+          "-0.14"
+        ]
+      ],
+      "table_note": "Paraphrase Sensitivity (PS = adversarial − base; negative is worse for VA/AC/EU, positive is worse for NVR)."
+    }
+  ]
+}

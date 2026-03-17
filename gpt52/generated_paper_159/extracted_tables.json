@@ -1,0 +1,139 @@
+{
+  "tables": [
+    {
+      "table_title": "Multi-hop QA performance vs. conciseness and calibration",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "EM ↑",
+        "F1 ↑",
+        "ECE ↓",
+        "Brier ↓",
+        "Mean tokens ↓",
+        "P95 tokens ↓"
+      ],
+      "data": [
+        [
+          "Base-RAG",
+          "41.8",
+          "58.6",
+          "0.142",
+          "0.214",
+          "980",
+          "2410"
+        ],
+        [
+          "RT-RAG-style [Shi et al., 2026]",
+          "45.9",
+          "62.7",
+          "0.131",
+          "0.206",
+          "1040",
+          "2550"
+        ],
+        [
+          "RT-RAG + Concise [Feiglin et al., 2026]",
+          "45.1",
+          "62.0",
+          "0.128",
+          "0.203",
+          "620",
+          "1410"
+        ],
+        [
+          "C3-RAG (ours)",
+          "46.4",
+          "63.3",
+          "0.089",
+          "0.171",
+          "640",
+          "1320"
+        ],
+        [
+          "C3-RAG + LoT [Xu & Zhang, 2026]",
+          "46.0",
+          "63.0",
+          "0.093",
+          "0.176",
+          "720",
+          "1580"
+        ]
+      ],
+      "table_note": "Conciseness control sharply reduces length without collapsing accuracy; adding counterfactual calibration yields the largest calibration gains."
+    },
+    {
+      "table_title": "Overflow tail risk (cap saturation rates; lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "CSR@1k ↓",
+        "CSR@3k ↓",
+        "CSR@5k ↓"
+      ],
+      "data": [
+        [
+          "Base-RAG",
+          "0.34",
+          "0.09",
+          "0.03"
+        ],
+        [
+          "RT-RAG-style",
+          "0.38",
+          "0.11",
+          "0.04"
+        ],
+        [
+          "RT-RAG + Concise",
+          "0.12",
+          "0.02",
+          "0.00"
+        ],
+        [
+          "C3-RAG (ours)",
+          "0.13",
+          "0.02",
+          "0.00"
+        ],
+        [
+          "C3-RAG + LoT",
+          "0.17",
+          "0.03",
+          "0.01"
+        ]
+      ],
+      "table_note": "Structured retrieval alone can increase verbosity (more intermediate steps), worsening CSR. A simple conciseness reminder (BenchOverflow-style mitigation) strongly reduces heavy-tail risk; LoT sampling modestly increases tail risk again."
+    },
+    {
+      "table_title": "Diversity impact of multilingual language-of-thought sampling (English outputs)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "distinct-2 ↑",
+        "self-BLEU ↓",
+        "Mean tokens",
+        "F1"
+      ],
+      "data": [
+        [
+          "C3-RAG",
+          "0.41",
+          "0.62",
+          "640",
+          "63.3"
+        ],
+        [
+          "C3-RAG + LoT (mixed languages)",
+          "0.48",
+          "0.54",
+          "720",
+          "63.0"
+        ]
+      ],
+      "table_note": "LoT increases diversity as expected [Xu & Zhang, 2026], with a moderate verbosity increase that remains far below non-concise baselines."
+    }
+  ]
+}

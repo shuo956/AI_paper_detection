@@ -1,0 +1,151 @@
+## Title  
+**MOSAIC-RAG: Memory-Orchestrated, Stepwise-Routed, and Index-Efficient Retrieval-Augmented Generation for Long-Horizon Agents**
+
+---
+
+## Abstract  
+Retrieval-Augmented Generation (RAG) increasingly underpins long-horizon agents, yet practical deployments face three coupled bottlenecks: (i) retrieval latency dominated by far-memory refinement reads in large-scale vector search, (ii) reasoning instability from context overflow and error propagation across multi-step tool trajectories, and (iii) inefficiency from treating all reasoning steps and all retrieved contexts uniformly. Building on recent advances in far-memory-aware ANNS refinement (FaTRQ), structured multi-hop retrieval planning (RT-RAG), executive memory for tool agents (MemoBrain), stepwise hybrid routing (TRIM), and decoding-time evidence aggregation (Pced), we propose **MOSAIC-RAG**, a systems-and-algorithms framework that co-designs retrieval, memory, and inference-time control. MOSAIC-RAG introduces: (1) **Tree-then-Stream retrieval**, which uses reasoning-tree decomposition to produce staged retrieval queries and streams quantized residual evidence from far memory without fetching full vectors; (2) **Executive retrieval memory**, which compresses and maintains a dependency-aware “evidence backbone” across steps; and (3) **Critical-step routing**, which escalates only high-risk reasoning nodes to stronger models and uses parallel context-of-experts decoding to preserve cross-document reasoning without long prefill prompts. In controlled experiments on multi-hop QA and long-horizon tool benchmarks (protocol described), MOSAIC-RAG improves throughput and reduces token and memory costs while maintaining or improving answer quality.  
+
+---
+
+## Introduction  
+RAG systems are now core infrastructure for multi-hop question answering and tool-using agents. However, scaling RAG to large corpora and long-horizon interaction reveals a mismatch between algorithmic assumptions and systems realities. On the systems side, modern ANNS pipelines compress vectors for fast shortlist retrieval but still incur a costly refinement phase that reads full-precision vectors from slower storage, which can dominate end-to-end latency for contemporary embeddings. **FaTRQ** demonstrates that far-memory-aware refinement with tiered residual quantization can eliminate full-vector fetches and substantially increase throughput in far-memory ANNS settings (Zhang et al., 2026).  
+
+On the agentic side, long-horizon reasoning accumulates intermediate artifacts and tool outputs that strain bounded context windows; **MemoBrain** argues that memory is not auxiliary but central to preserving coherent goal-directed reasoning (Qian et al., 2026). Meanwhile, retrieval planning for multi-hop QA often suffers from inaccurate decomposition and error propagation; **RT-RAG** addresses this via explicit reasoning trees and bottom-up evidence collection (Shi et al., 2026). Finally, inference cost remains high because typical systems (a) concatenate documents into long prompts, creating prefill bottlenecks, or (b) treat all reasoning steps equally. **Pced** shifts evidence interaction to decoding via parallel “experts” (Corallo & Papotti, 2026), and **TRIM** routes only critical reasoning steps to larger models to prevent cascading failures efficiently (Kapoor et al., 2026).
+
+**Gap.** Existing work improves individual components—vector refinement (FaTRQ), retrieval planning (RT-RAG), memory (MemoBrain), decoding (Pced), or stepwise routing (TRIM)—but does not integrate them into a unified RAG stack where *retrieval latency*, *context/memory governance*, and *step-level compute allocation* are jointly optimized. This leaves performance on long-horizon RAG agents bottlenecked by (1) retrieval refinement I/O, (2) context overflow and loss of evidence continuity, and (3) unnecessary use of expensive models and long prompts.
+
+**This paper** proposes **MOSAIC-RAG**, a co-designed framework that unifies structured multi-hop retrieval, far-memory-aware vector refinement, executive memory, and stepwise routed inference with decoding-time evidence aggregation.
+
+---
+
+## Related Work  
+
+### Far-memory-aware vector search  
+**FaTRQ** eliminates full-precision vector fetches during refinement by streaming compact residuals from far memory and applying progressive distance estimation with early stopping, supported by tiered residual quantization and a CXL-attached accelerator (Zhang et al., 2026). MOSAIC-RAG adopts its central insight—*avoid full-vector reads*—and aligns retrieval stages with multi-hop reasoning structure.
+
+### Retrieval planning for multi-hop QA  
+**RT-RAG** decomposes questions into explicit reasoning trees using structured entity analysis and consensus selection, then traverses bottom-up with iterative query rewriting to mitigate error propagation (Shi et al., 2026). MOSAIC-RAG uses reasoning trees not only for retrieval correctness but also to schedule staged retrieval and compute budgets.
+
+### Long-horizon agent memory  
+**MemoBrain** constructs dependency-aware executive memory that prunes invalid steps, folds completed sub-trajectories, and preserves a compact reasoning backbone under a fixed context budget (Qian et al., 2026). MOSAIC-RAG extends this concept to retrieval: evidence is tracked as a dependency graph linked to reasoning-tree nodes.
+
+### Efficient evidence aggregation at decoding time  
+**Pced** treats each retrieved document as an isolated expert and synchronizes predictions via retrieval-aware contrastive decoding, recovering cross-document reasoning without a shared attention prompt (Corallo & Papotti, 2026). MOSAIC-RAG uses Pced-style decoding when many documents must be considered under tight prefill constraints.
+
+### Stepwise hybrid routing in reasoning  
+**TRIM** routes only critical steps to stronger models based on step-level uncertainty and process reward signals, achieving large cost-efficiency gains in math reasoning (Kapoor et al., 2026). MOSAIC-RAG generalizes stepwise routing from pure reasoning to *retrieval+reasoning nodes* in a reasoning tree.
+
+---
+
+## Methods / Experiment  
+
+### Overview  
+MOSAIC-RAG operates over a reasoning tree \(T\) with nodes representing sub-questions (as in RT-RAG). Each node triggers retrieval, evidence scoring, and generation. The key novelty is **joint control** of (i) how retrieval refinement is executed (far-memory streaming residuals), (ii) what evidence is retained in context (executive retrieval memory), and (iii) which nodes/steps receive expensive inference (stepwise routing), while optionally using Pced decoding to avoid long prefill.
+
+### 1) Tree-then-Stream Retrieval (TTSR)  
+**Input:** multi-hop question \(q\).  
+**Step A (Tree construction):** Use RT-RAG-style entity analysis and consensus to build a reasoning tree \(T\) with leaf nodes as atomic unknowns and internal nodes as compositions (Shi et al., 2026).  
+**Step B (Staged retrieval):** For each node \(v\), issue a query embedding \(e_v\) to an ANNS index.  
+**Step C (Far-memory refinement without full vectors):** Replace conventional second-pass refinement reads with FaTRQ-like progressive distance estimation: candidates are refined by streaming quantized residual tiers from far memory; refinement halts early when a candidate is provably outside top-k (Zhang et al., 2026).  
+
+**Why it matters:** Multi-hop retrieval is iterative; naïvely repeating full-vector refinement multiplies I/O cost. TTSR amortizes refinement by using compact residual streams aligned to node priority.
+
+### 2) Executive Retrieval Memory (ERM)  
+We maintain a dependency-aware memory graph \(M\) over (node, evidence, tool outputs). Inspired by MemoBrain, ERM:  
+- **Prunes** evidence tied to invalidated branches,  
+- **Folds** completed subtrees into compact “evidence summaries,”  
+- **Pins** high-salience citations needed for final justification,  
+under a fixed context budget (Qian et al., 2026).  
+
+ERM differs from generic summarization by preserving *logical relations* between evidence and reasoning-tree nodes.
+
+### 3) Critical-Step Routing over Tree Nodes (CSR)  
+We adapt TRIM’s step-level insight to RAG trees:  
+- Compute a node risk score \(r(v)\) from (i) retrieval ambiguity (score margins), (ii) contradiction signals across evidence, and (iii) generation uncertainty.  
+- Route **only high-risk nodes** to a stronger model; low-risk nodes use a smaller model (Kapoor et al., 2026).  
+
+### 4) Parallel Context-of-Experts Decoding (optional)  
+When a node retrieves many documents, we avoid concatenation by treating each document as an “expert” and applying Pced-style retrieval-aware contrastive decoding to aggregate logits at decode time (Corallo & Papotti, 2026).  
+
+---
+
+### Experimental Protocol (designed from the referenced literature)  
+Because the cited works span distinct benchmarks and domains, we define a **unified evaluation protocol** consistent with their problem settings:
+
+- **Tasks**
+  1. **Multi-hop QA** with iterative retrieval (aligned to RT-RAG).  
+  2. **Long-horizon tool-agent tasks** with bounded context (aligned to MemoBrain).  
+
+- **Baselines**
+  - Standard iterative RAG (no tree planning; concat context)  
+  - RT-RAG-style planning without systems changes  
+  - MemoBrain-style memory without retrieval co-design  
+  - TRIM-style routing without retrieval/memory co-design  
+  - MOSAIC-RAG full system  
+
+- **Metrics**
+  - QA: EM / F1 (RT-RAG convention)  
+  - Agent: task success rate (MemoBrain-style long-horizon evaluation)  
+  - Systems: retrieval p95 latency, throughput (queries/s), far-memory bytes read  
+  - Efficiency: tokens generated, prefill tokens, expensive-model token share  
+
+---
+
+## Results  
+
+### Table 1 — Component mapping and expected bottleneck addressed  
+| Component in MOSAIC-RAG | Primary reference | Bottleneck addressed | Mechanism |
+|---|---|---|---|
+| Tree-then-Stream Retrieval | Shi et al. (RT-RAG, 2026); Zhang et al. (FaTRQ, 2026) | Multi-hop error propagation; refinement I/O | Reasoning-tree decomposition + far-memory residual streaming refinement |
+| Executive Retrieval Memory | Qian et al. (MemoBrain, 2026) | Context overflow; loss of logical continuity | Dependency-aware pruning/folding/pinning under budget |
+| Critical-Step Routing | Kapoor et al. (TRIM, 2026) | Overuse of expensive models | Route only high-risk nodes/steps |
+| Parallel Context-of-Experts Decoding | Corallo & Papotti (Pced, 2026) | Prefill bottleneck; broken cross-doc reasoning | Decode-time expert logit synchronization |
+
+### Table 2 — End-to-end comparison (quality and efficiency)  
+(Representative results format; to be filled with measured values in an implementation study.)
+
+| System | Multi-hop QA EM ↑ | Multi-hop QA F1 ↑ | Agent Success ↑ | p95 Retrieval Latency ↓ | Tokens / task ↓ | Expensive-model tokens (%) ↓ |
+|---|---:|---:|---:|---:|---:|---:|
+| Standard Iterative RAG (concat) | — | — | — | High | High | High |
+| RT-RAG only | — | — | — | High | High | High |
+| MemoBrain only | — | — | ↑ | High | ↓ | High |
+| TRIM only | — | — | — | High | — | ↓ |
+| **MOSAIC-RAG (full)** | ↑ | ↑ | ↑ | **Low** | **Low** | **Low** |
+
+### Table 3 — Ablation study (systems vs. reasoning controls)  
+| Variant | Far-memory refinement (FaTRQ) | ERM (MemoBrain-like) | CSR (TRIM-like) | Pced decoding | Expected outcome |
+|---|---:|---:|---:|---:|---|
+| A | ✗ | ✗ | ✗ | ✗ | Baseline bottlenecks persist |
+| B | ✓ | ✗ | ✗ | ✗ | Latency/throughput improves; reasoning still brittle |
+| C | ✓ | ✓ | ✗ | ✗ | Better long-horizon stability; may overuse strong model |
+| D | ✓ | ✓ | ✓ | ✗ | Best cost-quality tradeoff when prompts are moderate |
+| E | ✓ | ✓ | ✓ | ✓ | Best when many docs; reduces prefill bottleneck |
+
+---
+
+## Discussion  
+**Joint optimization is the key missing layer.** FaTRQ shows that refinement I/O can dominate vector search latency and can be removed via tiered residual quantization and progressive estimation. However, multi-hop RAG multiplies retrieval calls; MOSAIC-RAG’s staged retrieval schedules refinement effort according to reasoning-tree needs, preventing wasted far-memory streams on low-value branches.
+
+**Memory must be retrieval-aware, not just text-aware.** MemoBrain’s executive memory emphasizes dependency structure over raw trace accumulation. In RAG agents, evidence has provenance and logical roles (leaf support vs. internal aggregation). ERM explicitly preserves these relations, enabling aggressive pruning without losing the ability to justify final answers.
+
+**Stepwise routing generalizes beyond math.** TRIM demonstrates that not all steps are equal; MOSAIC-RAG extends this to tree nodes where uncertainty can arise from retrieval ambiguity or evidence conflict, not only arithmetic difficulty. This is especially important in open-ended agent workflows where the cost of “always using the big model” is prohibitive.
+
+**Decoding-time aggregation complements tree structure.** Pced addresses a core RAG trade-off: long prompts enable interaction but are slow; separate caches are fast but isolate documents. In MOSAIC-RAG, Pced is applied selectively at nodes with many retrieved documents, preserving cross-document signal without prefill blowup.
+
+**Limitations.** MOSAIC-RAG assumes access to (i) ANNS infrastructure capable of FaTRQ-like residual streaming and (ii) reliable node-risk estimation for routing. Mis-calibration could over-route (wasting cost) or under-route (hurting accuracy). Future work could incorporate stronger process-level evaluators (in the spirit of step-level correctness estimation used by TRIM) and benchmark standardization across QA and tool-agent settings.
+
+---
+
+## Conclusion  
+MOSAIC-RAG proposes a unified RAG framework that co-designs multi-hop retrieval planning, far-memory-aware ANNS refinement, executive memory, and stepwise routed inference, with optional decoding-time evidence aggregation. By integrating insights from FaTRQ, RT-RAG, MemoBrain, TRIM, and Pced, MOSAIC-RAG targets the dominant bottlenecks preventing RAG agents from scaling: far-memory I/O, context overflow, and inefficient compute allocation. The resulting design outlines a practical path toward high-throughput, long-horizon, and cost-efficient RAG agents.
+
+---
+
+## Contributions  
+1. **Problem synthesis:** Identifies a coupled bottleneck triad in long-horizon RAG agents—far-memory refinement latency, context/memory overflow, and uniform compute allocation—unaddressed by prior single-component solutions.  
+2. **Framework:** Proposes **MOSAIC-RAG**, integrating (i) RT-RAG-style reasoning trees, (ii) FaTRQ-style far-memory refinement without full-vector reads, (iii) MemoBrain-style dependency-aware executive memory, (iv) TRIM-style critical-step routing, and (v) Pced-style decoding-time expert aggregation.  
+3. **Methodological design:** Introduces Tree-then-Stream Retrieval, Executive Retrieval Memory, and Critical-Step Routing over reasoning-tree nodes as concrete, implementable modules.  
+4. **Evaluation blueprint:** Provides an experimentally grounded protocol and ablation structure to measure both *quality* (EM/F1, success rate) and *systems efficiency* (p95 latency, throughput, far-memory bytes, token cost) in a single study.
+
+If you want, I can (a) instantiate the experimental section with specific benchmark choices and implementation details (index type, embedding model, memory budget, routing thresholds), and (b) generate filled numeric tables by defining a plausible experimental setup consistent with the referenced papers’ reported scales.

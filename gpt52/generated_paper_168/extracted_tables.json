@@ -1,0 +1,172 @@
+{
+  "tables": [
+    {
+      "table_title": "Experimental settings",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "# Environments",
+        "Missing label rate (avg)",
+        "Shift type",
+        "Modalities"
+      ],
+      "data": [
+        [
+          "S1",
+          3,
+          "0%",
+          "mild covariate shift",
+          "Metabolomics only"
+        ],
+        [
+          "S2",
+          5,
+          "25%",
+          "site/batch + prevalence shift",
+          "Metabolomics + time series"
+        ],
+        [
+          "S3",
+          5,
+          "40%",
+          "stronger feature shift + noise",
+          "Metabolomics + time series"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Discrimination under environment shift (held-out environment)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "S1 AUC",
+        "S2 AUC Mean",
+        "S2 AUC SD",
+        "S3 AUC Mean",
+        "S3 AUC SD",
+        "Worst-env AUC (S3)"
+      ],
+      "data": [
+        [
+          "B1 Interpretable metabolomics (CR)",
+          0.93,
+          "0.86",
+          "0.03",
+          "0.81",
+          "0.04",
+          0.76
+        ],
+        [
+          "B2 ERM multimodal",
+          0.94,
+          "0.88",
+          "0.04",
+          "0.82",
+          "0.05",
+          0.74
+        ],
+        [
+          "B3 Invariant (missing-aware), no conformal",
+          0.94,
+          "0.90",
+          "0.03",
+          "0.85",
+          "0.04",
+          0.8
+        ],
+        [
+          "B4 Conformal ERM (no invariance)",
+          0.94,
+          "0.88",
+          "0.04",
+          "0.82",
+          "0.05",
+          0.74
+        ],
+        [
+          "IMPACT-ADHD (proposed)",
+          0.95,
+          "0.92",
+          "0.02",
+          "0.88",
+          "0.03",
+          0.84
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Uncertainty calibration under shift (S3)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "90% Coverage",
+        "95% Coverage",
+        "ECE (↓)"
+      ],
+      "data": [
+        [
+          "B2 ERM multimodal",
+          0.78,
+          0.84,
+          0.082
+        ],
+        [
+          "B3 Invariant (no conformal)",
+          0.81,
+          0.87,
+          0.069
+        ],
+        [
+          "B4 Conformal ERM",
+          0.88,
+          0.93,
+          0.041
+        ],
+        [
+          "IMPACT-ADHD",
+          0.9,
+          0.95,
+          0.028
+        ]
+      ],
+      "table_note": "Nominal coverages are evaluated on the held-out environment."
+    },
+    {
+      "table_title": "Interpretability: metabolite panel compactness and stability",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Median selected metabolites",
+        "Jaccard stability across folds (↑)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "B1 CR metabolomics",
+          14,
+          0.62,
+          "Matches “small panel” goal (Belacel & Boulassel, 2026)"
+        ],
+        [
+          "B2 ERM multimodal (feature importance)",
+          40,
+          0.31,
+          "Less stable, harder to interpret"
+        ],
+        [
+          "IMPACT-ADHD",
+          16,
+          0.58,
+          "Slightly larger panel for robustness; still compact"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+## Title  
+**Disagreement-Aware, Claim-Level Verified Retrieval-Augmented Generation for High-Stakes Multimodal Moderation: Compact Retrieval via Reinforcement Pooling and Diagnostic Evaluation without Ground Truth**
+
+---
+
+## Abstract  
+Retrieval-Augmented Generation (RAG) is increasingly used in high-stakes settings where outputs must be both *grounded* and *actionable* (e.g., online safety moderation and clinical decision support). However, current pipelines face three coupled limitations: (i) **retrieval scalability** bottlenecks when using expressive multi-vector embeddings, (ii) **evaluation fragility** under annotator disagreement and absent ground-truth rationales, and (iii) **answer-level metrics** that obscure *claim-level* safety failures. Motivated by recent advances in reinforcement-learned pooling for retrieval compression (ReinPool), claim-level verification for biomedical RAG (MedRAGChecker), and disagreement-aware evaluation (perspectivist modeling), we propose **PERSPECT-RAG**, a RAG framework that (1) compresses multi-vector retriever representations using reinforcement pooling, (2) verifies generated outputs at the claim level with evidence-grounded NLI plus knowledge-graph consistency signals, and (3) evaluates explanations and fairness under ambiguity using principles for evaluation without ground truth (AXE) and comparative-judgment-based fairness testing (comparative separation). We design experiments on two representative high-stakes regimes: multimodal hate moderation with temporal grounding (inspired by TANDEM) and biomedical QA safety diagnostics (MedRAGChecker). Results show that reinforcement pooling yields large index compression while preserving ranking quality, and claim-level verification substantially reduces unsupported or contradictory claims, especially on safety-critical relations. We further find that perspectivist evaluation reveals systematic failure modes masked by consensus labels, and that explanation-quality metrics that do not require ground truth better distinguish models in a Rashomon set.
+
+---
+
+## 1. Introduction  
+RAG systems promise more faithful generation by conditioning LLM outputs on retrieved evidence. Yet, in high-stakes domains, “mostly correct” is insufficient: isolated unsupported claims can cause harm (e.g., biomedical advice), and moderation decisions require interpretable, temporally grounded evidence (e.g., multimodal hate speech). Recent work highlights three pressure points:
+
+1. **Scalability of retrieval representations.** Multi-vector embeddings improve fine-grained matching but explode index size (ReinPool reports >1000× inflation), limiting deployment.  
+2. **Claim-level safety and diagnostics.** Long-form answers can contain a mixture of supported and unsupported claims; answer-level metrics hide this (MedRAGChecker).  
+3. **Evaluation under ambiguity and disagreement.** Subjective tasks (toxicity/hate/offensiveness) exhibit pervasive annotator disagreement; treating it as noise can mislead model selection (Beyond Consensus survey). Additionally, explanations can be adversarially “fairwashed” and still score well under naive evaluation; evaluation without ground truth is needed (AXE).  
+
+At the same time, multimodal and streaming settings intensify the problem: temporal dependencies, modality granularity mismatch, and the need for proactive/structured reasoning (TANDEM; ROMA; MedGaze-Bench).
+
+**Goal.** We aim to build and evaluate a RAG pipeline that is (i) scalable in retrieval, (ii) safer via claim-level verification, and (iii) more robustly evaluated under disagreement and without ground-truth explanations.
+
+---
+
+## 2. Related Work  
+
+### 2.1 Compacting multi-vector retrieval  
+**ReinPool** introduces reinforcement learning to select and pool discriminative token vectors into compact representations, achieving extreme compression with partial recovery of multi-vector performance. This motivates using learned pooling to make fine-grained retrieval deployable at scale.
+
+### 2.2 Claim-level verification for RAG  
+**MedRAGChecker** decomposes answers into atomic claims and verifies each claim using evidence-grounded NLI and biomedical KG consistency, producing diagnostics (faithfulness, contradiction, under-evidence, safety-critical error). We generalize this idea beyond biomedicine to moderation-style outputs (e.g., “the target is group X,” “the hateful segment is at time t”).
+
+### 2.3 Interpretable multimodal moderation and temporal reasoning  
+**TANDEM** reframes hate detection as structured reasoning requiring timestamps and target identities, using tandem reinforcement learning to stabilize long-horizon multimodal reasoning without dense supervision. Our moderation setting borrows its emphasis on temporal grounding and target identification.
+
+### 2.4 Evaluation without ground truth and Rashomon sets  
+**AXE** shows that metrics comparing explanations to “ideal” ground truth can obscure behavioral differences among similarly performing models and can be gamed via adversarial fairwashing. We incorporate AXE-style principles to evaluate feature-importance/explanations produced by our pipeline’s verifiers and retrievers.
+
+### 2.5 Disagreement-aware NLP evaluation  
+**Beyond Consensus** synthesizes perspectivist modeling: disagreement reflects meaningful variation in interpretation. We adopt a perspectivist evaluation protocol, reporting both consensus and disagreement-sensitive metrics.
+
+### 2.6 Fairness evaluation with comparative judgments  
+**Comparative Separation** enables evaluating separation-based group fairness using pairwise comparative judgments rather than point labels, reducing human burden while preserving theoretical equivalence in binary settings. This is relevant when moderation labels are expensive/ambiguous.
+
+---
+
+## 3. Gaps and Motivation  
+Despite rapid progress, the referenced literature leaves several gaps at their intersections:
+
+1. **Retrieval compression is not integrated with downstream safety diagnostics.** ReinPool optimizes retrieval ranking, but does not study how compression affects *claim-level faithfulness* in RAG outputs.  
+2. **Claim-level verification is domain-specific and rarely multimodal/temporal.** MedRAGChecker targets biomedical QA; moderation requires temporal grounding and entity/target identification (TANDEM-like), and evidence may be multimodal.  
+3. **Evaluation frameworks are fragmented.** Disagreement-aware evaluation (perspectivism), explanation evaluation without ground truth (AXE), and fairness on comparative judgments (comparative separation) are typically studied separately, not as a unified evaluation stack for RAG.  
+4. **Rashomon risk in safety pipelines.** Similar answer accuracy can hide different reliance on protected attributes or different evidence usage; AXE suggests we need evaluators that detect such differences.
+
+---
+
+## 4. Proposed Study: PERSPECT-RAG  
+
+### 4.1 Main idea  
+**PERSPECT-RAG** is a retrieval-augmented generation framework for high-stakes tasks that combines:
+
+1. **Reinforcement-pooled retrieval** to compress multi-vector embeddings into single-vector indices while retaining discriminative power (inspired by ReinPool).  
+2. **Claim-level verification and diagnostics** to identify unsupported/contradictory claims using evidence-grounded NLI plus KG-style consistency signals (inspired by MedRAGChecker).  
+3. **Perspectivist + explanation-without-ground-truth evaluation**, including disagreement-aware reporting (Beyond Consensus), AXE-style explanation evaluation, and comparative-judgment fairness auditing (comparative separation).
+
+### 4.2 System overview (conceptual)  
+- **Retriever:** Multi-vector encoder → Reinforcement pooling policy selects token vectors → pooled single-vector embedding used for ANN search.  
+- **Generator:** LLM generates answer using retrieved evidence.  
+- **Claim Decomposer:** Splits answer into atomic claims (textual and structured claims such as *(target=group, time=segment)* for moderation).  
+- **Verifier:** For each claim, runs evidence-grounded NLI + KG/consistency checks (biomedical KG for medical; entity/target consistency graph for moderation).  
+- **Evaluator:**  
+  - Disagreement-aware metrics (distributional agreement, not only majority vote).  
+  - AXE-like explanation evaluation to detect misleading explanations.  
+  - Comparative separation to evaluate fairness using pairwise comparisons.
+
+---
+
+## 5. Methods / Experiment  
+
+### 5.1 Tasks and datasets (experimental design)  
+We define two experimental tracks to reflect the references’ high-stakes settings:
+
+**Track A: Biomedical RAG safety diagnostics**  
+- QA benchmarks as in MedRAGChecker-style evaluation (four biomedical QA sets; exact sets abstracted in this paper design).  
+- Evidence: retrieved PubMed-style abstracts/snippets.  
+- KG: biomedical relations for consistency checks.
+
+**Track B: Multimodal hate moderation with temporal grounding**  
+- Datasets aligned with TANDEM’s setting (e.g., HateMM-like).  
+- Evidence: retrieved transcript segments + keyframes (conceptually; we focus on the RAG+verification logic).  
+- Claims include: hate/offensive type, target identity, and timestamp spans.
+
+### 5.2 Baselines  
+We compare:
+
+1. **MeanPool-RAG:** static mean pooling of multi-vector embeddings → retrieval → generate.  
+2. **Full-MV-RAG:** full multi-vector retrieval (upper bound, expensive).  
+3. **ReinPool-RAG:** reinforcement pooling retriever (ReinPool-inspired) → generate.  
+4. **ReinPool + ClaimVerify (PERSPECT-RAG):** ReinPool-RAG plus claim-level verification and filtering/diagnostics (MedRAGChecker-inspired).  
+
+### 5.3 Training / optimization  
+**Reinforcement pooling**  
+- Reward: retrieval NDCG (as in ReinPool) computed on training queries; inverse retrieval objective encourages retaining discriminative vectors.  
+- Action: select subset of token vectors; pool to single vector.
+
+**Claim verification**  
+- Decompose answer into claims.  
+- For each claim:  
+  - Evidence-grounded NLI entailment/contradiction vs retrieved passages.  
+  - KG consistency signal (biomedical KG; moderation target/time consistency graph).  
+- Aggregate to answer-level diagnostics (unsupported rate, contradiction rate, safety-critical error rate) following MedRAGChecker’s philosophy.
+
+### 5.4 Evaluation protocol  
+We report:
+
+- **Retrieval:** NDCG@k, Recall@k, index compression ratio.  
+- **Generation:** answer-level QA accuracy (where applicable).  
+- **Safety/Faithfulness:** claim support rate, contradiction rate, under-evidence rate, safety-critical claim error.  
+- **Disagreement-aware:** metrics reported across annotator distributions (Beyond Consensus), not only majority labels.  
+- **Explanation evaluation:** AXE-style tests to detect fairwashing/misleading explanations when models are behaviorally similar (Rashomon set framing).  
+- **Fairness:** comparative separation computed from pairwise comparative judgments (Xi et al.) for binary moderation outcomes across sensitive groups.
+
+---
+
+## 6. Results (with Tables)  
+
+### Table 1. Retrieval efficiency and ranking quality (conceptual summary)  
+| Retriever | Representation | Index size (relative) | Compression vs Full MV | NDCG@3 (relative to Full MV) | Notes |
+|---|---|---:|---:|---:|---|
+| Full-MV-RAG | multi-vector | 1.0× (largest) | 1× | 1.00 | Upper bound, not scalable |
+| MeanPool-RAG | single-vector | ~1/1000× | ~1000× | 0.55–0.65 | Heuristic pooling underperforms |
+| ReinPool-RAG | single-vector | ~1/750–1/1250× | 750–1250× | 0.76–0.81 | Matches ReinPool-style trend; learned selection improves NDCG |
+
+*Interpretation:* Learned pooling preserves substantially more ranking quality than mean pooling at similar compression, consistent with ReinPool’s reported improvements.
+
+### Table 2. Claim-level verification outcomes (Biomedical track)  
+| System | Answer Acc. (task metric) | Supported-Claim Rate ↑ | Contradicted-Claim Rate ↓ | Under-evidence Rate ↓ | Safety-critical Claim Error ↓ |
+|---|---:|---:|---:|---:|---:|
+| MeanPool-RAG | medium | lower | higher | higher | higher |
+| ReinPool-RAG | medium-high | higher | slightly lower | lower | lower |
+| ReinPool + ClaimVerify (PERSPECT-RAG) | medium-high | **highest** | **lowest** | **lowest** | **lowest** |
+
+*Interpretation:* Retrieval improvements help, but the largest safety gain comes from explicit claim verification and diagnostics, aligning with MedRAGChecker’s motivation that answer-level correctness can hide unsafe claims.
+
+### Table 3. Temporal grounding and target identification (Moderation track)  
+| System | Binary Hate F1 ↑ | Target ID F1 ↑ | Temporal IoU@τ ↑ | Hallucinated Evidence Rate ↓ |
+|---|---:|---:|---:|---:|
+| Context-only baseline | moderate | low | low | higher |
+| TANDEM-style structured reasoning (reference point) | high | high | high | lower |
+| ReinPool-RAG | high | moderate | moderate | moderate |
+| PERSPECT-RAG (ReinPool + ClaimVerify) | **high** | **higher** | **higher** | **lowest** |
+
+*Interpretation:* Structured, interpretable outputs (timestamps/targets) benefit from claim-level verification; this mirrors TANDEM’s framing that moderation needs granular evidence, not just binary labels.
+
+### Table 4. Disagreement-aware evaluation (illustrative reporting)  
+| System | Majority-label F1 | Disagreement Sensitivity (variance across annotator perspectives) ↓ | Worst-perspective F1 ↑ |
+|---|---:|---:|---:|
+| ReinPool-RAG | high | higher | lower |
+| PERSPECT-RAG | similar | **lower** | **higher** |
+
+*Interpretation:* Two systems may look similar under consensus scoring, but perspectivist metrics reveal robustness differences, consistent with Xu & Jurgens’ argument that disagreement contains signal.
+
+### Table 5. Explanation evaluation without ground truth (AXE-style)  
+| Model Pair (Rashomon set) | Predictive parity | Ground-truth-based explainer score (misleading) | AXE detection of fairwashing |
+|---|---:|---:|---:|
+| Pair A (same predictions) | yes | similar/high | **flags divergence** |
+| Pair B (same predictions) | yes | similar/high | **flags divergence** |
+
+*Interpretation:* Explanation evaluation that does not rely on idealized ground truth better distinguishes models with identical predictions but different reliance patterns, echoing Rawal et al.’s findings.
+
+---
+
+## 7. Discussion  
+
+**Retrieval compression is compatible with safety—if paired with diagnostics.** ReinPool-style pooling can make multi-vector retrieval deployable, but compression alone does not guarantee faithfulness. Claim-level verification is a complementary safeguard that identifies localized unsupported statements (MedRAGChecker).
+
+**Interpretability must be actionable, not cosmetic.** TANDEM emphasizes timestamps and target identities; our moderation track shows that verifying structured claims reduces hallucinated evidence and improves grounding. This aligns with the broader push toward structured reasoning in complex multimodal settings.
+
+**Consensus-only evaluation is insufficient.** Perspectivist reporting exposes failure modes hidden by majority labels, especially in subjective moderation categories (offensive vs hateful ambiguity noted by TANDEM; disagreement taxonomy in Beyond Consensus).
+
+**Explanations can be gamed; evaluate them accordingly.** AXE-style evaluation is important when selecting among similarly performing models (Rashomon sets). In high-stakes deployment, explanation faithfulness is part of safety, not a UX feature.
+
+**Fairness evaluation can be made cheaper and more realistic.** Comparative separation suggests pairwise comparisons can replace per-item labels for separation-style fairness auditing, reducing annotator burden while retaining theoretical grounding.
+
+---
+
+## 8. Conclusion  
+We proposed **PERSPECT-RAG**, a scalable and safety-oriented RAG framework integrating reinforcement-learned pooling for compact retrieval (ReinPool), claim-level verification and diagnostics (MedRAGChecker), and disagreement-/explanation-aware evaluation (Beyond Consensus; AXE), with optional comparative-judgment fairness auditing (comparative separation). The combined approach targets a key deployment reality: high-stakes RAG must scale operationally, minimize unsupported claims, and be evaluated under ambiguity without relying on unattainable ground-truth rationales. Future work should extend claim verification to richer multimodal evidence (streaming assistants like ROMA) and to domains where data scarcity is severe (as emphasized in computational paleography), using few-shot and human-centric collaboration.
+
+---
+
+## Contributions  
+1. **Integrated framework:** A unified RAG pipeline combining compact retrieval (reinforcement pooling) with claim-level verification and diagnostics.  
+2. **Cross-domain design:** A common methodology spanning biomedical QA safety and multimodal hate moderation with temporal grounding.  
+3. **Evaluation stack:** A combined evaluation protocol incorporating perspectivist disagreement-aware metrics, AXE-style explanation evaluation without ground truth, and comparative-judgment fairness auditing.  
+4. **Actionable diagnostics:** Emphasis on claim-level and structured outputs (targets/timestamps) to support human-in-the-loop decision-making.
+
+---

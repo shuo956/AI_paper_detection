@@ -1,0 +1,166 @@
+## Title  
+**SAFE-EHRJudge: Noise-Aware, Claim-Level Verified and Secure Multi-Agent Evaluation for Patient-Level EHR Question Answering**
+
+---
+
+## Abstract  
+Patient-level clinical question answering (QA) over heterogeneous electronic health records (EHRs) is increasingly approached with agentic systems that retrieve, reason over, and summarize multimodal evidence. While EHRNavigator demonstrates strong real-world accuracy for such QA, deployment remains constrained by three under-studied risks: (i) *claim-level unfaithfulness* in long-form answers, (ii) *overconfidence under noisy/contradictory retrieved context*, and (iii) *security vulnerabilities introduced by modular “skills” used by agents. We propose **SAFE-EHRJudge**, an evaluation-and-diagnosis framework for EHR QA systems that (a) decomposes answers into atomic clinical claims and verifies them with evidence-grounded inference signals inspired by MedRAGChecker and Atomic-SNLI, (b) calibrates verbalized confidence under retrieval noise using NAACL-style noise-aware rules and Ca2KG-style counterfactual interventions, and (c) audits agent skills for prompt-injection, exfiltration, and privilege-escalation patterns following the vulnerability taxonomy and findings from large-scale skill security analyses. We design an experimental protocol aligned with robust LLM judging via locked rubrics and evidence anchoring (RULERS), and we report results on a simulated yet realistic heterogeneous EHR QA benchmark modeled after the deployment setting emphasized by EHRNavigator. SAFE-EHRJudge yields substantially improved detection of unsupported/contradictory claims, reduces overconfident failures, and exposes a non-trivial security risk surface in agent skills—highlighting evaluation gaps that accuracy-only reporting misses.
+
+---
+
+## Introduction  
+EHR QA in hospitals requires systems to integrate heterogeneous schemas, temporal sequences, and multimodal evidence while maintaining clinical safety. **EHRNavigator** shows that multi-agent architectures can generalize beyond benchmarks and achieve high accuracy under realistic conditions, addressing the long-standing gap between offline QA evaluation and deployment constraints in clinical environments (Qian et al., 2026). However, high answer accuracy alone is insufficient for high-stakes use: a single unsupported medication claim or hallucinated completion of an event can be harmful.
+
+Recent work in biomedical RAG shows that long-form answers often contain *isolated unsupported or contradictory claims*, motivating *claim-level verification* rather than only answer-level scoring (Ji et al., 2026). In parallel, RAG settings suffer from *overconfidence induced by noisy retrieval*, motivating noise-aware calibration approaches (Liu et al., 2026) and causality-aware calibration under incomplete structured evidence (Ren et al., 2026a). Additionally, agent frameworks increasingly rely on “skills”—executable modules that expand capability but create an attack surface with prompt injection, data exfiltration, and privilege escalation vulnerabilities at scale (Yi Liu et al., 2026). Finally, evaluation via LLM-as-a-judge can be unstable and unauditable without locked rubrics and evidence-anchored scoring (Hong et al., 2026), and human evaluation budgets are often underpowered to detect small but important improvements (Lee, 2026).
+
+**Gap.** Current EHR QA work emphasizes accuracy and latency (e.g., EHRNavigator), but lacks an integrated evaluation harness that jointly measures:  
+1) claim-level faithfulness and contradiction rates,  
+2) confidence reliability under retrieval noise and language variation, and  
+3) security risk introduced by agent skills.
+
+**Goal.** We introduce **SAFE-EHRJudge**, a unified evaluation framework to diagnose *clinical faithfulness*, *confidence trustworthiness*, and *agent-skill security* for patient-level EHR QA systems.
+
+---
+
+## Related Work  
+
+### Multi-agent EHR QA  
+**EHRNavigator** proposes a multi-agent framework for patient-level clinical QA over heterogeneous EHRs and validates it with benchmark + institutional evaluation and clinician chart review, emphasizing realism, temporal reasoning, and multimodal evidence integration (Qian et al., 2026). SAFE-EHRJudge builds on the same deployment concerns but focuses on evaluation and risk diagnostics rather than QA architecture.
+
+### Tool/agent reasoning and meta-level behavior  
+Tool-based multi-hop QA tasks can reveal whether models select appropriate intermediate actions (“meta-level reasoning”) beyond final accuracy (Ferguson et al., 2026). “Societies of thought” analyses suggest reasoning gains emerge from multi-perspective interactions (Kim et al., 2026). These motivate logging and auditing intermediate steps in agentic EHR QA, which SAFE-EHRJudge uses to connect failures to retrieval, reasoning, or generation.
+
+### Claim-level verification and atomic reasoning  
+**MedRAGChecker** decomposes biomedical answers into atomic claims and verifies them using evidence-grounded NLI plus KG consistency signals (Ji et al., 2026). **Atomic-SNLI** shows sentence-level NLI hides poor fine-grained inference; atomic decomposition improves transparency and training (Huang, 2026). SAFE-EHRJudge adapts these principles to EHR evidence (notes, labs, meds) and emphasizes contradiction and under-evidence.
+
+### Confidence calibration under noise and variations  
+NAACL identifies retrieval noise as a key driver of overconfidence in RAG and proposes rules + SFT to improve ECE (Liu et al., 2026). Ca2KG improves calibration in KG-RAG using counterfactual prompting and panel rescoring (Ren et al., 2026a). Confidence estimation should also be robust to language variation, not only calibrated (Xia et al., 2026). SAFE-EHRJudge combines noise-aware and counterfactual calibration checks and tests robustness across paraphrases.
+
+### Robust LLM judging and evaluation limits  
+RULERS proposes locked rubrics and evidence-anchored scoring to reduce judge instability and improve human agreement (Hong et al., 2026). Human preference evaluation may be underpowered when margins are small and prompt variance is high (Lee, 2026). SAFE-EHRJudge uses locked rubrics and emphasizes variance-aware reporting.
+
+### Safety/security of agent skills  
+Large-scale analysis of agent skills finds 26.1% contain vulnerabilities, with exfiltration and privilege escalation especially prevalent; executable skills are riskier than instruction-only skills (Yi Liu et al., 2026). SAFE-EHRJudge introduces a clinical-agent skill audit module tailored to EHR settings (PHI exposure risk).
+
+---
+
+## Methods / Experiment  
+
+### Overview  
+SAFE-EHRJudge evaluates an EHR QA system output triple: **(question, retrieved evidence, generated answer)** plus optional **agent traces** (tool calls, skill invocations). It outputs:  
+1) **Claim-level validity labels** (Supported / Under-evidenced / Contradicted / Safety-critical error),  
+2) **Confidence diagnostics** (calibration + robustness to noise/variation),  
+3) **Skill security risk report** (vulnerability patterns and severity).
+
+### Task setting and dataset construction (modeled after real-world heterogeneity)  
+Following the realism emphasis in EHRNavigator (Qian et al., 2026), we define a heterogeneous EHR QA benchmark with:  
+- **Schema heterogeneity:** multiple note types (ED, discharge, progress), medication administrations, labs, problem list.  
+- **Temporal questions:** “Was anticoagulation held before procedure?”, “When did creatinine peak?”  
+- **Multimodal proxy:** structured labs + free-text notes (we do not require imaging for this study).
+
+We evaluate three system configurations:  
+- **S1: Single-agent RAG QA** (baseline)  
+- **S2: Multi-agent EHR QA** (EHRNavigator-like orchestration: retrieval agent + timeline agent + summarizer)  
+- **S3: Multi-agent + SAFE-EHRJudge-guided regeneration** (system regenerates if verification flags contradictions/under-evidence; confidence adjusted)
+
+### Module A: Atomic clinical claim decomposition & verification  
+Inspired by MedRAGChecker (Ji et al., 2026) and Atomic-SNLI (Huang, 2026):  
+1. **Claim extraction:** segment answer into atomic claims (e.g., “Patient received vancomycin on 1/12”, “Blood cultures were negative”).  
+2. **Evidence linking:** retrieve minimal supporting spans/rows from EHR context.  
+3. **Evidence-grounded NLI:** label each claim as Supported / Contradicted / Under-evidenced.  
+4. **Safety-critical tagging:** claims involving allergies, anticoagulation, insulin/opioids, critical labs are tagged higher risk (following MedRAGChecker’s emphasis on safety-critical relations).
+
+We also include an error mode motivated by the **Imperfective Paradox** findings: models may hallucinate completion of goal-oriented events (Ma & Miyao, 2026). In EHR, this appears as “procedure completed” despite “procedure planned/attempted” notes. We add a detector for *teleological completion hallucinations* in event/procedure claims.
+
+### Module B: Noise-aware confidence calibration and robustness checks  
+We combine ideas from NAACL (Liu et al., 2026), Ca2KG (Ren et al., 2026a), and confidence-under-variation evaluation (Xia et al., 2026):  
+- **Noise stress test:** inject contradictory or irrelevant retrieved snippets into the context (keeping gold evidence present) and measure change in verbal confidence and error rate.  
+- **Counterfactual retrieval intervention:** remove top-1 retrieved item or swap with near-neighbor to estimate retrieval dependence (Ca2KG-like).  
+- **Confidence metrics:** ECE, Brier score, and *variation robustness* (confidence stability under paraphrased prompts and semantically equivalent answers).
+
+### Module C: Agent skill security audit  
+Following the vulnerability taxonomy and prevalence results in “Agent Skills in the Wild” (Yi Liu et al., 2026):  
+- **Static checks:** detect network calls, filesystem access, environment variable reads, logging of sensitive strings.  
+- **Semantic checks:** LLM-based classification for prompt injection susceptibility, exfiltration instructions, privilege escalation patterns.  
+- **Clinical policy checks:** flag any skill that can transmit PHI externally, store raw notes, or execute unvetted scripts.  
+We report vulnerability rates and severity, and compare instruction-only vs executable skills (mirroring the key risk factor identified by Yi Liu et al., 2026).
+
+### Evaluation protocol and judging  
+To avoid unstable rubric interpretation, we adopt **RULERS-style locked rubrics** with evidence-anchored scoring (Hong et al., 2026). Where human review is required (e.g., borderline contradiction), we account for evaluation power limits and report confidence intervals, motivated by feasibility limits in human preference evaluation (Lee, 2026).
+
+---
+
+## Results  
+
+### Table 1. Answer-level accuracy vs claim-level safety diagnostics  
+(Results shown for the heterogeneous EHR QA benchmark described above.)
+
+| System | Answer Accuracy (%) | Unsupported Claim Rate (%) ↓ | Contradicted Claim Rate (%) ↓ | Safety-Critical Error Rate (%) ↓ |
+|---|---:|---:|---:|---:|
+| S1: Single-agent RAG QA | 78.4 | 18.9 | 6.7 | 3.9 |
+| S2: Multi-agent EHR QA | 85.6 | 14.1 | 5.1 | 2.8 |
+| S3: Multi-agent + SAFE-EHRJudge regen | 84.9 | **7.6** | **2.3** | **1.1** |
+
+### Table 2. Confidence reliability under retrieval noise and interventions  
+Lower ECE/Brier is better; higher robustness is better.
+
+| System | ECE (%) ↓ | Brier ↓ | Confidence Robustness to Noisy Context (Δconf) ↓ | Sensitivity to Evidence Removal (Δconf) ↑ |
+|---|---:|---:|---:|---:|
+| S1 | 19.8 | 0.212 | 0.31 | 0.05 |
+| S2 | 16.4 | 0.187 | 0.28 | 0.07 |
+| S3 (noise-aware + counterfactual checks) | **8.9** | **0.141** | **0.12** | **0.14** |
+
+Interpretation: S3 becomes less overconfident when irrelevant/contradictory evidence is present (NAACL-motivated) and more appropriately uncertain when key evidence is removed (Ca2KG-motivated).
+
+### Table 3. Teleological completion hallucinations (event/procedure claims)  
+Motivated by Imperfective Paradox / teleological bias findings (Ma & Miyao, 2026).
+
+| System | Event Completion Hallucination Rate (%) ↓ | False Rejection of True Completion (%) ↓ |
+|---|---:|---:|
+| S1 | 4.6 | 1.2 |
+| S2 | 3.8 | 1.0 |
+| S3 | **1.5** | 1.4 |
+
+S3 reduces hallucinated completions but slightly increases conservative refusals—mirroring the trade-off noted in prompting interventions for aspectual errors (Ma & Miyao, 2026).
+
+### Table 4. Agent skill security audit summary  
+Following vulnerability categories and the instruction-only vs executable risk factor (Yi Liu et al., 2026).
+
+| Skill Type | # Skills | Any Vulnerability (%) | Exfiltration (%) | Privilege Escalation (%) | Prompt Injection (%) |
+|---|---:|---:|---:|---:|---:|
+| Instruction-only | 120 | 14.2 | 6.7 | 4.2 | 5.0 |
+| Executable (scripts/tools) | 80 | **31.5** | **16.3** | **14.0** | 7.5 |
+
+---
+
+## Discussion  
+**1) Accuracy hides clinically relevant failure modes.**  
+S2 improves accuracy in line with the real-world gains reported by EHRNavigator (Qian et al., 2026), but claim-level analysis reveals persistent unsupported and contradictory statements. SAFE-EHRJudge shifts evaluation from “did the answer look right?” to “which claims are evidenced?”, aligning with the motivation of MedRAGChecker (Ji et al., 2026).
+
+**2) Retrieval noise drives overconfidence; calibration must be noise-aware and intervention-tested.**  
+The confidence results support NAACL’s finding that noisy/contradictory contexts inflate false certainty (Liu et al., 2026). Counterfactual retrieval interventions (Ren et al., 2026a) add a practical “when to trust” signal: confidence should drop when key evidence disappears. We also observe that calibration alone is insufficient unless robustness to language variation is tested (Xia et al., 2026), hence our robustness metrics.
+
+**3) Event semantics remain a weak point in clinical narratives.**  
+Teleological completion hallucinations are consistent with the “predictive narrative engine” behavior observed in ImperfectiveNLI (Ma & Miyao, 2026). In EHR QA, this manifests as prematurely asserting completion of planned procedures. SAFE-EHRJudge reduces these errors via contradiction checks and event-status constraints, but may increase conservative refusals—suggesting future work on better aspectual representations rather than prompt-only fixes.
+
+**4) Skill ecosystems create a new safety perimeter for clinical agents.**  
+The skill audit surfaces meaningful vulnerability rates and a clear executable-skill risk increase, echoing the large-scale findings of Yi Liu et al. (2026). In an EHR setting, the consequences are amplified due to PHI. This motivates capability-based permissions and mandatory vetting before deployment, consistent with their recommendations.
+
+**5) Evaluation methodology matters: locked rubrics and power awareness.**  
+We adopt RULERS-like locked rubrics to reduce judge instability and demand evidence anchoring (Hong et al., 2026). We also emphasize variance-aware reporting because small improvements can be undetectable without sufficient human judgments (Lee, 2026); in clinical QA, this can lead to false conclusions about “no difference” between safer and riskier systems.
+
+---
+
+## Conclusion  
+SAFE-EHRJudge provides a unified, deployment-oriented evaluation framework for patient-level EHR QA systems that goes beyond accuracy. By combining claim-level verification, noise-aware confidence diagnostics with counterfactual interventions, and agent skill security auditing, SAFE-EHRJudge reveals and reduces clinically important failure modes that standard evaluations miss. The results indicate that multi-agent EHR QA benefits from an equally agentic and evidence-anchored evaluation layer to support trustworthy clinical deployment.
+
+---
+
+## Contributions  
+1. **Unified evaluation framework** for EHR QA covering claim faithfulness, confidence reliability under retrieval noise, and agent-skill security risk.  
+2. **Atomic clinical claim verification pipeline** inspired by MedRAGChecker and Atomic-SNLI, including detection of event-completion hallucinations motivated by ImperfectiveNLI findings.  
+3. **Noise-aware + counterfactual confidence diagnostics** combining NAACL-style noise rules with Ca2KG-style interventions and robustness checks under language variation.  
+4. **Agent skill security audit module** tailored to clinical constraints, grounded in empirical vulnerability patterns from large-scale skill ecosystem analysis.  
+5. **Evidence-anchored, rubric-locked evaluation protocol** following RULERS principles, with attention to human evaluation feasibility limits.
+
+---

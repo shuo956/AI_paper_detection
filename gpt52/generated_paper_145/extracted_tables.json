@@ -1,0 +1,186 @@
+{
+  "tables": [
+    {
+      "table_title": "Reconstruction fidelity under mixed noise",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Mixed-noise level",
+        "Rel. L2 reconstruction error ↓",
+        "Spectral similarity ↑",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Standard DMD",
+          "medium",
+          "0.112",
+          "0.71",
+          "Sensitive to noise (least-squares instability)"
+        ],
+        [
+          "CR-DMD-only",
+          "medium",
+          "0.061",
+          "0.86",
+          "Robust denoising + improved mode fidelity (Nakamura et al., 2026)"
+        ],
+        [
+          "2D AE",
+          "medium",
+          "0.074",
+          "0.83",
+          "Strong spatial recon, weaker temporal consistency (Gadirov et al., 2026)"
+        ],
+        [
+          "3D AE",
+          "medium",
+          "0.069",
+          "0.85",
+          "Better temporal context, fewer redundant artifacts"
+        ],
+        [
+          "ERASER-ROM",
+          "medium",
+          "0.052",
+          "0.89",
+          "Mode-linked sparse reconstruction improves fidelity"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Anomaly detection performance (spatio-temporal anomalies)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "AUROC ↑",
+        "AUPRC ↑",
+        "Redundant detections per event ↓",
+        "Comments"
+      ],
+      "data": [
+        [
+          "Standard DMD residual",
+          "0.84",
+          "0.51",
+          "3.8",
+          "High false positives under noise"
+        ],
+        [
+          "2D AE (TRACE-style)",
+          "0.90",
+          "0.62",
+          "3.1",
+          "Detects localized artifacts, redundant over time"
+        ],
+        [
+          "3D AE (TRACE-style)",
+          "0.93",
+          "0.70",
+          "1.9",
+          "Temporal stacks reduce redundancy (Gadirov et al., 2026)"
+        ],
+        [
+          "ERASER-ROM",
+          "0.95",
+          "0.76",
+          "1.4",
+          "Combines denoised modes + temporal latent consistency"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Forecasting with uncertainty (latent SDE calibration)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "10-step rollout RMSE ↓",
+        "NLL ↓",
+        "Empirical 90% coverage ↑",
+        "Generalization to shifted ICs"
+      ],
+      "data": [
+        [
+          "Deterministic latent model",
+          "0.081",
+          "1.92",
+          "0.71",
+          "Degrades under shift"
+        ],
+        [
+          "Stochastic ROM (latent SDE)",
+          "0.074",
+          "1.31",
+          "0.87",
+          "Better uncertainty (Ilersich et al., 2026)"
+        ],
+        [
+          "ERASER-ROM (CR-DMD + SDE)",
+          "0.070",
+          "1.22",
+          "0.89",
+          "Robust modes improve OOD stability"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Energy–performance Pareto examples (ECOpt-inspired selection)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Config ID",
+        "Latent rank r",
+        "Window",
+        "Solver steps",
+        "AUROC ↑",
+        "Inference energy (mJ/seq) ↓",
+        "Pareto-efficient?"
+      ],
+      "data": [
+        [
+          "C1",
+          "8",
+          "1 (frame)",
+          "10",
+          "0.91",
+          "4.2",
+          "Yes (low energy)"
+        ],
+        [
+          "C2",
+          "14",
+          "5",
+          "10",
+          "0.94",
+          "6.8",
+          "Yes"
+        ],
+        [
+          "C3",
+          "20",
+          "5",
+          "20",
+          "0.95",
+          "11.5",
+          "Yes (high perf)"
+        ],
+        [
+          "C4",
+          "20",
+          "9",
+          "20",
+          "0.95",
+          "14.9",
+          "No (dominated)"
+        ]
+      ],
+      "table_note": "This table illustrates the core ECOpt message (Ferreira et al., 2026): better performance can cost more energy, and some high-compute configurations are dominated."
+    }
+  ]
+}

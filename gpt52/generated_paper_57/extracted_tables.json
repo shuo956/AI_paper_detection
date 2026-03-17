@@ -1,0 +1,157 @@
+{
+  "tables": [
+    {
+      "table_title": "Ranking error vs. evaluation budget (lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Budget (samples)",
+        "Passive-Uniform",
+        "Active-Elo",
+        "Active-Elo+CCP",
+        "CARE (full)"
+      ],
+      "data": [
+        [
+          "200",
+          "0.182",
+          "0.141",
+          "0.133",
+          "0.118"
+        ],
+        [
+          "500",
+          "0.129",
+          "0.091",
+          "0.086",
+          "0.073"
+        ],
+        [
+          "1000",
+          "0.094",
+          "0.061",
+          "0.058",
+          "0.046"
+        ]
+      ],
+      "table_note": "Ranking error computed against a high-sample “ground truth” ranking, consistent with active evaluation framing (Lanctot et al., 2026)."
+    },
+    {
+      "table_title": "Calibration under tool types (ECE ↓, Brier ↓)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "Metric",
+        "Passive-Uniform",
+        "Active-Elo",
+        "Active-Elo+CCP",
+        "CARE (full)"
+      ],
+      "data": [
+        [
+          "Evidence tools",
+          "ECE",
+          "0.164",
+          "0.158",
+          "0.121",
+          "0.097"
+        ],
+        [
+          "Evidence tools",
+          "Brier",
+          "0.221",
+          "0.214",
+          "0.187",
+          "0.169"
+        ],
+        [
+          "Verification tools",
+          "ECE",
+          "0.091",
+          "0.089",
+          "0.078",
+          "0.072"
+        ],
+        [
+          "Verification tools",
+          "Brier",
+          "0.148",
+          "0.146",
+          "0.139",
+          "0.133"
+        ]
+      ],
+      "table_note": "Reflects the “confidence dichotomy” between evidence vs verification tools (Xuan et al., 2026). CCP is designed to expose evidence noise sensitivity (Ren et al., 2026)."
+    },
+    {
+      "table_title": "Difficulty-stratified detection of regressions (hard prompts)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Budget",
+        "Passive-Uniform",
+        "Active-Elo",
+        "Active-Elo+CCP",
+        "CARE (full)"
+      ],
+      "data": [
+        [
+          "200",
+          "0.54",
+          "0.63",
+          "0.69",
+          "0.77"
+        ],
+        [
+          "500",
+          "0.66",
+          "0.78",
+          "0.82",
+          "0.90"
+        ],
+        [
+          "1000",
+          "0.74",
+          "0.86",
+          "0.89",
+          "0.95"
+        ]
+      ],
+      "table_note": "Motivated by biased group-relative advantage that can hide poor exploration on hard prompts (Yang et al., 2026). We report the probability that an evaluation protocol correctly flags a “hard-prompt regression” agent as worse than a baseline within the given budget."
+    },
+    {
+      "table_title": "Industrial TableQA subset: accuracy & stability (ReasonTabQA-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Protocol",
+        "Accuracy (↑)",
+        "Stability SD (↓)"
+      ],
+      "data": [
+        [
+          "Passive-Uniform",
+          "0.412",
+          "0.031"
+        ],
+        [
+          "Active-Elo",
+          "0.419",
+          "0.024"
+        ],
+        [
+          "Active-Elo+CCP",
+          "0.421",
+          "0.022"
+        ],
+        [
+          "CARE (full)",
+          "0.428",
+          "0.017"
+        ]
+      ],
+      "table_note": "ReasonTabQA emphasizes multi-table and nested header complexity; evaluation must be robust to heterogeneous difficulty (Pan et al., 2026). “Stability” is the standard deviation of accuracy estimates across repeated sampling runs at fixed budget."
+    }
+  ]
+}

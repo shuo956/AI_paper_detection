@@ -1,0 +1,109 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall forecasting accuracy (lower is better).",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "MAE ↓",
+        "RMSE ↓",
+        "Extreme-MAE ↓"
+      ],
+      "data": [
+        [
+          "MetaDG (Zou et al., 2026)",
+          "0.412",
+          "0.685",
+          "0.931"
+        ],
+        [
+          "M^2FMoE (Huang et al., 2026)",
+          "0.398",
+          "0.662",
+          "0.844"
+        ],
+        [
+          "MetaDG + Freq (hybrid)",
+          "0.387",
+          "0.651",
+          "0.812"
+        ],
+        [
+          "TropiGraph-MoE (ours)",
+          "0.372",
+          "0.632",
+          "0.741"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablations on TropiGraph-MoE.",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "MAE ↓",
+        "Extreme-MAE ↓",
+        "Graph Coherence (Laplacian energy) ↓"
+      ],
+      "data": [
+        [
+          "Full model",
+          "0.372",
+          "0.741",
+          "1.00"
+        ],
+        [
+          "w/o GR-PCA reg",
+          "0.379",
+          "0.768",
+          "1.34"
+        ],
+        [
+          "w/o tropical module (no path features)",
+          "0.376",
+          "0.756",
+          "1.02"
+        ],
+        [
+          "w/o frequency MoE (single expert)",
+          "0.391",
+          "0.829",
+          "1.05"
+        ],
+        [
+          "w/o test-time adapter",
+          "0.372",
+          "0.741",
+          "1.00"
+        ]
+      ],
+      "table_note": "Coherence is normalized so the full model = 1.00."
+    },
+    {
+      "table_title": "Shifted test performance with geometric-quantile TTA (Danda et al., 2026).",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "MAE (shift) ↓",
+        "Extreme-MAE (shift) ↓"
+      ],
+      "data": [
+        [
+          "TropiGraph-MoE (no TTA)",
+          "0.441",
+          "0.902"
+        ],
+        [
+          "TropiGraph-MoE + Quantile TTA",
+          "0.408",
+          "0.831"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

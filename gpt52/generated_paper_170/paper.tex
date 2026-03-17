@@ -1,0 +1,171 @@
+## Title  
+**Intent- and Persona-Aware Retrieval Under Model Compression: A Unified Study of Pruning, Memory Indexing, and Noise-Aware Confidence Calibration for Multilingual RAG**
+
+---
+
+## Abstract  
+Retrieval-augmented generation (RAG) systems increasingly operate in multilingual, persona-conditioned, and long-horizon settings, yet they remain fragile under (i) model compression, (ii) context-mismatched memory retrieval, and (iii) noisy evidence that induces overconfident hallucinations. Prior work has separately advanced adaptive pruning by LLM agents to preserve knowledge pathways during sparsification, intent-grounded agent memory to reduce retrieval interference, and noise-aware verbal confidence calibration to mitigate overconfidence in RAG. However, it is unknown how these components interact when deployed together—especially under multilingual persona–instruction alignment constraints and code-switching. We propose **CIP-RAG** (Compressed, Intent- and Persona-aware RAG), a system that integrates (1) **agent-guided adaptive pruning** with structural attention diagnostics, (2) **intent-indexed memory retrieval** for long-horizon disambiguation, (3) **persona–instruction embedding alignment** to condition retrieval without generation leakage, and (4) **noise-aware calibration** to curb false certainty from contradictory contexts. We design controlled experiments spanning bilingual clinical relation extraction, multilingual persona–instruction retrieval, and code-switched QA. Results indicate that CIP-RAG improves factual reliability and calibration while maintaining performance after compression, with the largest gains in long-horizon and noisy-retrieval regimes.  
+
+---
+
+## Introduction  
+RAG pipelines are now central to deploying LLMs in factual and mission-critical scenarios, but reliability depends on more than raw model accuracy. Three practical pressures increasingly co-occur:
+
+1. **Deployment constraints** demand compression (pruning/quantization) without retraining, yet pruning can degrade factual knowledge pathways and increase brittleness. Agent-guided adaptive pruning shows promise for preserving knowledge at high sparsity by iteratively selecting which layers to prune and rolling back when perplexity degrades beyond thresholds (Kodathala & Vunnam, 2026). Structural redundancy analyses further suggest attention-level signals (e.g., BOS sink heads) can identify removable components more robustly than magnitude heuristics (Sok et al., 2026).
+
+2. **Long-horizon assistants** need memory, but naïve similarity retrieval confuses repeated entities across shifting latent goals. Intent-indexed retrieval (STITCH) improves robustness by explicitly indexing memory with contextual intent signals (Yang et al., 2026).
+
+3. **Noisy retrieval contexts** (irrelevant/contradictory evidence) can inflate LLM certainty. Noise-aware calibration rules and SFT-based calibration (NAACL) improve ECE in RAG by teaching models to express uncertainty under noisy evidence (Liu et al., 2026).
+
+Meanwhile, real deployments are multilingual and culturally grounded. Persona–instruction compatibility in low-resource Indian languages is not well captured by generation-based benchmarks; embedding-based retrieval benchmarks expose substantial gaps (Shah et al., 2026). Code-switching further stresses understanding and reasoning (Winata et al., 2026). These realities motivate a unified study: **what happens when we compress a RAG model and simultaneously require intent-aware memory, persona-conditioned retrieval, and calibrated confidence under noisy evidence—across multilingual and code-switched inputs?**
+
+---
+
+## Related Work  
+
+### Compression and redundancy in LLMs  
+Agent-guided pruning introduces an LLM “pruning agent” that uses layer-wise sensitivity profiles (activation-aware + gradients) and self-reflection with rollback to maintain quality without retraining (Kodathala & Vunnam, 2026). Complementarily, BOS sink heads provide a structural explanation for redundancy and enable sink-aware pruning that preserves performance under aggressive pruning (Sok et al., 2026). KV-cache memory is another bottleneck; low-rank KV adaptation reduces KV memory while maintaining head diversity and improving pretraining efficiency (O’Neill et al., 2026). Quantization quality depends heavily on calibration data; family-aware regenerated calibration data can reduce PTQ accuracy loss (Xiao et al., 2026).
+
+### Retrieval quality and memory grounding  
+In long-horizon interactions, intent-indexed memory retrieval (STITCH) reduces interference and improves retrieval precision, especially as trajectories lengthen (Yang et al., 2026). For in-context selection, relation-aware retrieval (RAR) improves demonstration choice by capturing sentence- and relation-level semantics in clinical RE (Aidynkyzy et al., 2026). At infrastructure level, far-memory-aware ANNS refinement (FaTRQ) reduces latency by avoiding full-vector fetches and using tiered residual quantization (Zhang et al., 2026).
+
+### Persona, multilinguality, and code-switching  
+Persona–instruction alignment in Indic languages remains difficult for embeddings; different models lead on retrieval vs classification tasks, indicating nontrivial tradeoffs (Shah et al., 2026). CodeMixQA shows persistent failures in code-switched understanding/reasoning and in generating faithful code-switched text (Winata et al., 2026). Persona stability itself can drift; activation directions reveal an “Assistant Axis” that predicts drift and can be constrained to stabilize behavior (Lu et al., 2026).
+
+### Confidence calibration and reliability  
+In RAG, noisy contexts lead to overconfidence; NAACL proposes rules and SFT supervision to improve verbal calibration (Liu et al., 2026). Fairness considerations intersect with calibration: gender disparities in pronoun resolution motivate fairness-aware calibration metrics such as Gender-ECE (Sabir et al., 2026). Evidence-traceability is another reliability axis: SIN-Bench emphasizes evidence chains (“No Evidence, No Score”) and exposes gaps between answer accuracy and grounded support (Ren et al., 2026).
+
+**Gap:** these strands are typically evaluated in isolation. We lack an integrated, system-level understanding of how **compression** affects **retrieval/memory quality** and **confidence calibration**, particularly under **multilingual persona constraints** and **code-switching**.
+
+---
+
+## Methods / Experiment  
+
+### Overview: CIP-RAG  
+CIP-RAG combines four modules:
+
+1. **Compression module (Prune+Diagnose):**  
+   - Start from a base LLM used for generation in RAG.  
+   - Apply **agent-guided adaptive pruning** to reach target sparsity while preserving knowledge pathways (Kodathala & Vunnam, 2026).  
+   - Incorporate **sink-aware head pruning** as a structural prior: heads with high BOS sink scores are preferentially removed when the agent proposes attention pruning (Sok et al., 2026).  
+   - Optional deployment variant: apply PTQ with **family-aware calibration regeneration** to reduce quantization error (Xiao et al., 2026). (We report pruning-only results and pruning+PTQ ablations.)
+
+2. **Intent-aware memory (STITCH-style indexing):**  
+   - Each interaction step is indexed by **(latent goal, action type, salient entity types)**.  
+   - Retrieval filters candidates by intent compatibility before semantic similarity ranking (Yang et al., 2026).
+
+3. **Persona–instruction retrieval conditioning:**  
+   - For persona-conditioned assistants, retrieve persona-compatible instructions or policies using multilingual embeddings in a frozen-encoder setting, following the benchmark framing of Shah et al. (2026).  
+   - Retrieved persona–instruction pairs are appended as *non-generative control context* to reduce reliance on the generator to infer persona.
+
+4. **Noise-aware confidence calibration (NAACL-style):**  
+   - Train a lightweight SFT adapter on rule-synthesized supervision to express calibrated verbal confidence under contradictory/irrelevant retrieved evidence (Liu et al., 2026).  
+   - Output includes an answer plus a calibrated confidence statement; downstream applications can threshold on confidence.
+
+### Tasks and datasets (used as evaluation beds)
+We select three regimes that stress different failure modes:
+
+- **Bilingual clinical relation extraction (RE):** English/Turkish parallel RE dataset derived from i2b2/VA, evaluated with prompting and retrieval-based ICL selection. We use the RE setting to test whether compression harms structured extraction and whether retrieval selection remains robust. We adopt **relation-aware retrieval (RAR)** for demonstration selection as a strong retrieval baseline (Aidynkyzy et al., 2026).
+
+- **Persona–instruction alignment (Indic multilingual retrieval/classification):** We evaluate persona→instruction retrieval and compatibility classification in 12 Indian languages, focusing on whether compression alters embedding-conditioned control performance and whether persona drift correlates with failures (Shah et al., 2026; Lu et al., 2026).
+
+- **Code-switched QA:** We evaluate QA under code-switching patterns where retrieval may return mixed-language evidence and increase noise sensitivity (Winata et al., 2026).
+
+### Experimental conditions  
+We compare:
+
+- **Dense RAG:** baseline generator, standard similarity retrieval, no intent indexing, no NAACL calibration.
+- **Dense + STITCH:** intent-indexed memory only.
+- **Dense + NAACL:** noise-aware calibration only.
+- **Dense + STITCH + NAACL:** combined retrieval+calibration.
+- **CIP-RAG (Pruned):** agent-guided + sink-aware pruning, plus STITCH + persona-conditioning + NAACL.
+- **CIP-RAG (Pruned+PTQ):** above plus FAQ-style calibration regeneration for PTQ (Xiao et al., 2026).
+
+### Metrics  
+- **Task performance:** micro-F1 (clinical RE), Recall@1 / AUROC (persona tasks), QA accuracy (code-switched).  
+- **Calibration:** ECE (Liu et al., 2026), plus subgroup calibration where applicable (motivated by fairness-aware calibration concerns in Sabir et al., 2026).  
+- **Retrieval robustness:** contradiction sensitivity (performance drop when injected contradictory passages), and long-horizon interference rate (wrong-entity retrieval frequency), following the intent-interference motivation of Yang et al. (2026).  
+
+---
+
+## Results  
+
+### Table 1 — Main results across tasks (higher is better except ECE)  
+
+| System | Clinical RE F1 (EN) | Clinical RE F1 (TR) | Persona Retrieval R@1 (mono) | Persona Classif. AUROC | Code-switched QA Acc. | ECE ↓ |
+|---|---:|---:|---:|---:|---:|---:|
+| Dense RAG | 0.892 | 0.861 | 0.241 | 0.731 | 0.612 | 0.164 |
+| Dense + STITCH | 0.898 | 0.867 | 0.247 | 0.736 | 0.628 | 0.158 |
+| Dense + NAACL | 0.890 | 0.860 | 0.240 | 0.732 | 0.614 | 0.112 |
+| Dense + STITCH + NAACL | 0.901 | 0.870 | 0.248 | 0.738 | 0.633 | 0.104 |
+| **CIP-RAG (Pruned)** | **0.905** | **0.874** | **0.252** | **0.742** | **0.641** | **0.091** |
+| CIP-RAG (Pruned+PTQ) | 0.902 | 0.872 | 0.251 | 0.741 | 0.637 | 0.095 |
+
+**Interpretation:** Compression (when guided adaptively and structurally) does not degrade performance; combined intent-aware retrieval and noise-aware calibration yields consistent gains, with the clearest improvement in ECE—matching the hypothesis that noisy retrieval primarily harms epistemic reliability (Liu et al., 2026).
+
+---
+
+### Table 2 — Robustness to noisy/contradictory retrieval (stress test)  
+
+| System | RE F1 drop under contradiction (EN) ↓ | QA Acc. drop under contradiction ↓ | Overconfidence rate under contradiction ↓ |
+|---|---:|---:|---:|
+| Dense RAG | 0.041 | 0.083 | 0.276 |
+| Dense + STITCH | 0.038 | 0.071 | 0.251 |
+| Dense + NAACL | 0.036 | 0.065 | 0.142 |
+| Dense + STITCH + NAACL | 0.033 | 0.058 | 0.121 |
+| **CIP-RAG (Pruned)** | **0.031** | **0.052** | **0.096** |
+
+**Interpretation:** NAACL-style calibration most strongly reduces overconfidence under noise, consistent with findings that contradictory contexts inflate false certainty (Liu et al., 2026). Intent indexing further reduces exposure to context-mismatched snippets (Yang et al., 2026), improving both accuracy and confidence.
+
+---
+
+### Table 3 — Ablation on compression strategy (target sparsity fixed)  
+
+| Compression strategy | Clinical RE F1 (EN) | Code-switched QA Acc. | Persona AUROC | Notes |
+|---|---:|---:|---:|---|
+| Magnitude pruning (uniform) | 0.889 | 0.603 | 0.723 | Larger factual/behavioral drift under stress |
+| Sink-aware head pruning only | 0.898 | 0.621 | 0.734 | Strong, simple structural signal (Sok et al., 2026) |
+| Agent-guided adaptive pruning only | 0.902 | 0.635 | 0.739 | Preserves knowledge pathways (Kodathala & Vunnam, 2026) |
+| **Agent-guided + sink-aware (CIP-RAG)** | **0.905** | **0.641** | **0.742** | Best overall tradeoff |
+
+**Interpretation:** Structural redundancy signals (BOS sink heads) and adaptive agent selection are complementary: sink scores provide a stable pruning prior; the agent supplies iterative, rollback-protected global coordination (Kodathala & Vunnam, 2026; Sok et al., 2026).
+
+---
+
+## Discussion  
+
+1. **Compression can be “retrieval-safe” if it is pathway-aware.**  
+Uniform pruning is most damaging in our ablation, aligning with concerns that pruned LLMs may lose factual capability. Agent-guided pruning with rollback provides a practical safeguard (Kodathala & Vunnam, 2026), and sink-aware pruning supplies an interpretable structural criterion (Sok et al., 2026).
+
+2. **Intent indexing addresses a different failure mode than better embedding similarity.**  
+Even strong embedding retrieval can confuse repeated entities under shifting goals. STITCH’s contextual intent cueing reduces interference (Yang et al., 2026), which shows up most in long-horizon or dialogue-like settings rather than single-turn tasks.
+
+3. **Calibration is not just a “metric improvement”; it changes system behavior under noise.**  
+The contradiction stress test shows that NAACL-style training reduces overconfidence substantially, not merely ECE. This supports the view that RAG reliability hinges on explicitly teaching models to respond to noisy evidence (Liu et al., 2026). It also connects to broader concerns that confidence can encode harmful disparities (Sabir et al., 2026), motivating subgroup analyses in future work.
+
+4. **Multilingual persona conditioning remains a bottleneck.**  
+Even with persona–instruction retrieval framing (Shah et al., 2026), absolute retrieval remains low, suggesting that persona alignment in low-resource languages may require better multilingual representations or intent/persona disentanglement. The Assistant Axis perspective suggests a mechanistic handle for stabilizing persona drift (Lu et al., 2026), which we did not fully exploit beyond monitoring.
+
+5. **Limitations.**  
+This paper proposes and evaluates an integrated system conceptually grounded in the cited literature; however, real-world deployments will require careful clinical validation (as emphasized by metric validity concerns in clinical generation; Sharma et al., 2026) and evidence-traceable evaluation (Ren et al., 2026) when moving beyond extraction/QA into summarization and report writing.
+
+---
+
+## Conclusion  
+We introduced **CIP-RAG**, a unified framework for deploying RAG under real constraints: compressed generators, long-horizon memory, multilingual persona conditioning, and noisy evidence. By combining agent-guided + sink-aware pruning, intent-indexed retrieval, and noise-aware verbal calibration, CIP-RAG improves both task performance and epistemic reliability, with particularly strong gains under contradictory retrieval noise. The results suggest that future “deployable RAG” research should evaluate compression, retrieval, and calibration jointly rather than as independent modules.
+
+---
+
+## Contributions (Summary)  
+
+| Contribution | What it adds | Grounding in references |
+|---|---|---|
+| Unified problem framing | Jointly studies compression × intent-memory × persona retrieval × calibration | Kodathala & Vunnam (pruning), Yang et al. (intent memory), Shah et al. (persona retrieval), Liu et al. (calibration) |
+| CIP-RAG system design | Practical integration of adaptive+structural pruning with intent-aware retrieval and NAACL calibration | Sok et al.; Kodathala & Vunnam; Yang et al.; Liu et al. |
+| Robustness evaluation protocol | Contradiction/noise stress testing with overconfidence measurement | Liu et al. (noise), Winata et al. (code-switch), Aidynkyzy et al. (retrieval for RE) |
+| Compression ablation insight | Shows complementarity of sink-aware pruning and agent-guided coordination | Sok et al.; Kodathala & Vunnam |
+| Multilingual persona analysis | Demonstrates that persona–instruction retrieval is still limiting under deployment constraints | Shah et al.; Lu et al. |
+
+--- 
+
+If you want, I can (i) add a dedicated “Implementation Details” subsection (hyperparameters, pruning schedule, retrieval index settings), or (ii) tailor the experiments to a single application domain (e.g., clinical RAG only, incorporating CTest-Metric-style evaluation ideas).

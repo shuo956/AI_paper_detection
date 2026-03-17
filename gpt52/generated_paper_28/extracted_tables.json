@@ -1,0 +1,162 @@
+{
+  "tables": [
+    {
+      "table_title": "Main results under noisy retrieval (distractor-heavy)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "EM ↑",
+        "F1 ↑",
+        "Retrieval Rate ↓",
+        "Avg. Context Tokens ↓"
+      ],
+      "data": [
+        [
+          "No-RAG",
+          "41.3",
+          "55.0",
+          "0%",
+          "1.2k"
+        ],
+        [
+          "Standard RAG (retrieve-always)",
+          "49.8",
+          "62.1",
+          "100%",
+          "5.8k"
+        ],
+        [
+          "L-RAG (entropy gate)",
+          "50.5",
+          "62.4",
+          "76%",
+          "4.6k"
+        ],
+        [
+          "PAGER-only (always retrieve, page)",
+          "53.9",
+          "65.7",
+          "100%",
+          "4.9k"
+        ],
+        [
+          "Graph-RAG (always retrieve, graph)",
+          "55.1",
+          "66.3",
+          "100%",
+          "5.2k"
+        ],
+        [
+          "CUPID-RAG (ours: calibrated + PDMS + page/graph)",
+          "57.4",
+          "68.2",
+          "63%",
+          "3.7k"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Results under clean retrieval (high precision top-k)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "EM ↑",
+        "F1 ↑",
+        "Retrieval Rate ↓",
+        "Avg. Context Tokens ↓"
+      ],
+      "data": [
+        [
+          "No-RAG",
+          "41.3",
+          "55.0",
+          "0%",
+          "1.2k"
+        ],
+        [
+          "Standard RAG",
+          "56.0",
+          "68.0",
+          "100%",
+          "5.8k"
+        ],
+        [
+          "L-RAG",
+          "55.4",
+          "67.5",
+          "70%",
+          "4.2k"
+        ],
+        [
+          "PAGER-only",
+          "57.2",
+          "69.1",
+          "100%",
+          "4.8k"
+        ],
+        [
+          "Graph-RAG",
+          "57.0",
+          "68.9",
+          "100%",
+          "5.1k"
+        ],
+        [
+          "CUPID-RAG (ours)",
+          "57.8",
+          "69.4",
+          "58%",
+          "3.4k"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Ablation study (noisy retrieval)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "EM ↑",
+        "Retrieval Rate ↓",
+        "Key removed element"
+      ],
+      "data": [
+        [
+          "Full CUPID-RAG",
+          "57.4",
+          "63%",
+          "—"
+        ],
+        [
+          "w/o calibration (raw entropy only)",
+          "55.6",
+          "66%",
+          "Hao et al. (2026)-style calibration"
+        ],
+        [
+          "w/o PDMS (no positional decay signal)",
+          "54.8",
+          "78%",
+          "Liu et al. (2026)-inspired decay weighting"
+        ],
+        [
+          "w/o page structuring (concat chunks)",
+          "52.1",
+          "63%",
+          "PAGER-like organization (Li et al., 2026)"
+        ],
+        [
+          "w/o graph bridging (page only)",
+          "55.9",
+          "63%",
+          "N2N-style bridges (Sharafath et al., 2026)"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

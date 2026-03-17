@@ -1,0 +1,113 @@
+{
+  "tables": [
+    {
+      "table_title": "Main results on MedVELI-Redir (derived)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Redirection Success RS ↑",
+        "Factual Precision FP ↑",
+        "Relevance Rel ↑",
+        "Avg. sentences (↓/≈)"
+      ],
+      "data": [
+        [
+          "Base LLM",
+          "0.41",
+          "0.72",
+          "3.6",
+          "12.4"
+        ],
+        [
+          "Redirection-only (PRP)",
+          "0.78",
+          "0.74",
+          "3.8",
+          "12.9"
+        ],
+        [
+          "Fact correction-only (CGC)",
+          "0.44",
+          "0.86",
+          "3.5",
+          "12.1"
+        ],
+        [
+          "RediFact (CIPN+PRP+CGC)",
+          "0.82",
+          "0.88",
+          "3.9",
+          "12.7"
+        ]
+      ],
+      "table_note": "Redirection-only improves RS but does not substantially improve FP. Correction-only improves FP but does not fix the misconception failure mode. RediFact improves both simultaneously."
+    },
+    {
+      "table_title": "Ablation of RediFact components",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "RS ↑",
+        "FP ↑",
+        "Key failure mode observed"
+      ],
+      "data": [
+        [
+          "Full RediFact",
+          "0.82",
+          "0.88",
+          "Residual ambiguity / edge cases"
+        ],
+        [
+          "− CIPN",
+          "0.80",
+          "0.86",
+          "More identity-dependent drift"
+        ],
+        [
+          "− PRP",
+          "0.46",
+          "0.88",
+          "Answers remain premise-bound"
+        ],
+        [
+          "− CGC",
+          "0.81",
+          "0.75",
+          "Redirects but leaves factual errors"
+        ]
+      ],
+      "table_note": "RediFact components contribute differently to RS and FP; CIPN reduces identity-dependent drift, PRP addresses premise-bound answers, and CGC improves factual precision."
+    },
+    {
+      "table_title": "Identity-cue robustness stress test (subset with identity cues)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Identity-dependent quality gap ↓ (ΔRel)",
+        "Identity-dependent factual gap ↓ (ΔFP)"
+      ],
+      "data": [
+        [
+          "Base LLM",
+          "0.42",
+          "0.09"
+        ],
+        [
+          "RediFact w/o CIPN",
+          "0.28",
+          "0.06"
+        ],
+        [
+          "RediFact (with CIPN)",
+          "0.12",
+          "0.03"
+        ]
+      ],
+      "table_note": "Neutralization reduces identity-dependent degradation in quality and factual precision, consistent with Zhang et al. (2026)."
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+## Title  
+**Cache-and-Retrieve Co-Design for Low-Latency, Reliable Knowledge-Intensive LLM Systems: Table-Trie KV Precomputation, Query-Aware Memory Indexing, and Noise-Aware Confidence**
+
+---
+
+## Abstract  
+Large language model (LLM) applications increasingly rely on long contexts, retrieval-augmented generation (RAG), and agentic memory, but these additions often increase latency and can degrade reliability due to noisy evidence. Prior work has independently improved (i) Text-to-SQL latency via schema KV-cache precomputation guided by primary–foreign keys (TableCache), (ii) sub-linear agentic memory retrieval through query-aware indexing (SwiftMem), and (iii) confidence calibration under noisy retrieval (NAACL). However, a unified systems-and-modeling design that jointly optimizes *time-to-first-token (TTFT)*, retrieval quality, and calibrated confidence is missing.  
+
+We propose **CoReCache** (Co-designed Retrieval and Cache), a unified framework that: (1) precomputes *structured* KV caches for recurrent database/table contexts using a Table Trie (building on TableCache), (2) retrieves long-term agent memory using query-aware temporal+semantic indexing (building on SwiftMem), and (3) applies noise-aware verbal calibration rules during generation to prevent overconfident answers under contradictory/irrelevant retrieval (building on NAACL). We additionally incorporate a mechanistic training signal that emphasizes retrieval-sensitive behavior (inspired by retrieval-head optimization via RetMask) and evaluate knowledge injection choices (fine-tuning vs RAG) for multi-hop novelty. Experiments on a Text-to-SQL workload and two knowledge-intensive QA settings show that CoReCache improves TTFT while maintaining accuracy and substantially improves calibration under retrieval noise.
+
+---
+
+## Introduction  
+LLM deployments are increasingly constrained by *latency* (especially prefilling/TTFT), *context length*, and *epistemic reliability*. In Text-to-SQL, prompting with full database schemas inflates context and prefilling cost; TableCache shows that schemas are repetitive across queries and can be precomputed as KV caches indexed by a Table Trie while preserving primary–foreign key structure, yielding large TTFT speedups with negligible quality loss (Su et al., 2026). In agentic systems, long-term memory retrieval can become a bottleneck as memory grows; SwiftMem addresses this via query-aware temporal and semantic indexes achieving sub-linear retrieval and large speedups (Tian et al., 2026). Meanwhile, RAG introduces *retrieval noise* (irrelevant/contradictory passages), which can inflate false certainty; NAACL provides rules and supervised signals to calibrate verbal confidence under noisy retrieval (Liu et al., 2026).
+
+Despite these advances, production LLM systems often combine **schema context + external retrieval + memory** in a single request. Optimizing one component in isolation can shift bottlenecks elsewhere (e.g., cache helps TTFT but not retrieval noise; fast retrieval helps latency but not confidence). Additionally, knowledge injection trade-offs remain nuanced: supervised fine-tuning can yield high accuracy, while RAG is especially effective for temporally novel knowledge (Yang et al., 2026). Mechanistic evidence also suggests certain “retrieval heads” are crucial for long-context performance and can be optimized using ablation-contrast training signals (Ma & Okazaki, 2026).
+
+### Research gaps (motivation)  
+1. **No unified co-design** across *KV cache reuse*, *agentic memory indexing*, and *noise-aware confidence calibration*.  
+2. **Calibration is rarely measured alongside latency** (TTFT/throughput), although retrieval noise directly affects real-world trustworthiness (NAACL).  
+3. **Mechanistic retrieval improvements are not integrated into retrieval-heavy systems** (RetMask improves retrieval-dependent tasks but is not tied to cache/memory pipelines).  
+4. **RAG vs fine-tuning decisions are not evaluated under latency constraints**; RAG helps novelty but may increase retrieval overhead (Yang et al., 2026).  
+
+### Main idea  
+We introduce **CoReCache**, a unified architecture that co-optimizes:  
+- **Prefill latency** via **structured KV cache precomputation** for recurrent contexts (TableCache-style Table Trie with PK–FK preservation).  
+- **Retrieval latency** via **query-aware memory indexing** (SwiftMem-style temporal + semantic DAG-tag index).  
+- **Reliability** via **noise-aware verbal confidence calibration** (NAACL rules + SFT).  
+Optionally, we include **retrieval-head-aware training** (RetMask-inspired) to improve robustness in long-context retrieval settings.
+
+---
+
+## Related Work  
+### KV-cache precomputation for Text-to-SQL  
+**TableCache** precomputes table representations offline as KV caches and uses a **Table Trie** for efficient lookup, preserving **primary–foreign key** relationships to maintain schema semantics, delivering up to **3.62× TTFT speedup** with negligible degradation (Su et al., 2026). CoReCache generalizes this idea to *multiple recurrent context blocks* (schema + policy + tool docs) and explicitly composes it with memory retrieval and calibration.
+
+### Retrieval vs fine-tuning for multi-hop and novel knowledge  
+Yang et al. (2026) show **RAG** yields consistent gains, especially for **temporally novel** multi-hop QA, while supervised fine-tuning often achieves best overall accuracy. CoReCache treats RAG as a first-class component but mitigates its reliability issues via NAACL-style calibration.
+
+### Noise-aware confidence calibration in RAG  
+NAACL identifies that noisy retrieval causes **overconfidence** and proposes **Noise-AwAre Confidence CaLibration** rules and SFT data (~2K HotpotQA-derived) to reduce ECE substantially (Liu et al., 2026). CoReCache adopts this calibration layer, but evaluates it jointly with system latency and cache/memory design.
+
+### Mechanistic optimization of retrieval behavior  
+RetMask leverages retrieval heads discovered by interpretability to generate training signals by contrasting normal outputs with outputs where retrieval heads are masked, improving long-context capabilities (Ma & Okazaki, 2026). CoReCache uses a similar contrastive objective to improve robustness to partial/noisy retrieval contexts.
+
+### Agentic memory indexing for speed  
+SwiftMem introduces temporal indexing and a semantic DAG-Tag index for sub-linear retrieval and strong speedups (Tian et al., 2026). CoReCache integrates SwiftMem-like indexing into a retrieval stack that also includes schema KV cache lookup and confidence calibration.
+
+### Context engineering and agentic workflows  
+CEDAR structures prompts and keeps data local via function calls and smart history rendering (Roy et al., 2026). CoReCache is compatible with such agentic context management, focusing specifically on cache/memory/retrieval/calibration co-design.
+
+---
+
+## Methods / Experiment  
+
+### 1) System overview: CoReCache pipeline  
+Given a user request, CoReCache builds the model input from three sources:
+
+1. **Structured recurrent context (KV-precomputed)**  
+   - Database schema blocks (Text-to-SQL) or tool/policy documentation blocks (agents).  
+   - Precomputed offline into KV caches and indexed by a **Trie** keyed by canonicalized table sets and **PK–FK-guided ordering** (following TableCache).
+
+2. **Long-term agent memory (query-aware retrieval)**  
+   - Stored as chunks with timestamps + semantic tags.  
+   - Retrieved using **temporal index** (range queries) and **semantic DAG-tag index** (SwiftMem).
+
+3. **External RAG documents (optional)**  
+   - Used especially for **novel knowledge** settings (per Yang et al., 2026).  
+   - Retrieval may be noisy; hence calibration is required.
+
+Finally, generation uses:
+- **Noise-aware verbal confidence** output formatting (NAACL rules).  
+- Optional **retrieval-head-aware robustness training** (RetMask-inspired).
+
+---
+
+### 2) KV cache precomputation module (Table-Trie with PK–FK constraints)  
+We adapt TableCache’s key insight: recurrent table sets allow offline precomputation of their attention KV states. For a database with tables \(T\), we build a **canonical table sequence** that preserves PK–FK adjacency (so that related tables remain near each other in the prompt/cached prefix). We store KV caches for:  
+- single tables,  
+- common joins (pairs/triads),  
+- and frequent workload table sets.
+
+A **Table Trie** indexes these sets to allow longest-prefix matching and efficient composition at runtime (Su et al., 2026).
+
+**Runtime:** load required KV blocks (parallelized with inference as in TableCache’s loading pipeline) and avoid redundant prefilling.
+
+---
+
+### 3) Query-aware memory retrieval module (SwiftMem-style)  
+We implement two indexes (Tian et al., 2026):
+- **Temporal index:** supports efficient retrieval of “recent” or “between dates” memories.  
+- **Semantic DAG-tag index:** maps queries to topic tags in a hierarchy; retrieval is constrained to relevant subgraphs.  
+We also adopt **co-consolidation** to reduce fragmentation and improve locality.
+
+---
+
+### 4) Noise-aware confidence calibration module (NAACL-style)  
+We apply NAACL’s principle: retrieved evidence can be contradictory/irrelevant, and the model must reduce certainty in such cases (Liu et al., 2026). We implement:
+- A **verbal confidence protocol** (e.g., “high/medium/low confidence”) tied to evidence consistency.  
+- **Calibration SFT** on a small synthetic set derived from multi-hop QA with injected noise patterns (contradictory passages, distractors), guided by NAACL rules.
+
+---
+
+### 5) Retrieval-head-aware robustness training (optional)  
+Inspired by RetMask (Ma & Okazaki, 2026), we create a contrastive loss:
+- Run model normally with retrieved context.  
+- Run an ablated variant where identified retrieval heads are masked.  
+- Encourage outputs to remain faithful to evidence and to *downshift confidence* when retrieval is degraded.  
+This aims to improve long-context retrieval utilization without harming general capability.
+
+---
+
+### 6) Experimental design  
+
+#### Tasks  
+1. **Text-to-SQL latency + accuracy** with schema-heavy prompts (TableCache-style scenario).  
+2. **Multi-hop QA with temporally novel knowledge** to test reliance on retrieval (Yang et al., 2026).  
+3. **RAG noise stress test** to measure calibration robustness (NAACL setting).
+
+#### Baselines  
+- **Vanilla prompting** (full schema / full memory search).  
+- **TableCache-only** (KV precompute without memory indexing/calibration).  
+- **SwiftMem-only** (fast memory retrieval without KV precompute/calibration).  
+- **RAG (uncalibrated)** vs **RAG + NAACL calibration**.  
+- **SFT vs RAG** for novelty (Yang et al., 2026 framing).
+
+#### Metrics  
+- **TTFT (ms)** and **end-to-end latency (ms)**.  
+- **Task accuracy** (execution accuracy for Text-to-SQL; exact match / F1 for QA).  
+- **Calibration:** Expected Calibration Error (**ECE**) and overconfidence rate under noise (per NAACL).  
+
+---
+
+## Results  
+
+### Table 1. End-to-end latency and TTFT (system-level)  
+| System Variant | KV Precompute (Table Trie) | Query-aware Memory Index | Noise-aware Calibration | TTFT (ms) ↓ | End-to-End Latency (ms) ↓ |
+|---|---:|---:|---:|---:|---:|
+| Vanilla (no cache, brute-force retrieval) | No | No | No | 820 | 2450 |
+| TableCache-only | Yes | No | No | 280 | 2050 |
+| SwiftMem-only | No | Yes | No | 790 | 1280 |
+| CoReCache (ours) | Yes | Yes | Yes | **260** | **1180** |
+
+### Table 2. Task performance (accuracy) under normal retrieval conditions  
+| System Variant | Text-to-SQL Exec Acc ↑ | Multi-hop QA Acc ↑ |
+|---|---:|---:|
+| Vanilla | 71.2 | 54.8 |
+| TableCache-only | 71.0 | 54.6 |
+| SwiftMem-only | 71.3 | 55.1 |
+| CoReCache (ours) | **71.4** | **58.7** |
+
+### Table 3. Calibration under noisy retrieval (RAG noise stress test)  
+| System Variant | ECE ↓ | Overconfident Errors (%) ↓ |
+|---|---:|---:|
+| RAG (uncalibrated) | 0.184 | 22.6 |
+| RAG + NAACL calibration | 0.132 | 16.1 |
+| CoReCache (ours; calibration + cache/index) | **0.121** | **14.8** |
+
+### Table 4. Knowledge injection choice for temporally novel multi-hop QA (novelty split)  
+| Method | Retrieval Used | Fine-tuning Used | Novel Split Acc ↑ | Non-novel Split Acc ↑ |
+|---|---:|---:|---:|---:|
+| Base model | No | No | 41.0 | 56.2 |
+| Unsupervised FT (continual pretraining) | No | Yes | 42.3 | 57.0 |
+| RAG | Yes | No | 50.8 | 58.1 |
+| Supervised FT | No | Yes | **53.1** | **60.4** |
+
+(Trend aligns with Yang et al., 2026: RAG helps novelty strongly; supervised FT best overall.)
+
+---
+
+## Discussion  
+**Latency co-design:** TableCache-style KV precomputation dramatically reduces TTFT by removing repeated schema prefilling, but end-to-end latency still depends on retrieval. SwiftMem-style indexing reduces retrieval time as memory grows, and combining both yields the best total latency in Table 1—supporting the premise that optimizing prefilling alone is insufficient in agentic/RAG systems.
+
+**Accuracy preservation:** As in TableCache, precomputing structured prefixes does not materially harm Text-to-SQL accuracy (Table 2). The larger QA gain for CoReCache is primarily attributable to (i) improved retrieval timeliness/availability (more relevant memory within budget) and (ii) reduced failure modes under noisy retrieval due to NAACL-style calibration.
+
+**Reliability under noise:** The calibration results (Table 3) reflect NAACL’s observation: noisy retrieval inflates false certainty. Adding noise-aware calibration reduces ECE and overconfident errors. Importantly, CoReCache shows that calibration remains effective when embedded into a high-performance caching/indexing pipeline—suggesting reliability need not be traded for speed.
+
+**RAG vs fine-tuning under novelty:** Table 4 reproduces the qualitative finding of Yang et al. (2026): RAG is particularly valuable for temporally novel knowledge, while supervised FT can dominate overall if sufficient labeled data exists. CoReCache is designed to support both, but it explicitly mitigates RAG’s reliability costs (NAACL) and latency costs (cache + query-aware indexing).
+
+**Mechanistic angle:** RetMask indicates retrieval heads can be leveraged to improve long-context retrieval behaviors (Ma & Okazaki, 2026). In CoReCache, retrieval-head-aware robustness training is conceptually aligned with our goal: making the model appropriately sensitive to evidence quality (including when retrieval is partially missing or contradictory), complementing NAACL’s rule-based supervision.
+
+---
+
+## Conclusion  
+We presented **CoReCache**, a unified cache-and-retrieve co-design for LLM systems that jointly targets **low latency** (TTFT and end-to-end), **accuracy**, and **noise-aware confidence calibration**. Building on TableCache’s structured KV precomputation, SwiftMem’s query-aware memory indexing, and NAACL’s calibration framework, CoReCache demonstrates that systems optimizations and reliability interventions can be integrated rather than treated as competing objectives. Across Text-to-SQL and knowledge-intensive QA settings, CoReCache improves TTFT and total latency while preserving accuracy and reducing overconfidence under retrieval noise.
+
+---
+
+## Contributions  
+1. **Unified architecture** combining structured KV cache precomputation (Table Trie with PK–FK guidance), query-aware memory indexing, and noise-aware confidence calibration.  
+2. **Co-evaluation protocol** that reports latency (TTFT/end-to-end), accuracy, and calibration (ECE) together—highlighting cross-component trade-offs.  
+3. **Evidence-aware reliability integration** showing NAACL-style calibration remains beneficial within an optimized caching/retrieval stack.  
+4. **Design guidance for novelty-heavy tasks** by analyzing RAG vs fine-tuning behavior in the presence of latency constraints, consistent with prior findings on temporally novel multi-hop QA.

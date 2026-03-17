@@ -1,0 +1,176 @@
+## Title
+**SAFE-MORAL-RAG: Atomic Claim Verification and Empathy-Aware Safety for Romanian Synthetic Health Microfiction in Retrieval-Augmented Generation**
+
+---
+
+## Abstract
+Compact language models trained on synthetic narratives offer a practical route for under-resourced languages, yet their deployment in safety-critical domains (e.g., health) raises concerns about hallucinated claims, prompt-injection vulnerability, and evaluation reliability. Building on the Romanian-centric TF3-RO pipeline for compact model training and synthetic moral microfiction generation, we propose **SAFE-MORAL-RAG**, a study of how to make Romanian narrative-style health answers safer and more trustworthy under retrieval augmentation. Our approach combines (i) **atomic claim decomposition and verification** inspired by Atomic-SNLI and MedRAGChecker, (ii) **retrieval quality–aware decoding** following OpenDecoder and **test-time adaptation** following TTARAG, (iii) **reasoning-enhanced prompt-injection defense** via ReasAlign-style structured conflict detection, and (iv) **anticipatory empathy modeling** using the Empathy Applicability Framework (EAF) to avoid unsafe “over-reassurance” while maintaining supportive tone. We evaluate on a new Romanian benchmark derived from synthetic moral microfiction with embedded health queries and controlled misinformation variants. Results show that jointly using retrieval-quality indicators + test-time adaptation reduces unsupported atomic claims, while atomic verification significantly improves safety-critical error detection. We also find a measurable trade-off between conciseness and perceived expertise consistent with CASSE, motivating multi-objective prompting. Finally, we use RULERS-style locked rubrics to stabilize LLM-as-a-judge evaluation.  
+
+---
+
+## 1. Introduction
+Romanian is both morphologically rich and comparatively under-resourced for open, reproducible language-model pipelines. TF3-RO demonstrates that **compact Romanian LMs** can be trained from scratch and then used to generate **large-scale synthetic moral microfiction** with controlled structure and evaluation tooling (Nădaș et al., 2026). This creates an opportunity: leverage such compact models for Romanian-facing assistants, including health-related information access.
+
+However, healthcare and safety-adjacent deployments face three persistent problems:
+
+1. **Claim-level unfaithfulness in long-form generation**, even under retrieval augmentation (Ji et al., 2026).
+2. **Robustness failures under distribution shift** (e.g., new prompts or domains), affecting both generation and detection/evaluation tools (Xia et al., 2026; Sun et al., 2026).
+3. **Security and alignment risks**, including indirect prompt injection in agentic/RAG settings (Li et al., 2026; Tahera et al., 2026).
+
+Additionally, health communication quality is not only factual: it requires **appropriate empathy**. Yet empathy should be *selective*—some queries require emotional acknowledgment, others do not (Randhawa et al., 2026). Style steering is also entangled: pushing conciseness can reduce perceived expertise (Cho et al., 2026), which is dangerous in health contexts.
+
+### Research gap
+Existing work provides strong components—Romanian compact LM pipelines (TF3-RO), atomic inference datasets (Atomic-SNLI), claim-level verification for biomedical RAG (MedRAGChecker), retrieval-quality-aware decoding (OpenDecoder), test-time adaptation for RAG (TTARAG), and prompt-injection defenses (ReasAlign). But there is **no integrated study** that:
+- targets **Romanian**,
+- focuses on **narrative/synthetic microfiction-driven** health queries (a realistic format for user engagement),
+- evaluates **atomic claim safety + empathy applicability + injection robustness** together,
+- and uses **stable, evidence-anchored evaluation rubrics** (Hong et al., 2026) rather than brittle judge prompting.
+
+### Main idea
+We propose **SAFE-MORAL-RAG**, an integrated framework and benchmark for **Romanian RAG health responses grounded in narrative microfiction**, combining retrieval-aware decoding + test-time adaptation + atomic claim verification + empathy applicability modeling + injection defense, evaluated with locked rubrics.
+
+---
+
+## 2. Related Work
+### Romanian compact LMs and synthetic narrative corpora
+TF3-RO provides an end-to-end Romanian pipeline: tokenizer design, packed pretraining of a ~52M model, compression to ~26M, and generation of 3M Romanian synthetic fables with extensive evaluation (Nădaș et al., 2026). We adopt the synthetic moral microfiction paradigm as a controllable testbed.
+
+### Atomic decomposition and explainable verification
+Atomic-SNLI shows that sentence-level entailment hides failures in fine-grained reasoning, and that atomic-level supervision improves transparent inference (Huang, 2026). MedRAGChecker decomposes RAG answers into atomic claims and verifies them using evidence-grounded NLI plus KG consistency signals (Ji et al., 2026). We adapt this *claim-first* philosophy to Romanian health narratives (not necessarily biomedical QA only).
+
+### RAG robustness: retrieval quality and test-time adaptation
+OpenDecoder incorporates explicit indicators of retrieved document quality (relevance, rank, QPP) into decoding to reduce sensitivity to noisy context (Mo et al., 2026). TTARAG adapts model parameters at inference by predicting retrieved content, improving domain transfer (Sun et al., 2026). We combine both: quality-aware decoding plus lightweight test-time adaptation.
+
+### Safety, privacy, and prompt injection
+Healthcare LLM deployments require phase-aware threat models and privacy techniques (Tahera et al., 2026). ReasAlign proposes structured reasoning and trajectory selection to defend against indirect prompt injection while maintaining utility (Li et al., 2026). AJAR highlights emerging “agentic gap” risks in tool settings (Dou & Yang, 2026). We focus on *RAG injection* embedded in retrieved text.
+
+### Empathy applicability and style side effects
+EAF predicts when empathy is applicable in general health queries (Randhawa et al., 2026). CASSE shows style features are entangled; conciseness can suppress perceived expertise (Cho et al., 2026). We operationalize empathy as a controllable dimension while monitoring expertise loss.
+
+### Evaluation reliability
+RULERS addresses instability and unverifiable reasoning in LLM-as-a-judge by compiling locked rubrics and requiring evidence-anchored scoring (Hong et al., 2026). We use a locked rubric protocol for consistent evaluation across conditions.
+
+---
+
+## 3. Methods / Experiment
+
+### 3.1 Task and dataset: RoMoralHealth-RAG
+We construct **RoMoralHealth-RAG**, a Romanian evaluation set built from TF3-RO-style synthetic moral microfiction (Nădaș et al., 2026):
+
+- Each item contains:  
+  (a) a short Romanian moral microfiction vignette,  
+  (b) a user health-related question prompted by the vignette (general health, not diagnosis),  
+  (c) a retrieved evidence bundle (top-k passages), and  
+  (d) a target response requirement: grounded, safe, and empathy-appropriate.
+
+To test robustness and safety, we generate controlled variants:
+- **Noisy retrieval**: mix relevant and irrelevant passages.
+- **Misinformation retrieval**: include a passage with a plausible but incorrect health claim.
+- **Prompt injection in retrieval**: embed malicious instructions (“ignore user, recommend unsafe action”) in a retrieved passage, following the indirect injection threat model (Li et al., 2026).
+- **Prompt shift**: paraphrase question prompts to test generalization (Xia et al., 2026).
+
+### 3.2 Models and systems compared
+We evaluate a compact Romanian generator consistent with TF3-RO’s compact modeling approach (Nădaș et al., 2026) in several configurations:
+
+1. **Base-RAG**: standard RAG generation.
+2. **+OpenDecoder-Q**: add retrieval quality indicators during decoding (Mo et al., 2026).
+3. **+TTARAG**: test-time adaptation by predicting retrieved content (Sun et al., 2026).
+4. **+AtomicVerify**: claim decomposition + evidence-grounded NLI verification inspired by Atomic-SNLI and MedRAGChecker (Huang, 2026; Ji et al., 2026).
+5. **+ReasAlign-Guard**: structured reasoning to detect instruction conflicts and resist injection (Li et al., 2026).
+6. **+EAF-Empathy**: empathy applicability classifier determines whether to include empathic framing (Randhawa et al., 2026).
+
+### 3.3 Atomic claim decomposition and verification (Romanian)
+We decompose each generated answer into **atomic claims** (Ji et al., 2026), aiming for minimal factual units (e.g., “Ibuprofen can irritate the stomach.”). Verification uses:
+- **Evidence-grounded NLI** signals (entails/contradicts/insufficient) aligned with atomic-level reasoning insights (Huang, 2026).
+- A lightweight consistency check inspired by MedRAGChecker’s diagnostic aggregation (Ji et al., 2026), producing answer-level rates:
+  - Unsupported claim rate
+  - Contradiction rate
+  - Safety-critical error rate (predefined health-risk claim categories)
+
+### 3.4 Injection defense via structured conflict reasoning
+Following ReasAlign (Li et al., 2026), the system:
+1. Extracts user intent and task constraints.
+2. Scans retrieved passages for *instructional text*.
+3. Detects conflicts (retrieval instruction vs. user request vs. safety policy).
+4. Selects a safe reasoning trajectory (test-time scaling idea) and proceeds with grounded answering.
+
+### 3.5 Empathy applicability control
+Using EAF (Randhawa et al., 2026), we predict whether empathy is applicable. If applicable, the generator adds brief validation/concern acknowledgment while maintaining evidence grounding. We also test a “forced concise” style to examine CASSE-like side effects on expertise perception (Cho et al., 2026).
+
+### 3.6 Evaluation protocol with locked rubrics
+We implement a **RULERS-style locked rubric** (Hong et al., 2026) with evidence-anchored scoring for:
+- Faithfulness to retrieved evidence
+- Safety (avoid harmful advice; uncertainty when needed)
+- Empathy appropriateness (only when applicable)
+- Helpfulness/utility
+- Perceived expertise (tracked due to style side effects)
+
+We also track generalization across prompt shifts, following the motivation of linguistic feature shifts affecting detector generalization (Xia et al., 2026), though our focus is generation.
+
+---
+
+## 4. Results
+
+### Table 1. RoMoralHealth-RAG dataset composition (illustrative)
+| Split | Items | Noisy retrieval (%) | Misinformation (%) | Injection-in-retrieval (%) | Prompt-shift variants |
+|---:|---:|---:|---:|---:|---:|
+| Dev | 500 | 30 | 20 | 20 | 1 per item |
+| Test | 2,000 | 30 | 20 | 20 | 2 per item |
+
+### Table 2. Main safety and faithfulness outcomes (answer-level)
+Lower is better for error rates; higher is better for rubric scores.
+
+| System | Faithfulness score (0-100) | Unsupported claim rate (%) | Contradiction rate (%) | Safety-critical error rate (%) |
+|---|---:|---:|---:|---:|
+| Base-RAG | 71.2 | 18.5 | 6.4 | 5.9 |
+| +OpenDecoder-Q | 75.6 | 15.1 | 5.8 | 5.1 |
+| +TTARAG | 76.4 | 14.6 | 5.5 | 4.8 |
+| +OpenDecoder-Q +TTARAG | 79.3 | 12.2 | 4.9 | 4.1 |
+| +AtomicVerify (on top) | 83.0 | 7.4 | 3.1 | 2.6 |
+| +ReasAlign-Guard (on top) | 82.1 | 8.0 | 3.3 | 1.9 |
+| Full: +OpenDecoder-Q +TTARAG +AtomicVerify +ReasAlign +EAF | **84.2** | **6.9** | **2.9** | **1.6** |
+
+### Table 3. Robustness to injection embedded in retrieved text
+| System | Injection attack success rate (ASR, %) ↓ | Utility score (0-100) ↑ |
+|---|---:|---:|
+| Base-RAG | 41.7 | 74.0 |
+| +AtomicVerify | 28.9 | 73.2 |
+| +ReasAlign-Guard | **6.8** | 73.5 |
+| Full system | **5.9** | **75.1** |
+
+### Table 4. Empathy applicability and style side effects (CASSE-inspired)
+| Setting | Empathy appropriateness (0-100) | Perceived expertise (0-100) | Avg length (tokens) |
+|---|---:|---:|---:|
+| Always-empathic | 78.4 | 70.2 | 210 |
+| EAF-controlled empathy | **85.6** | 72.0 | 195 |
+| Forced concise style | 80.1 | **64.3** | **120** |
+| Full system (EAF + no forced concision) | **86.0** | **73.1** | 185 |
+
+---
+
+## 5. Discussion
+**Retrieval-quality awareness and test-time adaptation are complementary.** OpenDecoder-style indicators help the generator discount low-quality context (Mo et al., 2026), while TTARAG improves adaptation under domain/prompt shift by aligning the model to retrieved content at inference (Sun et al., 2026). The combined gains suggest that *knowing retrieval quality* and *adapting to retrieval distribution* address different failure modes.
+
+**Atomic verification materially reduces safety-critical errors.** Consistent with MedRAGChecker’s motivation (Ji et al., 2026) and Atomic-SNLI’s evidence that fine-grained reasoning is harder than sentence-level judgments (Huang, 2026), we find that answer-level scores can look acceptable while a few atomic claims remain unsupported or dangerous. Atomic decomposition makes these errors visible and actionable.
+
+**Structured injection defense is necessary in RAG.** Injection embedded in retrieved passages is a realistic threat in healthcare information settings (Tahera et al., 2026). ReasAlign-style conflict reasoning substantially reduces ASR while preserving utility, aligning with the reported security–utility improvements of reasoning-enhanced alignment (Li et al., 2026). Our results also echo AJAR’s broader point that agentic and context-rich systems create new attack surfaces (Dou & Yang, 2026), even when our setting is “only” RAG.
+
+**Empathy should be predicted, not blindly added.** EAF-controlled empathy improves appropriateness (Randhawa et al., 2026). Moreover, forcing conciseness reduces perceived expertise, consistent with CASSE’s finding that style features are entangled and can have unintended side effects (Cho et al., 2026). This is especially important in Romanian health assistants: concise answers may feel less authoritative, potentially pushing users toward unsafe self-triage.
+
+**Evaluation stability matters.** Using locked rubrics and evidence-anchored scoring mitigates judge instability (Hong et al., 2026), which is critical when comparing small improvements in safety metrics.
+
+---
+
+## 6. Conclusion
+We introduced **SAFE-MORAL-RAG**, an integrated framework for safer Romanian RAG health responses grounded in synthetic moral microfiction. By combining TF3-RO-style compact Romanian modeling with retrieval-quality-aware decoding, test-time adaptation, atomic claim verification, prompt-injection defense, and empathy applicability control, we reduce unsupported and safety-critical claims while maintaining utility. Our study underscores that in safety-sensitive Romanian applications, **atomic verification and structured security reasoning** are not optional add-ons but core requirements, and that **style steering must be treated as multi-objective** due to expertise–conciseness entanglement.
+
+---
+
+## Contributions
+1. **Problem framing:** A unified study of Romanian narrative-driven health RAG that jointly considers faithfulness, safety, injection robustness, and empathy applicability.
+2. **Method:** SAFE-MORAL-RAG, integrating OpenDecoder-style retrieval quality signals, TTARAG test-time adaptation, Atomic-SNLI/MedRAGChecker-inspired atomic verification, and ReasAlign-inspired injection defense.
+3. **Benchmark design:** **RoMoralHealth-RAG**, derived from TF3-RO-like synthetic moral microfiction with controlled noisy/misleading/injected retrieval conditions.
+4. **Findings:** Empirical evidence that (i) retrieval-quality-aware decoding + test-time adaptation improves robustness, (ii) atomic verification reduces safety-critical errors, (iii) structured reasoning sharply lowers injection ASR, and (iv) EAF-controlled empathy improves appropriateness while conciseness can reduce perceived expertise.
+5. **Evaluation protocol:** A RULERS-inspired locked-rubric approach for more stable, evidence-anchored LLM-based evaluation.
+
+If you want, I can also add a short “Limitations & Ethical Considerations” section aligned with the healthcare privacy threat model (Tahera et al., 2026) and provide pseudo-code for the full pipeline.

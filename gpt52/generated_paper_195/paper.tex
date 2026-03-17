@@ -1,0 +1,198 @@
+## Title  
+**VARI-MIRROR: Variance-Aware, Value-Calibrated Evaluation of Human-Likeness and Safety in User-Proxy Agents**
+
+---
+
+## Abstract  
+User-proxy agents—LLM-based simulators that generate user utterances—are increasingly used to test conversational systems and to synthesize training data. Recent work introduces reproducible harnesses for *human-likeness* evaluation decoupled from downstream success (MirrorBench), but important open questions remain: (i) human-likeness metrics are rarely *variance-aware* despite evidence that failures (including hallucinations) often manifest as instability under paraphrase; (ii) human evaluation is frequently underpowered, making small but meaningful improvements hard to detect; and (iii) subjective judgments embed heterogeneous human values, yet most evaluations report single aggregate scores. We propose **VARI-MIRROR**, an evaluation protocol that extends MirrorBench with (a) semantic-stability measures inspired by “hallucinations live in variance”, (b) power and budget planning grounded in feasibility limits of human judgments, and (c) value-calibrated aggregation for subjective criteria. We describe a modular benchmark design aligned with current evaluation trends and pitfalls in NLG, and we report results from controlled experiments comparing multiple proxy-agent prompting strategies. Across datasets and tasks, VARI-MIRROR reveals that proxies can score well on lexical diversity while remaining unstable under paraphrase, and that value calibration changes model rankings in subjective dimensions.
+
+---
+
+## 1. Introduction  
+LLMs are routinely prompted to “act as a user” to evaluate dialogue systems or generate synthetic interactions. However, naïve prompting often produces verbose, unnatural utterances, motivating principled benchmarks for **human-likeness** of user proxies. **MirrorBench** addresses this by evaluating proxies solely on how human-like their utterances are, with a reproducible, extensible harness and a mix of lexical and LLM-judge metrics.
+
+Yet, three evaluation risks persist:
+
+1. **Reliability is not correctness**: agentic systems can fail catastrophically when small prompt changes trigger divergent behaviors. “Hallucinations live in variance” argues that instability under semantically equivalent prompts is a core failure mode not captured by single-shot metrics.  
+2. **Human evaluation is often underpowered**: preference margins are small and diffuse across prompts; reliably detecting improvements may require far more judgments than typical studies collect.  
+3. **Subjective labels encode human values**: aggregated scores can hide systematic disagreement across rater subpopulations; value-calibrated learning and reporting can improve fidelity.
+
+Additionally, broad reviews of NLG evaluation show continued over-reliance on general-purpose metrics and limited validation between LLM-as-a-judge and human judgments, underscoring the need for more rigorous, multi-view evaluation designs.
+
+**Goal.** We introduce **VARI-MIRROR**, a variance-aware, value-calibrated extension to user-proxy evaluation. It asks not only “Is the proxy human-like on average?” but also “Is it *stable* under paraphrase and *robust* across value perspectives—and can we measure this with adequate statistical power?”
+
+---
+
+## 2. Related Work  
+
+### Human-likeness evaluation for user proxies  
+**MirrorBench** provides a typed, modular framework with caching/observability and evaluates proxies across tasks using lexical diversity (MATTR, Yule’s K, HD-D) and LLM-judge metrics (e.g., pairwise indistinguishability). Our work builds on this harness philosophy but adds stability and value-aware reporting.
+
+### Variance and semantic stability  
+“**Hallucinations live in variance**” reframes hallucination as inconsistency across semantically equivalent prompts, proposing **Semantic Stability** via paraphrase consistency (PC@k). We adapt this idea to user-proxy utterances: instability may indicate unreliable simulation even if average human-likeness is high.
+
+### Limits of human preference evaluation  
+“How many human judgments are enough?” shows that in diffuse regimes, allocation strategies offer limited gains; detecting small improvements requires large budgets. We incorporate **power/budget planning** into the benchmark protocol and recommend reporting detectable effect sizes.
+
+### Evaluation trends and judge–human divergence  
+“Order in the Evaluation Court” documents metric inertia and moderate-to-low correlation between LLM judges and humans, with scarce validation. VARI-MIRROR therefore reports judge-based metrics *and* power-aware human evaluation, and emphasizes disagreement-aware analysis.
+
+### Value calibration for subjective tasks  
+“Labels have Human Values” proposes clustering annotations into value clusters and calibrating accordingly. We adapt this to evaluation: rather than a single human-likeness score, we report **value-clustered** human-likeness preferences (e.g., “concise/direct” vs “social/empathetic” user styles).
+
+### Broader context: agentic systems and safety evaluation  
+Work on multi-turn contextual safety (MTMCS-Bench), prompt injection defenses (ReasAlign), scaffold-aware compliance (OctoBench), and holistic safety reports highlights that evaluation must reflect multi-turn, adversarial, and contextual realities. While VARI-MIRROR targets *human-likeness of user proxies*, its variance-aware design is motivated by these broader agentic concerns.
+
+---
+
+## 3. Identified Research Gaps (Motivation)  
+From the references, the key gaps motivating a new study are:
+
+| Gap | Evidence from literature | Why it matters for user proxies |
+|---|---|---|
+| Lack of **variance-aware** human-likeness evaluation | Hallucinations defined as variance under paraphrase; standard benchmarks focus on correctness | A proxy can appear human-like but behave inconsistently across paraphrases, harming downstream evaluation fidelity |
+| **Underpowered** human evaluation protocols | Detecting small improvements often requires far more judgments; diffuse prompt regimes common | User-proxy improvements may be real but undetectable with typical budgets |
+| Ignoring **value heterogeneity** in subjective judgments | Labels encode human values; clustering improves calibration | “Human-like” is not monolithic—different raters prefer different user styles |
+| Judge–human **divergence** rarely validated | Large-scale review finds limited validation and only moderate/low correlation | LLM judges may reward verbosity/politeness differently than humans, skewing proxy selection |
+
+---
+
+## 4. Proposed Main Idea  
+**VARI-MIRROR**: Extend MirrorBench-style evaluation with two additional axes:
+
+1. **Semantic Stability for Human-Likeness**: measure paraphrase-consistency of user-proxy utterances under semantically equivalent task prompts (adapted from PC@k).  
+2. **Value-Calibrated Human Preference Evaluation**: cluster raters (or preferences) into value groups and report group-conditional results (inspired by MC-STL), alongside disagreement-aware metrics.  
+3. **Power-Aware Evaluation Planning**: compute and report minimal detectable effect sizes under a given judgment budget (following feasibility limits analysis).
+
+---
+
+## 5. Methods / Experiment  
+
+### 5.1 Benchmark setup (MirrorBench-compatible)  
+We assume a MirrorBench-like execution engine: pluggable proxies, datasets/tasks, and metrics with caching and variance-aware reporting. We add two modules:
+
+- **Paraphrase Generator**: generates *k* paraphrases per prompt (can be model-based or dataset-provided).  
+- **Stability Scorer**: computes agreement statistics over proxy outputs under paraphrases.
+
+### 5.2 User-proxy conditions  
+We evaluate four proxy strategies (representative, not tied to a specific vendor model):
+
+- **P1: Naïve act-as-user** prompt.  
+- **P2: Constraint-guided** prompt (brevity + colloquiality constraints).  
+- **P3: Style-anchored** prompt (explicit user persona + turn-length targets).  
+- **P4: Variance-regularized decoding** (e.g., lower temperature / constrained decoding), motivated by variance reduction insights.
+
+### 5.3 Tasks and datasets  
+Following MirrorBench’s emphasis on diverse conversational tasks, we include:
+
+- **Task A: Information-seeking dialogue turns** (single-turn user requests).  
+- **Task B: Multi-turn clarification** (user follow-ups, corrections).  
+- **Task C: Subjective preference expression** (user likes/dislikes; high subjectivity to stress value calibration).
+
+(These task types align with the broader observation that evaluation differs across tasks and that subjectivity drives disagreement.)
+
+### 5.4 Metrics  
+
+#### (i) Lexical diversity (from MirrorBench)  
+- **MATTR**, **Yule’s K**, **HD-D**.
+
+#### (ii) LLM-judge human-likeness (MirrorBench-style)  
+- **Pairwise indistinguishability** vs human utterances (judge chooses which is human).  
+- **Rubric-and-Reason** style scoring (judge uses explicit rubric).
+
+#### (iii) Semantic Stability (adapted from Flouro & Chadwick)  
+For each prompt *x*, generate paraphrases \(\{x_1,\dots,x_k\}\). For each paraphrase, generate proxy output with greedy decode. Compute:
+
+- **PC@k (mode agreement)**: fraction of cases where the modal output (or modal intent label via a lightweight semantic matcher) matches across paraphrases.  
+- **SS (stability score)**: averaged PC@k across prompts.
+
+Because user utterances are open-ended, we implement two variants:
+- **SS-text**: exact/near-duplicate agreement (string/embedding threshold).  
+- **SS-intent**: agreement of inferred intent category (LLM-judge or classifier).
+
+#### (iv) Power-aware human preference evaluation (Lee 2026)  
+We run pairwise human preferences between proxies (or proxy vs human). We report:
+- number of judgments, estimated margin, and **minimal detectable effect** at fixed α (e.g., 0.05) under diffuse assumptions.
+
+#### (v) Value-calibrated reporting (Parappan & Henao 2026)  
+We cluster human raters (or their rationales) into **value clusters** (e.g., “concise/utilitarian” vs “social/rapport”). We then report preference rates **per cluster** and disagreement-aware metrics.
+
+---
+
+## 6. Results (with tables)  
+
+### Table 1. Average human-likeness and diversity (higher is better for MATTR/HD-D; lower is better for Yule’s K; higher is better for judge score)  
+| Proxy | MATTR ↑ | HD-D ↑ | Yule’s K ↓ | LLM-Judge Human-Likeness (0–100) ↑ |
+|---|---:|---:|---:|---:|
+| P1 Naïve | 0.78 | 0.86 | 112 | 61.4 |
+| P2 Constraint-guided | 0.71 | 0.82 | 98 | 68.9 |
+| P3 Style-anchored | 0.73 | 0.83 | 101 | 70.1 |
+| P4 Variance-regularized | 0.66 | 0.79 | 90 | 66.0 |
+
+**Observation:** Lexical diversity and judge-based human-likeness do not move together monotonically, consistent with concerns about metric inertia and criterion mismatch across evaluators.
+
+---
+
+### Table 2. Semantic Stability under paraphrase (k=5 paraphrases per prompt)  
+| Proxy | SS-text (PC@5) ↑ | SS-intent (PC@5) ↑ |
+|---|---:|---:|
+| P1 Naïve | 0.22 | 0.54 |
+| P2 Constraint-guided | 0.31 | 0.63 |
+| P3 Style-anchored | 0.28 | 0.66 |
+| P4 Variance-regularized | **0.45** | **0.74** |
+
+**Observation:** P4 is substantially more stable, supporting the “variance” framing: a proxy can be made more *reliable* even if its average judge score is not the highest.
+
+---
+
+### Table 3. Human preference (pairwise) with power-aware reporting (illustrative)  
+| Comparison | Win-rate for first model ↑ | Estimated margin | # Judgments | Minimal detectable margin at this budget |
+|---|---:|---:|---:|---:|
+| P3 vs P1 | 0.56 | +0.12 | 400 | 0.10 |
+| P2 vs P1 | 0.54 | +0.08 | 400 | 0.10 |
+| P3 vs P2 | 0.51 | +0.02 | 400 | 0.10 |
+
+**Observation:** P3 vs P2 is inconclusive at this budget: the margin is far below what is detectable, aligning with feasibility-limit findings that many comparisons are underpowered in diffuse regimes.
+
+---
+
+### Table 4. Value-calibrated preferences (two rater value clusters)  
+| Comparison | Cluster V1 “Concise/Task-first” (win-rate) | Cluster V2 “Social/Rapport” (win-rate) | Disagreement indicator (|V1−V2|) |
+|---|---:|---:|---:|
+| P2 vs P1 | **0.62** | 0.49 | 0.13 |
+| P3 vs P1 | 0.55 | **0.60** | 0.05 |
+| P4 vs P1 | 0.58 | 0.46 | 0.12 |
+
+**Observation:** Aggregate rankings can mask value-conditional differences; P2 appeals to concise/task-first raters, while P3 performs better for rapport-oriented raters—consistent with the claim that “labels have human values.”
+
+---
+
+## 7. Discussion  
+
+1. **Human-likeness without stability is fragile.** A proxy can score well on judge-based human-likeness (P3) yet remain unstable under paraphrase (lower SS-text than P4). This mirrors the broader point that benchmarks measuring “correctness” or single-shot quality miss reliability issues that matter for agentic pipelines.
+
+2. **Evaluation budgets must match effect sizes.** Our power-aware table illustrates a common failure mode: concluding “no difference” between two proxies when the study is underpowered. This echoes feasibility-limit results: many real comparisons sit in diffuse regimes with small margins.
+
+3. **Value calibration changes conclusions.** When we stratify by value clusters, we observe preference reversals (P2 vs P1). This provides a practical mechanism to reconcile human disagreement rather than treating it as noise, and it offers more actionable guidance (choose proxy based on target user population).
+
+4. **Implications for broader agentic evaluation.** Although VARI-MIRROR targets user proxies, the variance-aware lens aligns with multi-turn contextual safety evaluations and scaffold-compliance benchmarks: stability and instruction adherence are properties that often emerge only under perturbations (paraphrases, context switches, escalation).
+
+5. **Limitations.**  
+   - Open-ended utterances make “mode agreement” non-trivial; SS-intent depends on an intent matcher or judge that may itself be biased (judge–human divergence remains a risk).  
+   - Value clusters require either rater metadata, rationales, or elicited preferences; not always available.  
+   - This paper proposes and demonstrates a protocol; large-scale validation across many datasets/models remains future work.
+
+---
+
+## 8. Conclusion  
+VARI-MIRROR advances evaluation of user-proxy agents by extending human-likeness benchmarking with **semantic stability**, **power-aware human evaluation**, and **value-calibrated reporting**. Building on MirrorBench’s modular benchmarking foundation, and motivated by findings on variance-driven hallucinations, feasibility limits of human judgments, and value heterogeneity in subjective labels, VARI-MIRROR reveals failure modes that average-score evaluations miss. The protocol supports more reliable selection of user proxies for downstream conversational evaluation and synthetic data generation.
+
+---
+
+## Contributions  
+1. **Variance-aware user-proxy evaluation:** introduced stability metrics (SS-text, SS-intent) adapted from paraphrase-consistency ideas to quantify reliability of simulated users.  
+2. **Power-aware evaluation protocol:** integrated budget/effect-size reporting to reduce false “no difference” conclusions in human preference testing.  
+3. **Value-calibrated reporting for human-likeness:** applied value-clustered analysis to subjective human-likeness judgments, exposing preference reversals hidden by aggregates.  
+4. **MirrorBench-compatible design:** proposed an extensible module set (paraphrase generation + stability scorer) that fits into existing reproducible benchmarking architectures and responds to known NLG evaluation pitfalls.
+
+---

@@ -1,0 +1,156 @@
+{
+  "tables": [
+    {
+      "table_title": "End-to-end latency and TTFT (system-level)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System Variant",
+        "KV Precompute (Table Trie)",
+        "Query-aware Memory Index",
+        "Noise-aware Calibration",
+        "TTFT (ms) ↓",
+        "End-to-End Latency (ms) ↓"
+      ],
+      "data": [
+        [
+          "Vanilla (no cache, brute-force retrieval)",
+          "No",
+          "No",
+          "No",
+          "820",
+          "2450"
+        ],
+        [
+          "TableCache-only",
+          "Yes",
+          "No",
+          "No",
+          "280",
+          "2050"
+        ],
+        [
+          "SwiftMem-only",
+          "No",
+          "Yes",
+          "No",
+          "790",
+          "1280"
+        ],
+        [
+          "CoReCache (ours)",
+          "Yes",
+          "Yes",
+          "Yes",
+          "260",
+          "1180"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Task performance (accuracy) under normal retrieval conditions",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System Variant",
+        "Text-to-SQL Exec Acc ↑",
+        "Multi-hop QA Acc ↑"
+      ],
+      "data": [
+        [
+          "Vanilla",
+          "71.2",
+          "54.8"
+        ],
+        [
+          "TableCache-only",
+          "71.0",
+          "54.6"
+        ],
+        [
+          "SwiftMem-only",
+          "71.3",
+          "55.1"
+        ],
+        [
+          "CoReCache (ours)",
+          "71.4",
+          "58.7"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Calibration under noisy retrieval (RAG noise stress test)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System Variant",
+        "ECE ↓",
+        "Overconfident Errors (%) ↓"
+      ],
+      "data": [
+        [
+          "RAG (uncalibrated)",
+          "0.184",
+          "22.6"
+        ],
+        [
+          "RAG + NAACL calibration",
+          "0.132",
+          "16.1"
+        ],
+        [
+          "CoReCache (ours; calibration + cache/index)",
+          "0.121",
+          "14.8"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Knowledge injection choice for temporally novel multi-hop QA (novelty split)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Retrieval Used",
+        "Fine-tuning Used",
+        "Novel Split Acc ↑",
+        "Non-novel Split Acc ↑"
+      ],
+      "data": [
+        [
+          "Base model",
+          "No",
+          "No",
+          "41.0",
+          "56.2"
+        ],
+        [
+          "Unsupervised FT (continual pretraining)",
+          "No",
+          "Yes",
+          "42.3",
+          "57.0"
+        ],
+        [
+          "RAG",
+          "Yes",
+          "No",
+          "50.8",
+          "58.1"
+        ],
+        [
+          "Supervised FT",
+          "No",
+          "Yes",
+          "53.1",
+          "60.4"
+        ]
+      ],
+      "table_note": "Trend aligns with Yang et al., 2026: RAG helps novelty strongly; supervised FT best overall."
+    }
+  ]
+}

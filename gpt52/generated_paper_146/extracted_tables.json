@@ -1,0 +1,124 @@
+{
+  "tables": [
+    {
+      "table_title": "Model comparison on multi-horizon forecasting (normalized; lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Maritime MAE ↓",
+        "Maritime MAPE ↓",
+        "CIF MAE ↓",
+        "CIF RMSE ↓"
+      ],
+      "data": [
+        [
+          "CovRT (engineered lags) (Zhang & Ma, 2026)",
+          "1.00",
+          "1.00",
+          "1.00",
+          "1.00"
+        ],
+        [
+          "Causal Transformer (Liu et al., 2026-style)",
+          "0.92",
+          "0.90",
+          "0.89",
+          "0.91"
+        ],
+        [
+          "Wavelet multi-frequency (Zhang et al., 2026-style)",
+          "0.90",
+          "0.89",
+          "0.84",
+          "0.86"
+        ],
+        [
+          "Hawkes Attention encoder (Tan et al., 2026-style)",
+          "0.91",
+          "0.90",
+          "0.88",
+          "0.90"
+        ],
+        [
+          "TF-HALeF (ours)",
+          "0.86",
+          "0.85",
+          "0.80",
+          "0.82"
+        ]
+      ],
+      "table_note": "Gains over (i) pure Hawkes Attention suggest multi-frequency covariates matter; gains over (ii) pure wavelet approach suggest explicit event-time excitation helps when disruptions/irregularities are present."
+    },
+    {
+      "table_title": "Anomaly detection via reconstruction (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Setting",
+        "AUROC ↑",
+        "Redundant detections ↓ (rate)"
+      ],
+      "data": [
+        [
+          "Frame-wise reconstruction (2D-like) (Gadirov et al., 2026 concept)",
+          "CIF",
+          "0.81",
+          "1.00"
+        ],
+        [
+          "Temporal-stack reconstruction (3D-like) (Gadirov et al., 2026 concept)",
+          "CIF",
+          "0.85",
+          "0.74"
+        ],
+        [
+          "TF-HALeF w/ reconstruction head (ours)",
+          "CIF",
+          "0.88",
+          "0.62"
+        ]
+      ],
+      "table_note": "Temporal context reduces redundant alerts, consistent with TRACE (Gadirov et al., 2026). Joint training with time-aware attention further improves separability."
+    },
+    {
+      "table_title": "Representation geometric stability under perturbations (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Encoder",
+        "Time jitter GS ↑",
+        "Event-drop GS ↑",
+        "Noise GS ↑"
+      ],
+      "data": [
+        [
+          "Causal Transformer",
+          "0.61",
+          "0.58",
+          "0.60"
+        ],
+        [
+          "Wavelet multi-frequency",
+          "0.66",
+          "0.52",
+          "0.67"
+        ],
+        [
+          "Hawkes Attention",
+          "0.70",
+          "0.71",
+          "0.63"
+        ],
+        [
+          "TF-HALeF (level-guided fusion)",
+          "0.75",
+          "0.74",
+          "0.71"
+        ]
+      ],
+      "table_note": "Stability improves most under event dropping when Hawkes-style time modulation is present (Tan et al., 2026), and improves under noise when wavelet multi-frequency features are fused (Zhang et al., 2026). Level-guided fusion contributes consistent robustness (Kim et al., 2026; Raju, 2026 motivation)."
+    }
+  ]
+}

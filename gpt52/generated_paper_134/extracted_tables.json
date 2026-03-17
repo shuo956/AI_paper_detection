@@ -1,0 +1,193 @@
+{
+  "tables": [
+    {
+      "table_title": "Clustering performance under missingness and shift",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Missing Rate",
+        "Shift Severity",
+        "NMI ↑",
+        "ARI ↑"
+      ],
+      "data": [
+        [
+          "CROCS (Yerbury et al., 2026)",
+          "10%",
+          "Low",
+          "0.61",
+          "0.54"
+        ],
+        [
+          "TFEC + k-means (Tan et al., 2026)",
+          "10%",
+          "Low",
+          "0.64",
+          "0.56"
+        ],
+        [
+          "CROCS + TFEC",
+          "10%",
+          "Low",
+          "0.68",
+          "0.61"
+        ],
+        [
+          "FedSCOPE (ours)",
+          "10%",
+          "Low",
+          "0.72",
+          "0.66"
+        ],
+        [
+          "CROCS",
+          "30%",
+          "High",
+          "0.44",
+          "0.35"
+        ],
+        [
+          "CROCS + TFEC",
+          "30%",
+          "High",
+          "0.49",
+          "0.40"
+        ],
+        [
+          "FedSCOPE (ours)",
+          "30%",
+          "High",
+          "0.58",
+          "0.50"
+        ]
+      ],
+      "table_note": "Mean over environments; higher is better."
+    },
+    {
+      "table_title": "Stability to adversarial perturbations of daily profiles",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "ε = 0.01",
+        "ε = 0.03",
+        "ε = 0.05"
+      ],
+      "data": [
+        [
+          "CROCS",
+          "6.8%",
+          "18.9%",
+          "31.5%"
+        ],
+        [
+          "CROCS + TFEC",
+          "5.1%",
+          "15.7%",
+          "28.2%"
+        ],
+        [
+          "FedSCOPE w/o stability min-max",
+          "4.9%",
+          "14.8%",
+          "26.9%"
+        ],
+        [
+          "FedSCOPE (stable min-max)",
+          "2.7%",
+          "8.9%",
+          "16.4%"
+        ]
+      ],
+      "table_note": "Worst-case relative drop in NMI under \\(\\|\\delta\\|_\\infty \\le \\epsilon\\). Lower is better."
+    },
+    {
+      "table_title": "Privacy–utility trade-off in federated training",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "FL Mechanism",
+        "Privacy Setting",
+        "Comm./Round (relative) ↓",
+        "NMI ↑"
+      ],
+      "data": [
+        [
+          "FedAvg + DP-SGD",
+          "\\(\\varepsilon=3\\)",
+          "1.00×",
+          "0.49"
+        ],
+        [
+          "DP-FEDSOFIM (Nair et al., 2026)",
+          "\\(\\varepsilon=3\\)",
+          "1.05×",
+          "0.55"
+        ],
+        [
+          "CEPAM (Shiu & Ling, 2026)",
+          "tuned noise",
+          "0.35×",
+          "0.52"
+        ],
+        [
+          "FedSCOPE + DP-FEDSOFIM",
+          "\\(\\varepsilon=3\\)",
+          "1.10×",
+          "0.58"
+        ],
+        [
+          "FedSCOPE + CEPAM",
+          "tuned noise",
+          "0.40×",
+          "0.56"
+        ]
+      ],
+      "table_note": "Illustrative accuracy proxy: NMI at 30% missing, high shift."
+    },
+    {
+      "table_title": "Ablation: operator surrogate and derivative regularization",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "SBOS (MAD-BNO-style)",
+        "Stable min-max (StablePDENet)",
+        "Sobolev reg (DeepLight)",
+        "NMI ↑"
+      ],
+      "data": [
+        [
+          "A0: FRL only",
+          "✗",
+          "✗",
+          "✗",
+          "0.49"
+        ],
+        [
+          "A1",
+          "✓",
+          "✗",
+          "✗",
+          "0.53"
+        ],
+        [
+          "A2",
+          "✓",
+          "✓",
+          "✗",
+          "0.56"
+        ],
+        [
+          "A3 (full FedSCOPE)",
+          "✓",
+          "✓",
+          "✓",
+          "0.58"
+        ]
+      ],
+      "table_note": "NMI at 30% missing, high shift."
+    }
+  ]
+}

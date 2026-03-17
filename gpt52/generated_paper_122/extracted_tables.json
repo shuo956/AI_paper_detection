@@ -1,0 +1,168 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance across three settings",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Long-CoT Reasoning (Acc ↑)",
+        "Multi-hop QA (Novel) (Acc ↑)",
+        "Speech-Text Instr. (Score ↑)",
+        "Inference KV Budget"
+      ],
+      "data": [
+        [
+          "SFT-only distillation",
+          "62.1",
+          "48.3",
+          "54.0",
+          "100%"
+        ],
+        [
+          "DASD-style (Yan et al., 2026)",
+          "66.8",
+          "52.9",
+          "56.1",
+          "100%"
+        ],
+        [
+          "On-policy KD (naïve)",
+          "65.9",
+          "53.2",
+          "55.8",
+          "100%"
+        ],
+        [
+          "Veto (Jang et al., 2026)",
+          "68.0",
+          "55.1",
+          "57.0",
+          "100%"
+        ],
+        [
+          "EC-DASD (ours)",
+          "70.4",
+          "58.7",
+          "59.6",
+          "100%"
+        ],
+        [
+          "EC-DASD + ASL KV pruning (Taniguchi et al., 2026)",
+          "69.8",
+          "58.0",
+          "59.1",
+          "40%"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Confidence estimation quality (beyond calibration)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "ECE ↓",
+        "Robustness to Prompt Variants ↓",
+        "Stability across Equivalent Answers ↓",
+        "Sensitivity to Meaning Changes ↑"
+      ],
+      "data": [
+        [
+          "SFT-only",
+          "6.8",
+          "0.41",
+          "0.38",
+          "0.52"
+        ],
+        [
+          "DASD-style",
+          "6.1",
+          "0.36",
+          "0.34",
+          "0.55"
+        ],
+        [
+          "Veto",
+          "5.9",
+          "0.33",
+          "0.31",
+          "0.58"
+        ],
+        [
+          "EC-DASD (ours)",
+          "5.4",
+          "0.25",
+          "0.22",
+          "0.64"
+        ]
+      ],
+      "table_note": "Lower is better for inconsistency, higher is better for sensitivity."
+    },
+    {
+      "table_title": "Expert behavior preservation and interpretability (MoE student)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Metric",
+        "SFT-only",
+        "DASD-style",
+        "Veto",
+        "EC-DASD (ours)"
+      ],
+      "data": [
+        [
+          "Domain expert activation alignment ↑",
+          "0.71",
+          "0.76",
+          "0.77",
+          "0.84"
+        ],
+        [
+          "Driver expert activation alignment ↑",
+          "0.68",
+          "0.72",
+          "0.75",
+          "0.83"
+        ],
+        [
+          "Routing entropy (avoid over-collapse) ↑",
+          "1.02",
+          "1.08",
+          "1.05",
+          "1.12"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Retrieval setting: effect of decoding-time evidence aggregation",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Decoding Strategy",
+        "Prefill Latency ↓",
+        "Multi-doc Reasoning Acc ↑"
+      ],
+      "data": [
+        [
+          "Concatenate docs in prompt",
+          "1.00×",
+          "58.7"
+        ],
+        [
+          "Separate-doc KV caches (no interaction)",
+          "0.62×",
+          "54.9"
+        ],
+        [
+          "Pced (contrastive expert decoding)",
+          "0.65×",
+          "58.1"
+        ]
+      ],
+      "table_note": "Using a RAG multi-hop setup motivated by Yang et al. (2026); Pced from Corallo & Papotti (2026)."
+    }
+  ]
+}

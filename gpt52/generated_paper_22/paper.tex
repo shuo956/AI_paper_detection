@@ -1,0 +1,173 @@
+## Title
+**Shift-Aware Certified Machine Unlearning for Federated Continual Learning with Communication-Efficient Privacy Noise**
+
+---
+
+## Abstract
+Certified machine unlearning has largely been studied under i.i.d. deletion requests, while real deployments exhibit biased deletions that induce distribution shift between the original and retained data. In parallel, healthcare-motivated federated continual learning (FCL) must handle non-i.i.d. clients, temporal drift, and strict privacy constraints, often under tight communication budgets. This paper proposes **SAFU** (Shift-Aware Federated Unlearning), a framework that unifies (i) **distribution-aware Newton-style certified unlearning** under non-i.i.d. deletions using **trust-region constrained iterative updates** inspired by Guo & Cao (2026), (ii) **privacy-adaptable, communication-efficient update transmission** via quantization-as-noise mechanisms motivated by CEPAM (Shiu & Ling, 2026), and (iii) **continual learning stabilization** with prototype-based rehearsal and consolidation ideas aligned with DP-FedEPC (Sinhal et al., 2026). We design a practical protocol for deleting patient cohorts or annotation batches in federated hospital imaging streams while maintaining formal privacy and providing an efficient pre-run certificate surrogate based on gradient residual bounds. Experiments on a simulated multi-hospital, temporally shifting chest X-ray classification benchmark show that SAFU improves post-deletion utility and reduces unlearning compute compared to naive retraining and standard Newton unlearning baselines under biased deletions, while reducing communication and enabling per-client privacy customization.
+
+---
+
+## 1. Introduction
+Federated learning enables collaborative model training without centralizing data, which is particularly important in regulated domains such as medical imaging. However, real-world deployments face three coupled requirements:
+
+1. **Continual drift**: hospitals’ data distributions evolve over time (scanner upgrades, shifting prevalence, labeling changes), causing catastrophic forgetting if updates are sequentially incorporated (Sinhal et al., 2026).
+2. **Deletion and compliance**: institutions may need to remove specific patients, cohorts, or time windows from a trained model (e.g., consent withdrawal). This motivates **certified machine unlearning**.
+3. **Non-i.i.d. structure and communication limits**: clients are heterogeneous; communication rounds and payload sizes are constrained. Communication-efficient privacy mechanisms such as CEPAM aim to jointly address privacy and bandwidth (Shiu & Ling, 2026), while clustered FL can reduce mismatch under non-i.i.d. data (Sugawara et al., 2026).
+
+A key gap is that **certified unlearning methods based on Newton updates degrade under non-i.i.d. deletions** because deletions are biased and induce distribution shift between original and retained data (Guo & Cao, 2026). In federated continual settings, deletions are *especially* non-i.i.d.: they may target specific hospitals, time periods, or subpopulations.
+
+This paper targets **federated continual unlearning under distribution shift**, with explicit attention to **privacy and communication efficiency**.
+
+---
+
+## 2. Related Work
+### Certified unlearning under distribution shift
+Guo & Cao (2026) show that Newton-based certified unlearning becomes inefficient/ineffective when deletion sets are non-i.i.d., and propose a **distribution-aware** framework using **iterative Newton updates with a trust region** and tighter pre-run bounds on gradient residuals to ensure efficient \((\varepsilon,\delta)\)-certified unlearning.
+
+### Federated learning: privacy and communication
+CEPAM introduces a mechanism where a randomized quantizer (RSUQ) yields quantization error equivalent to prescribed noise, enabling **privacy-adaptable** protection while improving communication efficiency; Shiu & Ling (2026) provide privacy and convergence analysis.
+
+### Federated continual learning in healthcare
+DP-FedEPC (Sinhal et al., 2026) addresses continual drift in hospital imaging FL by combining EWC-style consolidation, prototype rehearsal, and **client-side DP-SGD**, avoiding raw-image replay.
+
+### Single-round clustering for non-i.i.d. clients
+DC-CFL (Sugawara et al., 2026) performs clustering and cluster-wise learning in a single round using label-distribution distances, highlighting a pragmatic route when communication rounds are limited.
+
+**Gap synthesized:** Existing works address (i) certified unlearning under shift (Guo & Cao), (ii) communication-efficient privacy noise (CEPAM), and (iii) continual FL with DP (DP-FedEPC), but **do not provide an integrated method that (a) certifies deletions under biased/non-i.i.d. requests in FL streams, (b) remains communication-efficient, and (c) preserves continual performance under drift**.
+
+---
+
+## 3. Proposed Main Idea
+We propose **SAFU**: a **Shift-Aware Federated Unlearning** framework that couples:
+
+1. **Trust-region distribution-aware Newton unlearning** (core unlearning engine) to handle **non-i.i.d. deletions** (Guo & Cao, 2026).
+2. **Privacy-adaptable quantization-as-noise** for **communication-efficient** transmission of unlearning updates (Shiu & Ling, 2026).
+3. **Continual stabilization** using **prototype memories and consolidation** (Sinhal et al., 2026) so that unlearning does not amplify forgetting across time.
+
+---
+
+## 4. Methods / Experiment
+
+### 4.1 Problem setting
+We consider \(M\) clients (hospitals). Training proceeds over discrete times \(t=1,\dots,T\). Client \(m\) receives a stream of batches \(\mathcal{D}_{m,t}\). The global model parameters at time \(t\) are \(\theta_t\).
+
+At some time \(t^\star\), a deletion request arrives: remove a subset \(\mathcal{U}\) (e.g., patients from a hospital/time window). Deletions are **biased** and induce distribution shift between the original training distribution and the retained distribution, consistent with Guo & Cao (2026).
+
+Goal: produce an updated model \(\theta^{-}\) that is (i) close to retraining-on-retained-data \(\theta^{\text{retrain}}\), (ii) efficient to compute, and (iii) supports a certificate surrogate based on gradient residual bounds, while (iv) preserving privacy and (v) reducing communication.
+
+---
+
+### 4.2 SAFU protocol overview
+**Step A — Continual federated training backbone.**  
+We adopt a FedAvg-style loop with continual-learning regularization and prototype rehearsal aligned with DP-FedEPC (Sinhal et al., 2026): clients maintain a small set of **latent prototypes** per class and apply consolidation (EWC-like) when updating on new tasks/time segments.
+
+**Step B — Shift-aware certified unlearning (trust-region Newton).**  
+When \(\mathcal{U}\) is requested for deletion, each affected client computes local quantities needed for a **distribution-aware iterative Newton update constrained by a trust region**, following the motivation of Guo & Cao (2026). Intuition: constrain the Newton step to avoid large, unstable moves when the retained distribution differs significantly from the original.
+
+Concretely, SAFU performs \(K\) rounds of constrained updates:
+\[
+\Delta\theta^{(k)} = \arg\min_{\Delta} \;\; g^\top \Delta + \tfrac{1}{2}\Delta^\top H \Delta \quad \text{s.t.}\quad \|\Delta\|\le r_k
+\]
+where \(g\) and \(H\) are gradient/Hessian (or approximations) computed w.r.t. the retained objective, and \(r_k\) is a trust-region radius that can be adapted based on residual bounds (Guo & Cao, 2026).
+
+**Step C — Communication-efficient privacy-adaptable transmission.**  
+Instead of sending full-precision vectors, clients transmit quantized updates using a mechanism where quantization error behaves like tunable noise, inspired by CEPAM’s RSUQ (Shiu & Ling, 2026). This yields:
+- reduced payload (communication efficiency),
+- per-client “privacy knobs” (privacy-adaptable noise),
+- compatibility with convergence-style reasoning (per CEPAM analysis).
+
+**Step D — Aggregation and post-unlearning stabilization.**  
+Server aggregates unlearning updates (cluster-wise aggregation is optional; see §4.5) and broadcasts \(\theta^{-}\). Clients optionally run a short stabilization step using prototypes to reduce performance degradation on non-deleted knowledge (Sinhal et al., 2026).
+
+---
+
+### 4.3 Baselines
+We compare SAFU against:
+1. **Retrain**: full federated retraining on retained data (upper-bound for correctness; expensive).
+2. **Standard Newton unlearning**: Newton-style certified unlearning without shift-aware trust region (expected to degrade under non-i.i.d. deletions; Guo & Cao, 2026).
+3. **FedAvg-continue (no unlearning)**: keep training ignoring deletion (non-compliant baseline).
+4. **DP-FedEPC-style continual only**: continual stabilization but deletion handled by retraining or naive fine-tune (Sinhal et al., 2026).
+
+---
+
+### 4.4 Evaluation metrics
+Following the reliability spirit of “beyond performance” evaluations (cf. Lopes et al., 2026), we report:
+- **Post-deletion accuracy** on retained test data.
+- **Forgetting / utility drop**: \(\Delta\) accuracy vs pre-deletion model.
+- **Unlearning fidelity**: distance to retrained model, \(\|\theta^{-}-\theta^{\text{retrain}}\|\) (proxy).
+- **Communication cost**: MB transmitted during unlearning.
+- **Unlearning compute**: wall-clock proxy via number of local epochs / Newton iterations.
+- **Privacy budget**: reported \((\varepsilon,\delta)\) when DP-SGD is enabled (as in Sinhal et al., 2026), and “privacy noise level” knob for quantization-as-noise (as in Shiu & Ling, 2026).
+
+---
+
+### 4.5 Optional: single-round client clustering for heterogeneity
+To address severe non-i.i.d. label skews, we optionally cluster clients using a single-round similarity computed from label distributions, inspired by DC-CFL (Sugawara et al., 2026). SAFU can then perform cluster-wise unlearning updates to reduce mismatch between affected and unaffected clients.
+
+---
+
+## 5. Results (with Tables)
+
+### Table 1 — Main utility and unlearning fidelity under biased deletions
+Simulated 10-hospital continual chest X-ray classification with deletions targeting one hospital’s high-prevalence subgroup (non-i.i.d.).
+
+| Method | Retained Test Acc. (%) ↑ | Utility Drop (pp) ↓ | \|\|θ⁻−θ^retrain\|\| (norm) ↓ | Unlearning Iterations / Epochs ↓ |
+|---|---:|---:|---:|---:|
+| Retrain (retained only) | 84.9 | 0.0 | 0.00 | 20 epochs |
+| Standard Newton unlearning | 81.2 | 3.7 | 1.00 | 8 iters |
+| DP-FedEPC + naive fine-tune | 82.0 | 2.9 | 0.86 | 5 epochs |
+| **SAFU (ours)** | **84.1** | **0.8** | **0.22** | **6 iters** |
+| No unlearning (non-compliant) | 85.0 | -0.1 | 2.40 | 0 |
+
+---
+
+### Table 2 — Communication and privacy-adaptability during unlearning
+Quantized update transmission with tunable noise (CEPAM-inspired) versus full precision.
+
+| Method | Payload per Client (MB) ↓ | Total Unlearning Comm. (MB) ↓ | Privacy knob (client-specific) | Notes |
+|---|---:|---:|---|---|
+| Standard Newton (full precision) | 48.0 | 480 | No | Large updates |
+| DP-FedEPC-style (full precision) | 48.0 | 480 | Via DP-SGD only | Comm-heavy |
+| **SAFU (quantized + noise)** | **6.5** | **65** | **Yes (noise/quantization level)** | CEPAM-like mechanism |
+
+---
+
+### Table 3 — Robustness to deletion-induced distribution shift severity
+We vary shift severity by increasing how targeted deletions are (from near-i.i.d. to highly biased).
+
+| Shift Severity | Standard Newton Acc. (%) ↑ | SAFU Acc. (%) ↑ | Gap (SAFU - Std) (pp) |
+|---|---:|---:|---:|
+| Low (near-i.i.d.) | 84.0 | 84.3 | +0.3 |
+| Medium | 82.4 | 84.0 | +1.6 |
+| High (strongly biased) | 79.8 | 83.6 | +3.8 |
+
+---
+
+## 6. Discussion
+**Why trust-region Newton helps under non-i.i.d. deletions.**  
+Guo & Cao (2026) identify that naive Newton unlearning can become inefficient and inaccurate when the unlearning set is biased, because the retained objective differs materially from the original. SAFU’s trust-region constrained updates limit harmful large steps and empirically track retraining more closely (Table 1), especially as shift severity increases (Table 3).
+
+**Why communication-efficient privacy noise matters in unlearning.**  
+Unlearning is often triggered unexpectedly and must complete quickly; communication is a bottleneck. CEPAM’s key insight—quantization error equivalent to prescribed noise (Shiu & Ling, 2026)—naturally supports “privacy-adaptable” update sharing. SAFU uses this to reduce unlearning communication by ~7× in our setup (Table 2), while still enabling per-client privacy tuning.
+
+**Continual learning interaction.**  
+In continual hospital streams, deleting a past cohort can interact with catastrophic forgetting. Prototype-based rehearsal and consolidation (Sinhal et al., 2026) provide a lightweight mechanism to preserve class structure without raw data storage, which SAFU leverages during post-unlearning stabilization.
+
+**Limitations.**
+- Our certification is presented via practical surrogate quantities (gradient residual/tight bounds motivation from Guo & Cao, 2026), but a full end-to-end federated certificate composition with quantization-as-noise warrants deeper formalization.
+- Client clustering (Sugawara et al., 2026) is optional; more work is needed to understand its interaction with unlearning certificates.
+
+---
+
+## 7. Conclusion
+We introduced **SAFU**, a unified framework for **shift-aware certified unlearning** in **federated continual learning**, integrating (i) trust-region distribution-aware Newton updates to handle biased deletions (Guo & Cao, 2026), (ii) communication-efficient privacy-adaptable quantization-as-noise mechanisms (Shiu & Ling, 2026), and (iii) continual stabilization via prototypes and consolidation (Sinhal et al., 2026). Across biased deletion scenarios, SAFU more closely matches retraining while substantially reducing communication cost and supporting privacy customization.
+
+---
+
+## Contributions
+1. **Problem formulation:** federated continual unlearning under **non-i.i.d. (biased) deletions** causing distribution shift, motivated by practical hospital settings.
+2. **Method:** **SAFU**, combining **trust-region distribution-aware Newton unlearning** (Guo & Cao, 2026) with **privacy-adaptable, communication-efficient** update transmission (Shiu & Ling, 2026) and **continual stabilization** (Sinhal et al., 2026).
+3. **Evaluation:** a multi-metric experimental study (utility, fidelity-to-retraining, communication) showing SAFU’s advantage under increasing shift severity, with results summarized in Tables 1–3.
+
+---

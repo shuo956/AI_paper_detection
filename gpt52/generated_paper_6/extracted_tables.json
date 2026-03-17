@@ -1,0 +1,157 @@
+{
+  "tables": [
+    {
+      "table_title": "Robustness under contextual distractors (NoisyBench-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Clean Score",
+        "Noisy Score",
+        "Δ Drop"
+      ],
+      "data": [
+        [
+          "Base Agent",
+          "0.74",
+          "0.46",
+          "-0.28"
+        ],
+        [
+          "+TACB",
+          "0.74",
+          "0.50",
+          "-0.24"
+        ],
+        [
+          "+NARM",
+          "0.75",
+          "0.56",
+          "-0.19"
+        ],
+        [
+          "+CIG",
+          "0.73",
+          "0.54",
+          "-0.19"
+        ],
+        [
+          "Full CATS",
+          "0.75",
+          "0.61",
+          "-0.14"
+        ]
+      ],
+      "table_note": "Higher is better (accuracy/F1 aggregated across tasks). “Δ” is relative drop from clean to noisy."
+    },
+    {
+      "table_title": "MedRedFlag misconception redirection quality",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "RS",
+        "CS",
+        "EAS"
+      ],
+      "data": [
+        [
+          "Base Agent",
+          "0.41",
+          "0.62",
+          "0.58"
+        ],
+        [
+          "+CIG (invoke redirection checker)",
+          "0.55",
+          "0.71",
+          "0.66"
+        ],
+        [
+          "+NARM (provenance + minimal context)",
+          "0.52",
+          "0.70",
+          "0.67"
+        ],
+        [
+          "Full CATS",
+          "0.63",
+          "0.78",
+          "0.74"
+        ]
+      ],
+      "table_note": "Higher is better. Metrics: Redirection Success (RS), Clinical Safety (CS), and Evidence-anchored Score (EAS) via locked rubric."
+    },
+    {
+      "table_title": "CLINSQL executable performance and rubric compliance",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Execution Score",
+        "Rubric Compliance"
+      ],
+      "data": [
+        [
+          "Base Agent",
+          "0.61",
+          "0.57"
+        ],
+        [
+          "+NARM",
+          "0.66",
+          "0.64"
+        ],
+        [
+          "+CIG (invoke schema/tool checks when low confidence)",
+          "0.67",
+          "0.69"
+        ],
+        [
+          "Full CATS",
+          "0.70",
+          "0.73"
+        ]
+      ],
+      "table_note": "Higher is better. Execution Score per CLINSQL-style evaluation plus rubric compliance (joins, temporal windows, cohort constraints)."
+    },
+    {
+      "table_title": "Long-horizon update stability (sequential edits)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "# Sequential Edits",
+        "Edit Success",
+        "General Ability"
+      ],
+      "data": [
+        [
+          "Naive sequential edits",
+          "5,000",
+          "0.72",
+          "0.49"
+        ],
+        [
+          "Naive sequential edits",
+          "20,000",
+          "0.60",
+          "0.31"
+        ],
+        [
+          "CATS w/ SLU (spectral stabilization)",
+          "5,000",
+          "0.75",
+          "0.62"
+        ],
+        [
+          "CATS w/ SLU (spectral stabilization)",
+          "20,000",
+          "0.70",
+          "0.55"
+        ]
+      ],
+      "table_note": "Higher is better. “General Ability” is a held-out capability suite; “Edit Success” is task-specific update success after many edits."
+    }
+  ]
+}

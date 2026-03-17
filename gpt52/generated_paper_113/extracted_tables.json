@@ -1,0 +1,122 @@
+{
+  "tables": [
+    {
+      "table_title": "Main end-to-end results (higher is better except CR/UER/SCER)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "CSR ↑",
+        "CR ↓",
+        "UER ↓",
+        "SCER ↓",
+        "MCS ↑"
+      ],
+      "data": [
+        [
+          "S1 Vanilla RAG",
+          "0.71",
+          "0.07",
+          "0.22",
+          "0.11",
+          "0.62"
+        ],
+        [
+          "S2 RAG + CVM",
+          "0.74",
+          "0.05",
+          "0.21",
+          "0.08",
+          "0.62"
+        ],
+        [
+          "S3 RAG + MSM",
+          "0.70",
+          "0.07",
+          "0.23",
+          "0.11",
+          "0.74"
+        ],
+        [
+          "S4 Triad-RAG",
+          "**0.78**",
+          "**0.04**",
+          "**0.18**",
+          "**0.06**",
+          "**0.76**"
+        ]
+      ],
+      "table_note": "Claim verification improves factual safety metrics (S2 vs S1), moral steering improves moral compliance (S3 vs S1), and the combined system yields the best joint profile (S4)."
+    },
+    {
+      "table_title": "Confidence quality under language variation and paraphrase tests (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Conf-R (prompt perturb.) ↑",
+        "Conf-S (equiv. answers) ↑",
+        "Conf-Δ (meaning flips) ↑"
+      ],
+      "data": [
+        [
+          "S1 Vanilla RAG",
+          "0.61",
+          "0.58",
+          "0.42"
+        ],
+        [
+          "S2 RAG + CVM",
+          "0.64",
+          "0.60",
+          "0.51"
+        ],
+        [
+          "S3 RAG + MSM",
+          "0.60",
+          "0.57",
+          "0.43"
+        ],
+        [
+          "S4 Triad-RAG",
+          "**0.72**",
+          "**0.69**",
+          "**0.58**"
+        ]
+      ],
+      "table_note": "Diagnostics alone help sensitivity somewhat (S2), but Triad-RAG improves robustness and stability, aligning with Xia et al. (2026)’s call to evaluate beyond calibration."
+    },
+    {
+      "table_title": "Matched vs mismatched input/reasoning language (gap analysis)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Condition",
+        "S1 MCS",
+        "S4 MCS",
+        "Δ (S4−S1)"
+      ],
+      "data": [
+        [
+          "Matched (EN input / EN reasoning)",
+          "0.64",
+          "0.77",
+          "+0.13"
+        ],
+        [
+          "Mismatched (EN input / ZH reasoning)",
+          "0.56",
+          "0.71",
+          "+0.15"
+        ],
+        [
+          "Mismatched (ZH input / EN reasoning)",
+          "0.58",
+          "0.73",
+          "+0.15"
+        ]
+      ],
+      "table_note": "Performance drops under mismatched conditions, consistent with Li et al. (2026)’s finding that reasoning-language effects can dominate. Steering narrows, but does not eliminate, these gaps."
+    }
+  ]
+}

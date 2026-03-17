@@ -1,0 +1,156 @@
+## Title  
+**Noise- and Drift-Resilient Retrieval-Augmented Agentic Reasoning: A Unified Framework for Semantic Anchoring, Policy Governance, and Query Suggestion**
+
+---
+
+## Abstract  
+Retrieval-Augmented Generation (RAG) and agentic tool-use are increasingly deployed in high-stakes and noisy environments, yet recent evidence shows substantial brittleness to contextual distractors and iterative decoding artifacts. Prior work identifies (i) catastrophic performance degradation under contextual noise (NoisyBench), (ii) semantic drift during diffusion-based decoding in RAG (Response Semantic Drift; SPREAD), and (iii) orchestration-level failures and unsafe tool calls requiring governance (AgentGuardian). Separately, research on query suggestion for agentic RAG highlights the value of proposing *answerable* alternatives when user requests exceed system scope. However, there is no unified approach that jointly addresses **(a)** noise robustness, **(b)** semantic drift across iterative generation, and **(c)** safe, capability-aware tool execution—while offering **(d)** graceful interaction via answerable query suggestions.  
+
+We propose **ANCHOR-RAG**, a unified framework combining (1) **semantic anchoring** to suppress drift and maintain query alignment, (2) **evidence regioning** to restrict reasoning to query-aligned subsets of retrieved knowledge (inspired by region-first reasoning), (3) **control-flow-aware access policies** for tool governance, and (4) **dynamic in-context query suggestion** when answerability is low. We outline an experimental protocol spanning noisy RAG, multi-step tool workflows, and temporal/multi-hop reasoning stressors. Simulated results (for paper construction) indicate that ANCHOR-RAG improves accuracy and precision under distractors while reducing hallucination and unsafe tool actions, with the largest gains in high-noise settings.
+
+---
+
+## Introduction  
+RAG and LLM agents promise improved factuality and task completion by integrating external corpora and tools. Yet, emerging literature shows that external context is rarely clean, and agentic workflows can *amplify* errors by over-trusting noisy tool outputs. **Lee et al.** introduce **NoisyBench**, showing up to **80%** performance drops under distractors and an inverse-scaling trend where more test-time computation can worsen outcomes in noisy contexts.  
+
+In parallel, **Yu et al.** show that applying RAG to **Diffusion Language Models (DLMs)** yields stronger contextual dependence but exposes a core failure mode: **Response Semantic Drift (RSD)**, where iterative denoising progressively deviates from the query semantics. They propose **SPREAD**, which guides denoising via query relevance.  
+
+Meanwhile, real-world agent deployments require robust orchestration. **Abaev et al. (AgentGuardian)** propose learning context-aware access-control policies from execution traces, mitigating hallucination-driven tool misuse. In domain deployments, **Yang et al. (AgriAgent)** demonstrate that hierarchical planning and capability-aware orchestration outperform unified execution paradigms under tool incompleteness and task complexity variation.  
+
+Finally, interaction design matters when user queries are out-of-scope. **Spaeh et al.** show that **query suggestion** via dynamic in-context learning can propose *answerable* alternatives, improving safety and usefulness without simply blocking requests.  
+
+**Gap:** Existing approaches address these issues in isolation—noise robustness (NoisyBench/RARE), drift in diffusion decoding (SPREAD), governance (AgentGuardian), hierarchical tool planning (AgriAgent), and query suggestion (Spaeh et al.). There is a missing **integrated framework** that simultaneously:  
+1) limits distractor influence,  
+2) prevents semantic drift across iterative generation,  
+3) enforces safe and capability-aware tool use, and  
+4) maintains user utility via answerable query suggestions.
+
+---
+
+## Related Work  
+### Robustness to noisy contexts and distractors  
+**NoisyBench** (Lee et al.) systematizes noise types (random docs, irrelevant chat, hard negatives) and reveals catastrophic drops and attention misallocation to distractors. They propose **Rationale-Aware Reward (RARE)** to incentivize identifying helpful information.  
+
+### Drift and precision in diffusion-based RAG  
+**Yu et al.** demonstrate that DLM+RAG can be promising but suffers from **RSD** due to denoising strategies that fail to preserve semantic alignment. **SPREAD** introduces query-relevance-guided denoising to suppress drift and improve precision.
+
+### Region-first evidence selection for stable multi-hop reasoning  
+**ReGraM** (Chaerin Lee et al.) argues the key is not more retrieval but selecting an appropriate **subset** of evidence. By constructing query-aligned subgraphs and constraining stepwise reasoning, ReGraM reduces hallucination substantially and improves accuracy across medical QA.
+
+### Agent orchestration, capability awareness, and governance  
+**AgriAgent** proposes hierarchical execution with contract-driven planning and dynamic tool generation for complex tasks. **AgentGuardian** learns control-flow-aware access policies from traces to detect malicious/misleading inputs and reduce orchestration failures.
+
+### Answerable query suggestion in agentic RAG  
+**Spaeh et al.** initiate query suggestion specifically for agentic RAG, using robust dynamic few-shot learning from workflow examples to propose queries that are both relevant and answerable.
+
+### Additional evaluation stressors and human factors  
+**Time Puzzles** (Wang & Dong) provides iterative temporal reasoning diagnostics; **KinshipQA** (Sun & Kazakov) probes multi-hop reasoning across cultural kinship systems. Work on identity robustness (Zhang et al.), socially grounded personas (Venkit et al.), and cultural norms (Cheng et al.) underscores that robustness and safety must generalize across user contexts and norms.  
+
+---
+
+## Methods / Experiment  
+### Overview: ANCHOR-RAG  
+We propose **ANCHOR-RAG**, a modular framework for robust agentic RAG under noise and iterative generation.
+
+**Module A — Evidence Regioning (ER):**  
+Given a query *q* and retrieved set *D*, build a **query-aligned evidence region** *R ⊂ D* by scoring passages (and optionally entities/relations) for relevance and consistency, then restricting reasoning to *R*. This is inspired by the **region-first** principle of ReGraM: stable reasoning comes from focusing on the right subset, not expanding retrieval indiscriminately.
+
+**Module B — Semantic Anchoring (SA):**  
+During generation (including iterative decoding), enforce semantic alignment to *q* and *R* by periodically computing an alignment score and applying a corrective constraint (e.g., reweighting attention to query/evidence anchors, or relevance-guided refinement). This generalizes SPREAD’s insight (query-guided denoising) beyond DLMs to iterative agent reasoning steps and multi-turn tool traces.
+
+**Module C — Policy-Governed Tool Orchestration (PGTO):**  
+Before executing any tool call, enforce a learned access-control policy conditioned on: current context, tool capability contract, and control-flow dependencies, following AgentGuardian’s governance idea. For complex tasks, incorporate capability-aware planning principles from AgriAgent: if capability gaps exist, trigger alternative planning or safe failure modes.
+
+**Module D — Answerability-Aware Query Suggestion (AAQS):**  
+If answerability is low (e.g., insufficient evidence region confidence, policy blocks critical tools, or retrieval scope mismatch), generate **answerable query suggestions** using dynamic in-context learning from prior workflows (Spaeh et al.), rather than producing low-grounded answers.
+
+---
+
+### Experimental Design  
+We define three evaluation settings aligned with the references:
+
+1) **Noisy RAG robustness:**  
+Use NoisyBench-style noise injection (random docs, irrelevant histories, hard negatives). Measure accuracy drop, distractor sensitivity, and hallucination.
+
+2) **Iterative reasoning under constraints:**  
+Use **Time Puzzles** to stress iterative temporal reasoning, particularly under noisy contexts and tool-use constraints (e.g., calendar conversion tools).  
+
+3) **Multi-hop relational reasoning:**  
+Use **KinshipQA**-style relational chain tasks to measure robustness under culturally varying assumptions and distractors.
+
+Additionally, we record agent tool-call traces and evaluate governance effectiveness (blocked unsafe calls, preserved functionality), consistent with AgentGuardian.
+
+---
+
+### Metrics  
+- **Task Accuracy** (dataset-specific)  
+- **Precision / Hallucination Rate** (hallucination measured as unsupported claims vs evidence region; aligned with ReGraM’s emphasis)  
+- **Noise Robustness Score (NRS):** relative accuracy retained under distractors  
+- **Tool Safety Metrics:** unauthorized tool call rate; policy false-block rate  
+- **Suggestion Utility:** fraction of suggestions judged answerable and relevant (Spaeh et al. framing)
+
+---
+
+## Results (with Tables)  
+*Note: The following tables present a coherent experimental report consistent with the methods above; values are illustrative to demonstrate expected trends grounded in the cited findings (e.g., large drops under noise per NoisyBench; drift reduction per SPREAD; hallucination reduction via regioning per ReGraM; safer tool use via AgentGuardian; improved suggestions via Spaeh et al.).*
+
+### Table 1 — Performance under contextual distractors (Noisy RAG setting)  
+| System | Clean Accuracy (%) | Noisy Accuracy (%) | NRS (Noisy/Clean) | Hallucination Rate (%) |
+|---|---:|---:|---:|---:|
+| Vanilla Agentic RAG | 72.4 | 34.1 | 0.47 | 18.9 |
+| + Evidence Regioning (ER) | 73.0 | 45.8 | 0.63 | 12.4 |
+| + ER + Semantic Anchoring (SA) | 73.5 | 51.2 | 0.70 | 9.7 |
+| + ER + SA + PGTO | 73.2 | 50.6 | 0.69 | 9.9 |
+| **ANCHOR-RAG (ER+SA+PGTO+AAQS)** | **73.1** | **53.9** | **0.74** | **8.8** |
+
+### Table 2 — Semantic drift and precision in iterative generation  
+| System | Drift Score ↓ (lower is better) | Evidence Citation Precision (%) | Unsupported Claim Rate (%) |
+|---|---:|---:|---:|
+| Vanilla iterative agent | 0.41 | 62.0 | 16.5 |
+| + SA (semantic anchoring) | 0.25 | 70.8 | 11.2 |
+| + ER + SA | 0.19 | 76.3 | 8.9 |
+| **ANCHOR-RAG** | **0.17** | **77.5** | **8.4** |
+
+### Table 3 — Tool governance outcomes (policy + capability awareness)  
+| System | Task Success (%) | Unsafe/Unauthorized Tool Calls (per 100 tasks) ↓ | False Blocks (per 100 tasks) ↓ |
+|---|---:|---:|---:|
+| Ungoverned tool agent | 68.0 | 14.2 | 0.0 |
+| + PGTO (AgentGuardian-style) | 66.9 | 3.1 | 2.6 |
+| + PGTO + capability-aware replanning (AgriAgent-style) | 71.5 | 3.4 | 2.8 |
+| **ANCHOR-RAG** | **72.0** | **3.0** | **2.4** |
+
+### Table 4 — Answerability-aware query suggestion (out-of-scope queries)  
+| System | Suggestion Relevance (%) | Suggestion Answerability (%) | User-Utility Proxy (Relevance × Answerability) |
+|---|---:|---:|---:|
+| No suggestions (refusal only) | — | — | — |
+| Retrieval-only suggestions | 61.7 | 49.5 | 30.5 |
+| Few-shot static suggestions | 66.2 | 55.1 | 36.5 |
+| **AAQS (dynamic workflow ICL)** | **71.4** | **64.8** | **46.3** |
+
+---
+
+## Discussion  
+**Noise robustness:** Table 1 reflects the core NoisyBench finding that distractors can cause dramatic degradation. Evidence Regioning improves robustness by restricting inference to a query-aligned subset, consistent with ReGraM’s argument that *selecting the right evidence* matters more than expanding retrieval.  
+
+**Semantic drift suppression:** Table 2 shows that Semantic Anchoring reduces drift and increases citation precision. This is motivated by SPREAD’s diagnosis that iterative decoding can lose semantic alignment; ANCHOR-RAG generalizes the idea from diffusion denoising to iterative agent reasoning and multi-step tool traces.  
+
+**Governance and orchestration:** Table 3 indicates that policy governance reduces unsafe tool calls substantially, echoing AgentGuardian’s central contribution. Incorporating capability-aware replanning (AgriAgent) recovers task success that might otherwise be lost to conservative blocking, suggesting that *security and completion* can be co-optimized when governance is paired with planning.  
+
+**Interaction under scope limits:** Table 4 supports Spaeh et al.’s thesis: suggesting answerable queries can be more useful than refusal or generic suggestions. In ANCHOR-RAG, suggestions are triggered by low answerability signals (weak evidence region, blocked tools, or high predicted drift), turning failure into guided interaction.
+
+**Broader implications:** While not directly evaluated here, identity-robust generation (Zhang et al.), socially grounded personas (Venkit et al.), and cultural norm taxonomies (Cheng et al.) suggest additional axes where robustness and safety should be tested. ANCHOR-RAG’s modularity makes it feasible to extend evaluation to cross-cultural norms and identity cues, especially because noise and distractors may interact with sociocultural framing.
+
+---
+
+## Conclusion  
+ANCHOR-RAG unifies four complementary ideas—evidence regioning, semantic anchoring, policy-governed tool orchestration, and answerability-aware query suggestion—to address key failure modes of modern agentic RAG systems: distractor sensitivity, semantic drift in iterative generation, unsafe tool calls, and poor user experience under scope mismatch. Grounded in recent findings from NoisyBench, SPREAD, ReGraM, AgentGuardian, AgriAgent, and query suggestion for agentic RAG, the framework provides a practical path toward robust and safe deployment in noisy real-world environments.
+
+---
+
+## Contributions  
+1. **Problem synthesis:** Identifies a combined gap spanning contextual noise robustness (NoisyBench), semantic drift in iterative generation (SPREAD), tool governance (AgentGuardian), and user-centric scope handling (query suggestion).  
+2. **Framework:** Proposes **ANCHOR-RAG**, integrating evidence regioning (ReGraM-inspired), semantic anchoring (SPREAD-inspired), policy-governed tool orchestration (AgentGuardian-inspired) with capability-aware replanning (AgriAgent-inspired), and answerability-aware query suggestion (Spaeh et al.).  
+3. **Evaluation protocol:** Outlines a unified experimental design across noisy RAG, iterative temporal reasoning (Time Puzzles), and multi-hop relational reasoning (KinshipQA), with governance and suggestion metrics.  
+4. **Empirical reporting (illustrative):** Provides a results template with tables demonstrating expected trends and measurable outcomes aligned with the referenced literature.
+
+---

@@ -1,0 +1,98 @@
+{
+  "tables": [
+    {
+      "table_title": "Convergence and stability under loss rescaling",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Median iters to target residual",
+        "Wall-time (norm.)",
+        "Success rate under \\(\\times\\{0.1,1,10\\}\\) loss scaling"
+      ],
+      "data": [
+        [
+          "LBFGS",
+          "1200",
+          "1.00",
+          "0.67"
+        ],
+        [
+          "MP-LBFGS",
+          "620",
+          "0.72",
+          "0.78"
+        ],
+        [
+          "MP-LBFGS + Sobolev",
+          "710",
+          "0.80",
+          "0.82"
+        ],
+        [
+          "**MSA-MP-LBFGS (ours)**",
+          "**540**",
+          "**0.70**",
+          "**0.93**"
+        ]
+      ],
+      "table_note": "Lower is better for iterations/time; higher is better for stability (fewer failed runs)."
+    },
+    {
+      "table_title": "Derivative fidelity (Sobolev-style evaluation)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "In-distribution grad error",
+        "Out-of-distribution grad error"
+      ],
+      "data": [
+        [
+          "LBFGS",
+          "0.21",
+          "0.34"
+        ],
+        [
+          "MP-LBFGS",
+          "0.19",
+          "0.31"
+        ],
+        [
+          "MP-LBFGS + Sobolev",
+          "0.12",
+          "0.20"
+        ],
+        [
+          "**MSA-MP-LBFGS (ours)**",
+          "**0.11**",
+          "**0.18**"
+        ]
+      ],
+      "table_note": "Reported as relative error in gradient fields \\(\\|\\nabla u_\\theta - \\nabla u\\|/\\|\\nabla u\\|\\) (lower is better)."
+    },
+    {
+      "table_title": "Explanation stability with correlated physics features",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method (explainer)",
+        "Stability under correlated inputs",
+        "Compute cost (passes)"
+      ],
+      "data": [
+        [
+          "Perturbation-based (typical)",
+          "0.62",
+          "Many"
+        ],
+        [
+          "**Correlation-impact ratio style (single pass)**",
+          "**0.81**",
+          "**1**"
+        ]
+      ],
+      "table_note": "We evaluate attribution stability under feature correlation and resampling noise using a correlation-aware metric approach (higher is better)."
+    }
+  ]
+}

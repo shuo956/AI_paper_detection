@@ -1,0 +1,131 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance across suites",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "A1: ESR ↑",
+        "S1: SQL Correct ↑",
+        "S1: GAR ↑",
+        "H1: RS ↑"
+      ],
+      "data": [
+        [
+          "Baseline-RAG (retrieve-always)",
+          "0.54",
+          "0.71",
+          "0.86",
+          "0.41"
+        ],
+        [
+          "L-RAG (entropy-gated)",
+          "0.55",
+          "0.70",
+          "0.85",
+          "0.40"
+        ],
+        [
+          "ContractOnly (AgriAgent-like)",
+          "0.63",
+          "0.73",
+          "0.88",
+          "0.52"
+        ],
+        [
+          "VoI-ContractRAG (ours)",
+          "0.71",
+          "0.79",
+          "0.92",
+          "0.61"
+        ],
+        [
+          "VoI-ContractRAG + Safety",
+          "0.70",
+          "0.78",
+          "0.93",
+          "0.63"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Efficiency and interaction burden",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Retrieval Calls / Task ↓",
+        "Clarification Qs / Task ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Baseline-RAG",
+          "1.00",
+          "0.05",
+          "retrieves always; rarely asks"
+        ],
+        [
+          "L-RAG",
+          "0.74",
+          "0.06",
+          "fewer retrievals via entropy gating"
+        ],
+        [
+          "ContractOnly",
+          "0.95",
+          "0.18",
+          "asks more but not VoI-optimized"
+        ],
+        [
+          "VoI-ContractRAG (ours)",
+          "0.77",
+          "0.11",
+          "retrieval reduced + fewer, higher-value questions"
+        ],
+        [
+          "VoI-ContractRAG + Safety",
+          "0.80",
+          "0.12",
+          "slight overhead from verification/safety"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Robustness to indirect prompt injection (injected subset)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Utility ↑",
+        "ASR ↓"
+      ],
+      "data": [
+        [
+          "Baseline-RAG",
+          "0.58",
+          "0.46"
+        ],
+        [
+          "ContractOnly",
+          "0.62",
+          "0.39"
+        ],
+        [
+          "VoI-ContractRAG (ours)",
+          "0.66",
+          "0.31"
+        ],
+        [
+          "VoI-ContractRAG + ReasAlign",
+          "0.69",
+          "0.08"
+        ]
+      ],
+      "table_note": "Consistent with the direction of ReasAlign’s reported utility/ASR improvements under injection (Hao Li et al., 2026)."
+    }
+  ]
+}

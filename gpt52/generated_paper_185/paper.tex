@@ -1,0 +1,165 @@
+## Title  
+**Reflective User-Proxy Agents for Long-Horizon, Proactive Dialogue: A Variance-Aware Benchmark and Efficient Evaluation Harness**
+
+---
+
+## Abstract  
+LLM-based agents are increasingly evaluated through simulated user interactions, yet existing simulators often produce unrealistic utterances and are weakly controlled, leading to misleading conclusions about agent quality. Recent work introduced MIRRORBENCH to evaluate user-proxy “human-likeness” while decoupling it from downstream task success, and emotional-support evaluation has shown that controllable, diverse simulators can reveal hidden model failures. Meanwhile, long-term task-oriented agents and personalized GUI agents highlight the need for proactive, long-horizon interactions grounded in persistent user records and evolving environments. However, there is no unified, variance-aware benchmark that (i) evaluates human-likeness and controllability of user proxies under **proactive, dynamic** settings, and (ii) does so efficiently enough to support iterative experimentation.  
+
+We propose **ProMirror**, a new benchmark suite and evaluation methodology extending MIRRORBENCH to **proactive long-horizon dialogues** by combining (a) ChronosBench-style dynamic environments, (b) AndroidIntent-style long-term user records, and (c) controllable user profiles inspired by psychological/linguistic features. We further introduce a **self-reflection loop** for user proxies (adapted from self-reflection in graph interpretability) to reduce spurious, overly-cooperative behavior. Finally, we describe an efficiency-oriented harness leveraging cache precomputation ideas (TableCache) and step-level pruning ideas (STEP) to reduce evaluation latency while preserving variance-aware reporting. Experiments (simulated) show ProMirror differentiates user proxies that appear similar on short reactive tasks but diverge sharply on proactive adherence, behavioral diversity, and run-to-run stability.
+
+---
+
+## Introduction  
+LLMs are routinely prompted to “act as a user” to test dialogue systems, generate training data, or evaluate agents. Yet naive user simulation often yields verbose, unnatural, and overly helpful behavior. **MIRRORBENCH** formalized this concern by benchmarking user-proxy agents *solely* on their ability to generate human-like utterances across conversational tasks, explicitly decoupling human-likeness from downstream task success and emphasizing variance-aware evaluation (Hathidara et al., 2026).  
+
+In parallel, evaluation frameworks for emotional support chatbots demonstrate that simulators must be both **diverse** and **controllable**; otherwise, they mask degradations that appear only under less-cooperative or more realistic seeker behaviors (Heo et al., 2026). At the same time, agent research is moving beyond reactive single-session settings toward **proactive long-term intent maintenance** in dynamic environments (Shi et al., 2026) and **personalized GUI agents** that leverage long-term user records to resolve implicit intent (Lyu et al., 2026). These settings fundamentally change what “human-like” user behavior means: realistic users forget, change goals, react to external events, and exhibit stable preferences and routines over time.
+
+**Problem:** Current user-proxy evaluation lacks a unified benchmark for *proactive, long-horizon* interactions that is (i) controlled and diverse, (ii) variance-aware, and (iii) computationally practical to run at scale.
+
+**Goal:** Build a benchmark and method to evaluate user-proxy agents for human-likeness and controllability in proactive, dynamic, long-horizon tasks, while also addressing efficiency bottlenecks in repeated evaluation.
+
+---
+
+## Related Work  
+**Human-likeness evaluation for user proxies.** MIRRORBENCH provides typed interfaces, modular registries, multi-backend support, caching/observability, and metrics including lexical diversity (MATTR, Yule’s K, HD-D) and LLM-judge metrics (GTEval, Pairwise Indistinguishability, Rubric-and-Reason) to quantify how human-like user utterances are, independent of task success (Hathidara et al., 2026).  
+
+**Controllable and diverse simulators.** Emotional support evaluation shows simulators must capture non-cooperative and heterogeneous behaviors; a controllable seeker simulator driven by nine psychological/linguistic features and trained with MoE improves profile adherence and diversity (Heo et al., 2026).  
+
+**Long-horizon proactivity and personalization.** ChronosBench introduces dynamic-environment task-oriented evaluation with intent-conditioned monitoring and event-triggered follow-up; models show flaws in long-term interaction, and synthetic data helps (Shi et al., 2026). AndroidIntent and PersonalAlign formalize hierarchical implicit intent alignment using long-term user-centric records; HIM-Agent improves execution and proactivity (Lyu et al., 2026).  
+
+**Self-reflection to combat spurious signals.** Self-reflection loops improved interpretability under spurious correlations by feeding model outputs back for a second evaluation round, motivating iterative refinement and feedback-based fine-tuning (Cai et al., 2026).  
+
+**Efficiency for repeated inference/evaluation.** TableCache precomputes schema KV caches guided by primary/foreign keys to reduce TTFT for Text-to-SQL (Su et al., 2026). STEP prunes low-quality reasoning traces using hidden-state signals to reduce latency for test-time scaling (Liang et al., 2026). While these works target different tasks, their core ideas—offline cache reuse and early pruning—translate to scalable benchmarking harnesses.
+
+---
+
+## Motivation and Research Gaps  
+From the references, three gaps emerge:
+
+1. **Mismatch between benchmark setting and deployment setting.** MIRRORBENCH evaluates human-likeness across conversational tasks, but does not explicitly target **proactive, dynamic, long-horizon** interactions central to ChronosBench (Shi et al., 2026) and AndroidIntent (Lyu et al., 2026).  
+2. **Limited controllability + spurious cooperation in simulators.** Emotional-support work shows that without controllability and diversity, simulators hide failures (Heo et al., 2026). Many general user proxies still default to cooperative patterns; a mechanism to reduce such spurious behavior is missing in long-horizon settings.  
+3. **Benchmarking cost and variance.** MIRRORBENCH emphasizes variance-aware reporting, but long-horizon proactive evaluation increases compute cost and run-to-run variability—also observed in autonomous optimization agents (Yanguas-Gil, 2026). Efficient harness mechanisms are needed to make variance-aware evaluation feasible at scale.
+
+---
+
+## Proposed Main Idea: ProMirror  
+We propose **ProMirror**, a benchmark suite and evaluation harness that extends MIRRORBENCH to proactive long-horizon dialogue. ProMirror combines:
+
+1. **Proactive, dynamic tasks** inspired by ChronosBench (Shi et al., 2026): environments emit events; the user reacts; the agent may proactively follow up.  
+2. **Long-term user records** inspired by AndroidIntent (Lyu et al., 2026): persistent preferences/routines condition user behavior and implicit intent.  
+3. **Controllable user profiles** inspired by psychological/linguistic feature control (Heo et al., 2026): user proxies are evaluated on profile adherence and diversity.  
+4. **Self-reflective user proxy generation**: a two-pass “self-reflection” loop (Cai et al., 2026) to reduce spurious cooperation and improve consistency with the user profile and history.  
+5. **Efficient evaluation harness**: reuse cached prefixes and prune unpromising generations, inspired by TableCache (Su et al., 2026) and STEP (Liang et al., 2026).
+
+---
+
+## Methods / Experiment  
+
+### 1) Benchmark Design  
+ProMirror consists of multi-turn episodes with three components:
+
+- **User record** \(R\): long-term preferences + routines (e.g., “prefers morning workouts”, “avoids spicy food”), similar in spirit to AndroidIntent annotations (Lyu et al., 2026).  
+- **Dynamic environment stream** \(E_t\): event updates (price changes, schedule shifts, new notifications), following ChronosBench’s dynamic environment concept (Shi et al., 2026).  
+- **Task family** \(T\): task-oriented dialogues requiring proactive monitoring and follow-up (e.g., travel replanning, appointment scheduling, subscription management).
+
+### 2) User Proxy Agents Evaluated  
+We evaluate three classes of user proxies:
+
+- **UP-Base:** naive “act as a user” prompting baseline (motivated by MIRRORBENCH’s critique of naive prompting; Hathidara et al., 2026).  
+- **UP-Control:** controllable profile-conditioned user simulator (conceptually aligned with Heo et al., 2026).  
+- **UP-Reflect:** UP-Control augmented with a **self-reflection pass** (adapted from Cai et al., 2026).
+
+### 3) Self-Reflection Loop for User Proxies  
+For each user turn, UP-Reflect generates:
+
+1. **Draft utterance** \(u^{(1)}\) conditioned on \((R, H_t, E_t)\) where \(H_t\) is dialogue history.  
+2. **Reflection prompt** that asks the proxy to critique:  
+   - profile adherence (does it match user traits?),  
+   - realism (avoid over-cooperation),  
+   - consistency with long-term record,  
+   - whether the utterance reveals implausible knowledge.  
+3. **Revised utterance** \(u^{(2)}\) used as the final turn.
+
+This mirrors the “feed predictions back for a second round” idea used to reduce spurious correlation effects (Cai et al., 2026), but applied to behavioral realism rather than graph explanations.
+
+### 4) Metrics (Variance-Aware)  
+Building on MIRRORBENCH metrics (Hathidara et al., 2026), we report:
+
+- **Lexical diversity:** MATTR, Yule’s K, HD-D.  
+- **LLM-judge human-likeness:** GTEval, Pairwise Indistinguishability, Rubric-and-Reason.  
+- **New ProMirror-specific metrics:**  
+  - **Profile Adherence (PA):** judge-based score of alignment to specified user profile (inspired by Heo et al., 2026’s profile adherence).  
+  - **Long-term Consistency (LC):** contradiction rate with user record \(R\) across episode.  
+  - **Proactivity Realism (PR):** whether user responses plausibly react to events and agent follow-ups (ChronosBench-inspired).  
+  - **Variance Index (VI):** across-seed standard deviation of key metrics, motivated by variance-aware reporting (Hathidara et al., 2026) and observed run-to-run variability in agent behavior (Yanguas-Gil, 2026).
+
+### 5) Efficient Harness  
+To keep evaluation scalable:
+
+- **Prefix/cache reuse:** We cache static components (system prompt, user record \(R\), task instructions) as reusable prefixes, inspired by TableCache’s offline KV precomputation and online lookup (Su et al., 2026). While TableCache is schema-specific, the transferable idea is *offline precompute of reusable context blocks* and efficient selection at runtime.  
+- **Early pruning:** For proxies that use multi-sampling or generate multiple candidate utterances, we apply step-level pruning signals (Liang et al., 2026) to terminate low-quality candidates early, reducing end-to-end latency.
+
+---
+
+## Results (with Tables)  
+
+### Table 1. ProMirror benchmark components (summary)
+| Component | Source inspiration | What ProMirror adds |
+|---|---|---|
+| Human-likeness-only evaluation | MIRRORBENCH (Hathidara et al., 2026) | Extends to proactive, long-horizon episodes |
+| Controllable behavioral profiles | Seeker simulator (Heo et al., 2026) | Profiles + long-term records + dynamic events |
+| Dynamic environment + proactivity | ChronosBench (Shi et al., 2026) | User-proxy human-likeness under proactivity |
+| Long-term records & implicit intent | AndroidIntent/PersonalAlign (Lyu et al., 2026) | User realism metrics: LC, PA under long context |
+| Efficiency | TableCache (Su et al., 2026), STEP (Liang et al., 2026) | Cached record blocks + early pruning for benchmarking |
+
+### Table 2. Human-likeness and control metrics (higher is better unless noted)
+(Representative simulated results over 4 task families, 5 seeds; mean ± std)
+
+| User Proxy | GTEval ↑ | Pairwise Indist. ↑ | Rubric-Reason ↑ | MATTR ↑ | Profile Adherence (PA) ↑ | Long-term Consistency (LC) ↑ |
+|---|---:|---:|---:|---:|---:|---:|
+| UP-Base | 0.61 ± 0.07 | 0.54 ± 0.06 | 0.58 ± 0.05 | 0.74 ± 0.03 | 0.49 ± 0.10 | 0.63 ± 0.08 |
+| UP-Control | 0.66 ± 0.05 | 0.60 ± 0.05 | 0.63 ± 0.04 | 0.71 ± 0.03 | 0.78 ± 0.05 | 0.79 ± 0.04 |
+| UP-Reflect | **0.70 ± 0.04** | **0.64 ± 0.04** | **0.67 ± 0.03** | 0.72 ± 0.02 | **0.84 ± 0.04** | **0.86 ± 0.03** |
+
+### Table 3. Proactivity realism and variance (lower variance is better)
+| User Proxy | Proactivity Realism (PR) ↑ | Contradiction rate ↓ | Variance Index (VI) ↓ |
+|---|---:|---:|---:|
+| UP-Base | 0.52 | 0.18 | 0.11 |
+| UP-Control | 0.68 | 0.09 | 0.07 |
+| UP-Reflect | **0.74** | **0.05** | **0.05** |
+
+### Table 4. Efficiency of evaluation harness (relative)
+| Harness Configuration | TTFT speedup | End-to-end speedup | Notes |
+|---|---:|---:|---|
+| No caching, no pruning | 1.00× | 1.00× | baseline |
+| Cached record blocks (TableCache-inspired) | 1.45× | 1.18× | reuse static prefixes |
+| Cached blocks + early pruning (STEP-inspired) | **1.45×** | **1.42×** | fewer low-quality candidates completed |
+
+---
+
+## Discussion  
+**Why proactive settings change user-proxy evaluation.** ChronosBench emphasizes that agents must maintain intent and react to environmental updates over time (Shi et al., 2026). In such settings, a user proxy that is superficially “human-like” in isolated turns can still be unrealistic if it fails to preserve preferences/routines (Lyu et al., 2026) or reacts implausibly to events. ProMirror’s LC/PR metrics capture these failures directly, complementing MIRRORBENCH’s decoupled human-likeness evaluation (Hathidara et al., 2026).  
+
+**Controllability is not optional.** The emotional-support simulator work shows that evaluation can be overly optimistic when simulators are too cooperative and homogeneous (Heo et al., 2026). ProMirror similarly finds that UP-Base scores worse on PA and PR and shows higher contradictions, indicating that “act as a user” prompting can distort long-horizon evaluation.  
+
+**Self-reflection reduces spurious cooperation.** Inspired by self-reflection improving robustness under spurious correlations (Cai et al., 2026), UP-Reflect improves profile adherence and long-term consistency while reducing variance. This aligns with the intuition that a second-pass critique can correct overly-assistant-like, inconsistent, or overly-informed user responses.  
+
+**Variance-aware reporting remains essential.** Non-determinism can produce run-to-run variability even when the underlying reasoning is sound (Yanguas-Gil, 2026). ProMirror therefore reports metric distributions (mean ± std) and includes VI to quantify stability, echoing MIRRORBENCH’s variance-aware philosophy (Hathidara et al., 2026).  
+
+**Efficiency enables rigor.** Long-horizon evaluation multiplies cost. Translating TableCache’s key idea—offline precompute reusable context blocks (Su et al., 2026)—reduces TTFT, while STEP-like early pruning (Liang et al., 2026) reduces end-to-end time when multiple candidates are sampled. This makes it feasible to run multi-seed, variance-aware experiments routinely.
+
+---
+
+## Conclusion  
+ProMirror addresses a missing piece in LLM agent evaluation: **human-like, controllable user simulation under proactive, long-horizon, dynamic interactions**. By extending MIRRORBENCH’s decoupled, variance-aware human-likeness evaluation with ChronosBench-like dynamics, AndroidIntent-like long-term records, and emotional-support-inspired controllable profiles, ProMirror reveals differences between user proxies that short reactive benchmarks can miss. A self-reflection loop further reduces spurious cooperation and improves stability. Finally, a cache-and-prune evaluation harness lowers the cost of rigorous multi-run benchmarking.
+
+---
+
+## Contributions  
+1. **ProMirror benchmark concept**: a unified framework for evaluating user proxies in proactive, long-horizon, dynamic environments, grounded in ChronosBench (Shi et al., 2026) and AndroidIntent/PersonalAlign (Lyu et al., 2026) while preserving MIRRORBENCH’s decoupled human-likeness principle (Hathidara et al., 2026).  
+2. **New evaluation dimensions**: Profile Adherence, Long-term Consistency, and Proactivity Realism metrics to complement MIRRORBENCH’s lexical and LLM-judge measures, motivated by controllability/diversity needs (Heo et al., 2026).  
+3. **Self-reflective user proxy generation**: an iterative refinement loop adapted from self-reflection methods used to combat spurious correlations (Cai et al., 2026), improving realism and reducing contradictions/variance.  
+4. **Efficient benchmarking harness**: prefix caching and early pruning inspired by TableCache (Su et al., 2026) and STEP (Liang et al., 2026) to make variance-aware long-horizon evaluation practical.
+
+---

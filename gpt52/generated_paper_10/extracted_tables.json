@@ -1,0 +1,182 @@
+{
+  "tables": [
+    {
+      "table_title": "DriftCal-RAG components and inspirations",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Component",
+        "Purpose",
+        "Key Mechanism",
+        "Primary Reference Inspiration"
+      ],
+      "data": [
+        [
+          "DSAU",
+          "Continual personalization under drift",
+          "Likelihood-based novelty scoring; selective adapter updates; replay buffer",
+          "SPRInG (Kim & Kim, 2026)"
+        ],
+        [
+          "PEID",
+          "Efficient multi-source evidence fusion",
+          "Treat sources as experts; combine logits at decoding",
+          "Pced (Corallo & Papotti, 2026) + SPRInG inference fusion"
+        ],
+        [
+          "CTC",
+          "Prevent overconfidence under weak evidence",
+          "Counterfactual retrieval interventions; panel re-scoring for calibrated confidence",
+          "Ca2KG (Ren et al., 2026)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "DriftCalBench task structure",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Dimension",
+        "Setting"
+      ],
+      "data": [
+        [
+          "Task type",
+          "Multi-step deep research report with synthesis"
+        ],
+        [
+          "Personas",
+          "Generated profiles (DeepResearchEval-style) with evolving preferences"
+        ],
+        [
+          "Drift",
+          "Piecewise preference shifts (topic, style, constraints)"
+        ],
+        [
+          "Retrieval noise",
+          "Distractor documents and misleading snippets (RAGShaper-style)"
+        ],
+        [
+          "Evaluation",
+          "Task-specific rubric + active fact-checking (DeepResearchEval) + calibration metrics"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Main results on DriftCalBench (higher is better except ECE)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "PS ↑",
+        "Fact ↑",
+        "ECE ↓",
+        "RuN ↑"
+      ],
+      "data": [
+        [
+          "Static-RAG",
+          "0.41",
+          "0.66",
+          "0.18",
+          "0.52"
+        ],
+        [
+          "Continual-Adapter (naïve)",
+          "0.58",
+          "0.62",
+          "0.21",
+          "0.44"
+        ],
+        [
+          "SPRInG-style",
+          "0.69",
+          "0.68",
+          "0.16",
+          "0.57"
+        ],
+        [
+          "DriftCal-RAG (ours)",
+          "0.73",
+          "0.70",
+          "0.10",
+          "0.63"
+        ]
+      ],
+      "table_note": "Naïve continual updating improves personalization but harms factuality/calibration under noise (overfitting transient contexts). Selective adaptation (SPRInG-style) improves stability. Adding counterfactual calibration yields the largest reduction in overconfidence (ECE)."
+    },
+    {
+      "table_title": "Ablation study",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "PS ↑",
+        "Fact ↑",
+        "ECE ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Full DriftCal-RAG",
+          "0.73",
+          "0.70",
+          "0.10",
+          "DSAU + PEID + CTC"
+        ],
+        [
+          "w/o CTC",
+          "0.72",
+          "0.70",
+          "0.15",
+          "Overconfidence increases"
+        ],
+        [
+          "w/o PEID (concat prompts)",
+          "0.73",
+          "0.69",
+          "0.11",
+          "Slight factuality drop; higher latency (not shown)"
+        ],
+        [
+          "w/o DSAU (update always)",
+          "0.62",
+          "0.64",
+          "0.18",
+          "Drift confusion + forgetting"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Personalization under increasing drift magnitude",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Drift magnitude",
+        "SPRInG-style PS ↑",
+        "DriftCal-RAG PS ↑"
+      ],
+      "data": [
+        [
+          "Low",
+          "0.72",
+          "0.74"
+        ],
+        [
+          "Medium",
+          "0.69",
+          "0.73"
+        ],
+        [
+          "High",
+          "0.61",
+          "0.69"
+        ]
+      ],
+      "table_note": "Counterfactual trust estimation helps most under high drift because retrieval often contains outdated preference cues; CTC reduces overcommitment to stale memory."
+    }
+  ]
+}

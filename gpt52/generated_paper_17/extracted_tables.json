@@ -1,0 +1,232 @@
+{
+  "tables": [
+    {
+      "table_title": "C³S-Bench schema (per dialogue)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Field",
+        "Type",
+        "Description"
+      ],
+      "data": [
+        [
+          "Image",
+          "optional",
+          "Realistic scene image (or null for text-only)"
+        ],
+        [
+          "Turns",
+          "list",
+          "Multi-turn user–assistant dialogue"
+        ],
+        [
+          "Risk setting",
+          "categorical",
+          "Escalation / Context-switch"
+        ],
+        [
+          "Safety label",
+          "binary + severity",
+          "Safe vs unsafe intent; severity scale"
+        ],
+        [
+          "Norm context",
+          "categorical",
+          "Culture/country + norm category (Cultural Compass)"
+        ],
+        [
+          "Norm violation label",
+          "multi-label",
+          "Which norms are violated (if any)"
+        ],
+        [
+          "Evasion label",
+          "ordinal",
+          "None / mild / strong (aligned to EvasionBench levels)"
+        ],
+        [
+          "Clarity label",
+          "categorical",
+          "Clear vs unclear (inspired by CLARITY task framing)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Overall performance scorecard (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model / Setting",
+        "CSR ↑",
+        "SAS ↑",
+        "BH ↑",
+        "NAR ↑",
+        "ED (F1) ↑",
+        "CI ↑"
+      ],
+      "data": [
+        [
+          "Base MLLM (no guardrail)",
+          "0.71",
+          "0.62",
+          "0.78",
+          "0.74",
+          "0.55",
+          "0.60"
+        ],
+        [
+          "+ Safety prompting",
+          "0.76",
+          "0.70",
+          "0.66",
+          "0.73",
+          "0.52",
+          "0.58"
+        ],
+        [
+          "+ Self-reflection critic (2nd pass)",
+          "0.75",
+          "0.72",
+          "0.72",
+          "0.78",
+          "0.60",
+          "0.63"
+        ],
+        [
+          "+ Anomaly monitor (STAR-inspired flagging)",
+          "0.77",
+          "0.73",
+          "0.68",
+          "0.75",
+          "0.58",
+          "0.61"
+        ],
+        [
+          "+ Critic + monitor (combined)",
+          "0.76",
+          "0.74",
+          "0.70",
+          "0.80",
+          "0.62",
+          "0.64"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Trade-offs by risk setting (paired safe/unsafe dialogues)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "System",
+        "SAS ↑ (unsafe handled safely)",
+        "BH ↑ (safe handled helpfully)",
+        "Over-refusal ↓"
+      ],
+      "data": [
+        [
+          "Escalation",
+          "Safety prompting",
+          "0.74",
+          "0.61",
+          "0.27"
+        ],
+        [
+          "Escalation",
+          "Critic (2nd pass)",
+          "0.75",
+          "0.69",
+          "0.18"
+        ],
+        [
+          "Context-switch",
+          "Safety prompting",
+          "0.66",
+          "0.70",
+          "0.21"
+        ],
+        [
+          "Context-switch",
+          "Critic (2nd pass)",
+          "0.70",
+          "0.74",
+          "0.15"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Norm adherence varies by cultural framing (slice analysis)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Culture slice (prompt framing)",
+        "NAR Base ↑",
+        "NAR + Critic ↑",
+        "Most frequent violation categories (qualitative tags)"
+      ],
+      "data": [
+        [
+          "Slice A",
+          "0.77",
+          "0.82",
+          "interpersonal boundaries; respect in refusal"
+        ],
+        [
+          "Slice B",
+          "0.72",
+          "0.79",
+          "authority sensitivity; stereotyping risk"
+        ],
+        [
+          "Slice C",
+          "0.75",
+          "0.80",
+          "indirectness norms; face-saving failures"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Evasion vs safety behavior coupling",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "ED F1 ↑",
+        "“Safe but evasive” rate ↓",
+        "“Unsafe compliance with hedging” rate ↓"
+      ],
+      "data": [
+        [
+          "Base",
+          "0.55",
+          "0.22",
+          "0.14"
+        ],
+        [
+          "Safety prompting",
+          "0.52",
+          "0.28",
+          "0.11"
+        ],
+        [
+          "Critic (2nd pass)",
+          "0.60",
+          "0.17",
+          "0.10"
+        ],
+        [
+          "Combined",
+          "0.62",
+          "0.15",
+          "0.09"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

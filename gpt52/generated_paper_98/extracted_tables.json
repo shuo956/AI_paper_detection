@@ -1,0 +1,142 @@
+{
+  "tables": [
+    {
+      "table_title": "Personalized factual QA (PFQABench-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Factual Acc. ↑",
+        "Personalization Score ↑",
+        "PIH Rate ↓"
+      ],
+      "data": [
+        [
+          "Base (no personalization)",
+          "62.1",
+          "18.4",
+          "3.2"
+        ],
+        [
+          "PRISP-only (few-shot, privacy-safe)",
+          "60.5",
+          "41.7",
+          "11.9"
+        ],
+        [
+          "PRISP + FPPS",
+          "66.8",
+          "39.9",
+          "6.1"
+        ],
+        [
+          "FACTSAFE-PERSONA (full)",
+          "69.4",
+          "40.8",
+          "4.8"
+        ]
+      ],
+      "table_note": "PRISP improves personalization but increases personalization-induced hallucinations; adding FPPS recovers factuality; the full method further improves factual accuracy and reduces PIH."
+    },
+    {
+      "table_title": "Evidence alignment and fine-grained factuality (InFi-Check-inspired + SIN 'No Evidence, No Score')",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Evidence Alignment (EA) ↑",
+        "Fine-grained Error F1 ↑",
+        "Correction Quality (Human/LLM-judge) ↑"
+      ],
+      "data": [
+        [
+          "PRISP-only",
+          "0.41",
+          "0.36",
+          "2.9 / 5"
+        ],
+        [
+          "PRISP + FPPS",
+          "0.52",
+          "0.39",
+          "3.3 / 5"
+        ],
+        [
+          "FACTSAFE-PERSONA (full)",
+          "0.67",
+          "0.48",
+          "3.9 / 5"
+        ]
+      ],
+      "table_note": "Steering helps, but explicit verification/correction drives the largest gains in evidence-linked reliability and interpretability."
+    },
+    {
+      "table_title": "Long-form synthesis quality (rubric-based)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Rubric Satisfaction ↑",
+        "Unsupported-Claim Penalty ↓",
+        "Overall Report Score ↑"
+      ],
+      "data": [
+        [
+          "PRISP-only",
+          "38.2%",
+          "0.31",
+          "0.44"
+        ],
+        [
+          "PRISP + FPPS",
+          "41.5%",
+          "0.24",
+          "0.49"
+        ],
+        [
+          "FACTSAFE-PERSONA (full)",
+          "47.9%",
+          "0.15",
+          "0.57"
+        ]
+      ],
+      "table_note": "The evidence-linked layer improves not only correctness but also report structure and verifiability, consistent with the rubric philosophy of DeepResearch Bench II and evidence-chain requirements of SIN-Bench."
+    },
+    {
+      "table_title": "Stylistic side effects (CASSE-inspired)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Prompting Condition",
+        "Method",
+        "Conciseness ↑",
+        "Perceived Expertise ↑",
+        "SSEI (↓ is better)"
+      ],
+      "data": [
+        [
+          "Neutral style",
+          "PRISP + FPPS",
+          "0.54",
+          "0.71",
+          "—"
+        ],
+        [
+          "Be concise",
+          "PRISP + FPPS",
+          "0.78",
+          "0.61",
+          "0.10"
+        ],
+        [
+          "Be concise",
+          "FACTSAFE-PERSONA (full)",
+          "0.76",
+          "0.66",
+          "0.05"
+        ]
+      ],
+      "table_note": "Conciseness still suppresses expertise (Cho et al., 2026), but evidence-linked verification partially restores perceived expertise without fully sacrificing conciseness."
+    }
+  ]
+}

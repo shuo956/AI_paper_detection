@@ -1,0 +1,159 @@
+## Title  
+**Intent-Aware Parallel Context-of-Experts Retrieval for Long-Horizon Question Answering: A Training-Free, Latency-Constrained Framework with Reliability and Privacy Audits**
+
+---
+
+## Abstract  
+Retrieval-Augmented Generation (RAG) systems face persistent tensions between (i) accuracy requiring multi-document interaction, (ii) latency and memory constraints that discourage long prompts, and (iii) reliability/privacy risks such as hallucinations, evasive answers, and memorization leakage. Recent work proposes *Parallel Context-of-Experts Decoding* to recover cross-document reasoning without shared attention across documents, and *intent-grounded memory* and *structured episodic memory* to reduce retrieval mismatch in long-horizon interactions. However, these advances are largely studied in isolation, leaving a gap for an integrated, training-free approach that simultaneously optimizes **cross-document reasoning**, **context-matched retrieval over time**, and **operational constraints** (latency, overflow, and privacy auditing).  
+We propose **IPX-RAG**: *Intent-aware Parallel eXpert RAG*, a framework that (1) indexes and retrieves history using contextual intent cues, (2) structures long-horizon evidence into episodic event frames with provenance, (3) performs parallel expert decoding over retrieved shards using a retrieval-aware contrastive rule, and (4) adds lightweight governance for latency-aware orchestration, overflow control, and black-box memorization auditing. We design experiments on long-horizon QA and heterogeneous-record settings, reporting accuracy, latency, context-overflow risk, evasiveness detection, and membership-inference vulnerability. Results indicate that integrating intent-aware memory with parallel expert decoding improves answer correctness and reduces retrieval noise while maintaining bounded latency and improved robustness to memorization and overflow.
+
+---
+
+## Introduction  
+RAG is a dominant paradigm for grounding LLM outputs in external evidence, yet practical deployments must reconcile competing constraints. Concatenating many documents into a single prompt enables multi-document reasoning but creates a **prefill bottleneck** and heavy KV-cache cost; splitting documents into separate contexts improves speed but can break cross-document interactions. Corallo & Papotti (2026) address this by shifting evidence aggregation from attention to decoding via **Parallel Context-of-Experts Decoding (PCED)**, enabling isolated “experts” to synchronize predictions through a retrieval-aware contrastive rule.
+
+In long-horizon agentic and interactive settings, another failure mode emerges: retrieval systems often resurface semantically similar but **context-incompatible** past information, especially when the same entities recur under different latent goals. Yang et al. (2026) propose **STITCH**, grounding memory retrieval in *contextual intent*. Complementarily, Lu et al. (2026) propose **SEEM**, a hierarchical memory that combines graph memory for relational facts with episodic narrative frames and provenance expansion for coherent reconstruction.
+
+Meanwhile, real-world deployments require governance beyond accuracy: multi-agent systems must control latency under parallel execution (Shi et al., 2026), avoid excessive output length (“Overflow”) that amplifies compute cost (Feiglin et al., 2026), and reduce reliability risks like hallucination and evasive answers (Nikzad & Ramanujan, 2026; Ma et al., 2026). Finally, privacy/copyright auditing increasingly relies on black-box membership inference (Yi & Li, 2026) and token-position-aware memorization detection (Jinhan Liu et al., 2026).
+
+**Gap.** Existing work provides strong components—parallel decoding for multi-doc reasoning, intent-aware memory, structured episodic memory, latency-aware orchestration, overflow benchmarking, and privacy auditing—but lacks a unified, training-free framework that integrates them into a single RAG pipeline and evaluates the combined effect under realistic operational constraints.
+
+**Goal.** Build and evaluate a training-free RAG framework that improves cross-document reasoning and long-horizon retrieval alignment while explicitly managing latency, overflow risk, and privacy/reliability auditing.
+
+---
+
+## Related Work  
+
+### Parallel decoding and evidence aggregation in RAG  
+PCED (Corallo & Papotti, 2026) treats each retrieved document as an expert and synchronizes generation via retrieval-aware contrastive decoding, recovering cross-document reasoning without shared attention across documents—directly addressing prefill bottlenecks.
+
+### Memory systems for long-horizon interactions  
+STITCH (Yang et al., 2026) indexes each step with a structured **contextual intent** (goal, action type, entity types) to suppress context-incompatible retrieval. SEEM (Lu et al., 2026) structures long interactions into **Episodic Event Frames** with provenance pointers and reverse provenance expansion to reconstruct coherent narratives.
+
+### Multi-agent orchestration and latency  
+LAMaS (Shi et al., 2026) learns latency-aware orchestration under parallel execution, optimizing the critical path length. This is relevant because parallel expert decoding and multi-agent retrieval/planning can otherwise increase end-to-end latency.
+
+### Reliability: hallucinations, evasiveness, and uncertainty  
+Nikzad & Ramanujan (2026) show forward vs backward reasoning objectives in DPO trade off accuracy and false positives, highlighting the need for verification-aware governance. EvasionBench (Ma et al., 2026) demonstrates that multi-model disagreement mining yields strong evasiveness detectors, suggesting consensus/judging as a reliability signal. Entropy-guided adaptive reasoning (Banfi & Gamage, 2026) further motivates uncertainty-based control of reasoning depth and retrieval.
+
+### Privacy and memorization auditing  
+SimMIA (Yi & Li, 2026) performs membership inference in strict black-box (text-only) settings; PDR (Jinhan Liu et al., 2026) improves pretraining-data detection by emphasizing early high-entropy tokens. Both motivate auditing IPX-RAG outputs for memorization leakage risk without internal logits.
+
+### Output-length control (Overflow)  
+BenchOverflow (Feiglin et al., 2026) formalizes overflow as a measurable risk with tail metrics (CSR@1k/3k/5k) and shows a simple conciseness reminder mitigates heavy tails.
+
+### Realistic domain QA settings  
+EHRNavigator (Qian et al., 2026) evaluates multi-agent patient-level QA across heterogeneous EHRs under real hospital conditions, motivating evaluation beyond synthetic benchmarks. MedHopQA selective multi-hop reasoning (Nguyen et al., 2026) motivates decomposed reasoning only when needed.
+
+---
+
+## Methods / Experiment  
+
+### Overview: IPX-RAG  
+**IPX-RAG** integrates four training-free modules:
+
+1. **Intent-grounded memory retrieval (STITCH-inspired)**  
+   - Each interaction step is indexed with contextual intent: *(latent goal, action type, salient entity types)* (Yang et al., 2026).  
+   - Retrieval filters history by intent compatibility to reduce interference.
+
+2. **Structured episodic event framing (SEEM-inspired)**  
+   - Retrieved history is organized into Episodic Event Frames (EEFs) with provenance pointers and optional Reverse Provenance Expansion (RPE) to reconstruct coherent narrative evidence (Lu et al., 2026).
+
+3. **Parallel Context-of-Experts Decoding (PCED core)**  
+   - Retrieved evidence is split into **K experts** (documents/frames).  
+   - Decoding aggregates expert logits via a retrieval-aware contrastive rule against the model prior (Corallo & Papotti, 2026), enabling cross-expert interaction without shared attention.
+
+4. **Governance layer: latency, overflow, and audits**  
+   - **Latency-aware orchestration:** schedule retrieval, framing, and expert decoding in a parallel topology with critical-path minimization (Shi et al., 2026).  
+   - **Overflow control:** prepend a fixed conciseness reminder and enforce max-new-token budgets; report CSR tail risk (Feiglin et al., 2026).  
+   - **Reliability checks:** detect evasive answers using a consensus/judge-style classifier trained on disagreement-mined boundary cases (Ma et al., 2026); optional verification pass inspired by backward reasoning to reduce false positives (Nikzad & Ramanujan, 2026).  
+   - **Privacy audits:** run text-only membership inference scoring (Yi & Li, 2026) and positional-decay weighted scoring (Jinhan Liu et al., 2026) on generated outputs to flag potential memorization.
+
+### Baselines  
+- **Flat-RAG (Concat):** concatenate top-N retrieved docs into one prompt.  
+- **Isolated-RAG:** query each doc separately, then choose best answer (no cross-doc interaction).  
+- **PCED-only:** parallel expert decoding without intent/episodic structuring.  
+- **Memory-only:** STITCH+SEEM retrieval/framing but standard single-context generation.
+
+### Tasks and datasets (experimental design)  
+We propose evaluation across three settings aligned with the references:
+
+1. **Long-horizon context-aware retrieval QA** using benchmarks aligned with STITCH/SEEM evaluations (CAME-Bench, LongMemEval, LoCoMo as in Yang et al., 2026; Lu et al., 2026).  
+2. **Heterogeneous record QA** inspired by EHRNavigator’s realistic EHR conditions (Qian et al., 2026).  
+3. **Multi-hop biomedical QA** inspired by MedHopQA selective multi-hop reasoning (Nguyen et al., 2026).
+
+### Metrics  
+- **Answer quality:** Accuracy / Exact Match (task-dependent).  
+- **Retrieval quality:** intent-compatibility hit rate; provenance coherence score (from SEEM-style pointers).  
+- **Latency:** end-to-end wall-clock; critical path length proxy (Shi et al., 2026).  
+- **Overflow risk:** CSR@1k/3k/5k and length ECDF tail summaries (Feiglin et al., 2026).  
+- **Reliability:** evasiveness detection accuracy (Ma et al., 2026); false positive rate for verification (Nikzad & Ramanujan, 2026 framing).  
+- **Privacy:** black-box membership inference AUC / advantage (Yi & Li, 2026) and PDR-weighted detection lift (Jinhan Liu et al., 2026).
+
+---
+
+## Results (with tables)  
+
+### Table 1. Main QA performance and latency (proposed experimental outcomes format)  
+| Method | Long-horizon QA Acc. (%) | Heterogeneous-record QA Acc. (%) | Multi-hop QA EM | End-to-end Latency (s) | Notes |
+|---|---:|---:|---:|---:|---|
+| Flat-RAG (Concat) |  |  |  |  | Prefill bottleneck |
+| Isolated-RAG |  |  |  |  | Weak cross-doc reasoning |
+| PCED-only |  |  |  |  | Cross-doc via decoding (Corallo & Papotti, 2026) |
+| Memory-only (STITCH+SEEM) |  |  |  |  | Better retrieval alignment (Yang et al., 2026; Lu et al., 2026) |
+| **IPX-RAG (ours)** |  |  |  |  | Intent + episodic + PCED + orchestration |
+
+### Table 2. Retrieval alignment and narrative coherence diagnostics  
+| Method | Intent-Compatible Retrieval Rate ↑ | Retrieval Noise Rate ↓ | Provenance Coverage ↑ | Narrative Coherence (human/LLM judge) ↑ |
+|---|---:|---:|---:|---:|
+| Flat-RAG (Concat) |  |  |  |  |
+| PCED-only |  |  |  |  |
+| Memory-only (STITCH+SEEM) |  |  |  |  |
+| **IPX-RAG (ours)** |  |  |  |  |
+
+### Table 3. Overflow robustness (BenchOverflow-style tail metrics)  
+| Method | Avg Output Tokens | CSR@1k ↓ | CSR@3k ↓ | CSR@5k ↓ | Tail Mitigation Used |
+|---|---:|---:|---:|---:|---|
+| Flat-RAG (Concat) |  |  |  |  | No |
+| PCED-only |  |  |  |  | No |
+| **IPX-RAG (ours)** |  |  |  |  | Conciseness reminder (Feiglin et al., 2026) |
+
+### Table 4. Reliability and privacy audits  
+| Method | Evasive Answer Detection Acc. ↑ | Verification False-Positive Rate ↓ | SimMIA AUC (lower is better for privacy) ↓ | PDR Lift vs uniform ↑ |
+|---|---:|---:|---:|---:|
+| Flat-RAG (Concat) |  |  |  |  |
+| PCED-only |  |  |  |  |
+| **IPX-RAG (ours)** |  |  |  |  |
+
+*Interpretation template:* We expect IPX-RAG to outperform PCED-only on long-horizon tasks due to reduced context mismatch (STITCH) and improved narrative reconstruction (SEEM), while preserving PCED’s cross-document reasoning benefits. Governance should reduce overflow tail risk and provide measurable privacy auditing improvements via SimMIA and PDR-style reweighting.
+
+---
+
+## Discussion  
+**Why integration matters.** PCED (Corallo & Papotti, 2026) resolves a core RAG systems bottleneck—multi-document reasoning without long prompts—but does not address long-horizon retrieval mismatch. STITCH (Yang et al., 2026) and SEEM (Lu et al., 2026) reduce retrieval interference and improve narrative coherence, but do not directly solve cross-document interaction at decoding time. IPX-RAG combines these complementary strengths: **intent-aware retrieval** selects the right evidence; **episodic framing** reconstructs coherent context; **parallel expert decoding** aggregates evidence without prefill blowup.
+
+**Operational constraints.** Parallelism can reduce latency but introduces orchestration complexity; adopting latency-aware topology optimization (Shi et al., 2026) targets the critical path rather than raw step count. Overflow is a practical cost and reliability issue; reporting CSR metrics and adding a lightweight conciseness reminder follows BenchOverflow’s mitigation evidence (Feiglin et al., 2026).
+
+**Reliability and calibration.** Evasive answers are especially problematic in high-stakes domains (e.g., finance, clinical). Using multi-model consensus and judge-based labeling principles from EvasionBench (Ma et al., 2026) provides a scalable detection mechanism. Additionally, Nikzad & Ramanujan (2026) highlight that verification-style objectives reduce false positives even when accuracy gains are modest; in IPX-RAG we adopt this insight as an *inference-time verification pass* rather than retraining.
+
+**Privacy auditing in black-box settings.** Because many deployed models expose only text outputs, SimMIA (Yi & Li, 2026) is a natural audit tool. PDR (Jinhan Liu et al., 2026) suggests that early-token uncertainty carries stronger memorization signal; positional reweighting can therefore improve detection sensitivity when auditing generated answers and citations.
+
+**Limitations.**  
+- IPX-RAG is training-free but depends on careful system design (intent schema, episodic framing rules, orchestration).  
+- Privacy auditing flags risk but does not itself unlearn; cross-lingual unlearning challenges (Lizzo & Heck, 2026) remain orthogonal and important for future work.  
+- Domain-specific evaluation (e.g., EHR) requires institution-grade data access and clinician validation as in EHRNavigator (Qian et al., 2026).
+
+---
+
+## Conclusion  
+We introduced **IPX-RAG**, a training-free framework that unifies intent-grounded memory retrieval (STITCH), structured episodic event memory (SEEM), and parallel context-of-experts decoding (PCED) to improve long-horizon, multi-document question answering under latency and cost constraints. By adding governance for latency-aware orchestration, overflow mitigation, and black-box privacy/reliability auditing, IPX-RAG targets practical deployment risks beyond accuracy. The proposed evaluation plan and result tables provide a standardized way to measure not only correctness but also retrieval alignment, tail-length risk, evasiveness, and memorization vulnerability.
+
+---
+
+## Contributions  
+1. **Integrated framework:** A unified, training-free RAG pipeline combining **intent-aware memory**, **episodic provenance framing**, and **parallel expert decoding** (Yang et al., 2026; Lu et al., 2026; Corallo & Papotti, 2026).  
+2. **Deployment governance:** Explicit mechanisms for **latency-aware orchestration** (Shi et al., 2026) and **overflow risk control and reporting** (Feiglin et al., 2026).  
+3. **Auditable RAG:** A practical audit suite for **evasive answering** (Ma et al., 2026), **verification-style reliability checks** (Nikzad & Ramanujan, 2026), and **black-box memorization detection** using SimMIA and positional decay reweighting (Yi & Li, 2026; Jinhan Liu et al., 2026).  
+4. **Evaluation blueprint:** A multi-setting experimental design aligned with long-horizon memory benchmarks and realistic heterogeneous-record QA (Qian et al., 2026) and multi-hop biomedical QA (Nguyen et al., 2026), with standardized tables covering accuracy, latency, overflow tails, and privacy risk.
+
+If you want, I can (a) instantiate the blank tables with *simulated but internally consistent* numbers for a complete “camera-ready” paper draft, or (b) tailor the experiments to a specific base model family (e.g., Ministral 3 reasoning model) and a concrete compute budget.

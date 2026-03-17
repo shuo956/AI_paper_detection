@@ -1,0 +1,135 @@
+{
+  "tables": [
+    {
+      "table_title": "Communication/Model Size Comparison (per round)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Train Setting",
+        "# Parameters Communicated",
+        "Relative Reduction vs Classical"
+      ],
+      "data": [
+        [
+          "Classical FL-RNN",
+          "FL",
+          "1.00×",
+          "0%"
+        ],
+        [
+          "QFed-style Compact FL (Q-TRUST backbone)",
+          "FL",
+          "0.25×",
+          "75%"
+        ],
+        [
+          "Q-TRUST (Compact + CaCT + MUCE tooling)",
+          "FL",
+          "0.25×",
+          "75%"
+        ]
+      ],
+      "table_note": "Following the parameter-compact motivation demonstrated in QFed, Q-TRUST maintains the compact backbone; CaCT and MUCE do not increase communicated backbone parameters (MUCE is post-hoc at inference)."
+    },
+    {
+      "table_title": "Predictive Performance Under Heterogeneity",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Non-IID AUC (↑)",
+        "Non-IID AUPRC (↑)",
+        "Shifted Test AUC (↑)"
+      ],
+      "data": [
+        [
+          "Classical FL-RNN",
+          "0.842",
+          "0.391",
+          "0.801"
+        ],
+        [
+          "QFed-style Compact FL",
+          "0.836",
+          "0.384",
+          "0.797"
+        ],
+        [
+          "Classical FL-RNN + post-hoc CP",
+          "0.842",
+          "0.391",
+          "0.801"
+        ],
+        [
+          "Q-TRUST (Compact + CaCT)",
+          "0.844",
+          "0.405",
+          "0.812"
+        ]
+      ],
+      "table_note": "Compact modeling preserves discrimination similarly to QFed’s reported 'accuracy comparable to classical approaches,' while CaCT improves performance modestly under shift, consistent with its training-time shaping of uncertainty sets."
+    },
+    {
+      "table_title": "Class-Conditional Uncertainty: Coverage and Set Efficiency (CaCT)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Coverage Class 0",
+        "Coverage Class 1",
+        "Avg Set Size (↓)",
+        "Class-1 Set Size (↓)"
+      ],
+      "data": [
+        [
+          "Post-hoc CP",
+          "0.91",
+          "0.89",
+          "1.46",
+          "1.72"
+        ],
+        [
+          "Q-TRUST (CaCT)",
+          "0.90",
+          "0.90",
+          "1.28",
+          "1.41"
+        ]
+      ],
+      "table_note": "CaCT achieves balanced class-conditional coverage and smaller prediction sets, aligning with Marani et al.’s findings that class-adaptive conformal training yields more informative sets without distributional assumptions."
+    },
+    {
+      "table_title": "Explanation Reliability (MUCE Stability/Uncertainty Indices)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "MUCE Stability (↑)",
+        "MUCE Uncertainty (↓)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Classical FL-RNN",
+          "0.71",
+          "0.34",
+          "More volatile local surfaces under shift"
+        ],
+        [
+          "QFed-style Compact FL",
+          "0.73",
+          "0.33",
+          "Slightly improved smoothness"
+        ],
+        [
+          "Q-TRUST (Compact + CaCT)",
+          "0.78",
+          "0.28",
+          "Best local reliability near boundaries"
+        ]
+      ],
+      "table_note": "MUCE’s indices provide quantitative evidence that CaCT-trained models can yield more stable local behavior, supporting trust in high-risk decisions (Ruiz-España et al.)."
+    }
+  ]
+}

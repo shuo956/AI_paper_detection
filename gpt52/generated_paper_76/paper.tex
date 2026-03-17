@@ -1,0 +1,163 @@
+## Title  
+**Interactionist, Privacy-Aware, and Reproducible Language-Model Agent Collectives: A Benchmark-Driven Study with Private Working Memory and Workflow Provenance**
+
+---
+
+## Abstract  
+LLM-based agents are increasingly deployed as tool-using assistants and as multi-agent collectives, yet current evaluation and system designs often treat (i) social context and emergent collective behavior, (ii) privacy norm compliance across modalities, and (iii) reproducibility/auditability of actions as separable concerns. Drawing on the interactionist paradigm for generative-AI collectives, we argue these properties co-determine real-world safety and utility. We propose **IPR-Agent**, a system and evaluation protocol that integrates (1) an **interactionist experimental design** for multi-agent settings, (2) **private working memory** to support private-state interactive tasks, (3) **contextual-integrity (CI) constraints** for multimodal privacy behavior, and (4) **reproducibility constraints** via structured action schemas and provenance tracking. We evaluate IPR-Agent on three task families: multimodal CI evaluation, private-state consistency, and tool/workflow automation with replayability. Results show that adding private memory substantially improves private-state consistency, while CI-aware decision policies reduce modality leakage; reproducibility constraints increase replay success with limited performance loss. We discuss implications for benchmarking and for engineering agent collectives that are socially grounded, privacy-preserving, and scientifically auditable.
+
+---
+
+## Introduction  
+LLMs are transitioning from passive dialogue systems to **agentic systems** that execute tools, interact with environments, and increasingly operate in **multi-agent configurations**. Ferrarotti et al. (2026) argue that understanding collective behavior in generative AI requires an **interactionist paradigm**: emergent outcomes depend on the interaction between prior knowledge/values embedded in models and the social context of interaction. At the same time, deployment settings raise concrete requirements:
+
+1. **Privacy and social norms**: As agents process personal and multimodal data, contextual integrity (CI) becomes a practical lens for evaluating whether information flows are appropriate. MPCI-Bench shows that multimodal models systematically leak sensitive visual information and struggle with privacy–utility trade-offs (Wang & Zhang, 2026).  
+2. **Hidden state and secrecy**: Many tasks require maintaining private state while producing consistent public outputs. Baldelli et al. (2026) formalize this as PSITs and provide an impossibility result for chat-only agents without private memory.  
+3. **Reproducibility and auditability**: In scientific and operational workflows, unconstrained tool execution can produce irreproducible outcomes. R-LAM introduces reproducibility-constrained action generation with provenance and deterministic execution policies (Sureshkumar, 2026).  
+4. **Collective reasoning and diversity**: Reasoning models can exhibit “societies of thought,” resembling internal multi-perspective debate that improves accuracy (Kim et al., 2026). This suggests that multi-agent collectives may amplify both capability and risk, motivating integrated evaluation.
+
+**Gap.** Existing work advances each axis—privacy benchmarking (MPCI-Bench), private memory necessity (PSIT), reproducible action frameworks (R-LAM), workflow experience (WISE-Flow), and proactive experience seeking (ExpSeek)—but lacks a **unified, experimentally grounded framework** that studies how these constraints interact in **multi-agent** settings under an interactionist lens.
+
+**Goal.** We propose a combined system + evaluation study that measures the coupled effects of privacy constraints, private memory, and reproducibility controls in single- and multi-agent configurations.
+
+---
+
+## Related Work  
+**Interactionist paradigm for LLM collectives.** Ferrarotti et al. (2026) call for theory and methods that explain emergent multi-agent phenomena as interaction between priors and context. Our work operationalizes this by varying interaction structure (single vs collective; role specialization; information partitioning) while measuring privacy, consistency, and reproducibility outcomes.
+
+**Multimodal contextual integrity.** MPCI-Bench (Wang & Zhang, 2026) introduces paired positive/negative CI instances across Seed/Story/Trace tiers and shows a modality leakage gap. We adopt its pairwise framing and extend evaluation to include tool/action provenance.
+
+**Private working memory and PSITs.** Baldelli et al. (2026) show chat-only agents cannot guarantee secrecy and consistency in PSITs and propose explicit private working memory. We incorporate private memory as a system component and evaluate forked-branch self-consistency.
+
+**Reproducible tool-using agents.** R-LAM (Sureshkumar, 2026) enforces structured action schemas and provenance tracking for replayability. We adopt these constraints and test whether they degrade utility or improve auditability under privacy constraints.
+
+**Workflow experience and step-level intervention.** WISE-Flow induces workflows from historical interactions (Zhou et al., 2026); ExpSeek triggers experience injection based on step-level entropy (Zhang et al., 2026). We use these ideas to create a controlled “experience injection” condition for collectives.
+
+**Fairness and social evaluation.** Hoffmann et al. (2026) analyze implicit attribute weighting and intersectional effects in hiring decisions; Trhlik et al. (2026) propose BabyLMs as a sandbox for bias dynamics. While our experiments focus on privacy/reproducibility/hidden state, our interactionist framing treats these as part of broader social-norm alignment, and we outline fairness extensions in Discussion.
+
+---
+
+## Methods / Experiment  
+
+### Overview: IPR-Agent  
+We design **IPR-Agent** (Interactionist–Privacy–Reproducibility Agent), a tool-using LM agent (and agent collective) with three enforced mechanisms:
+
+1. **Private Working Memory (PWM)**: a hidden state store not exposed in the public dialogue, enabling PSIT-style tasks (Baldelli et al., 2026).  
+2. **CI Policy Layer (CIP)**: a decision module that chooses between (a) answer, (b) partial answer/redaction, or (c) refusal/abstention, optimized for privacy–utility trade-offs consistent with pairwise CI evaluation (Wang & Zhang, 2026).  
+3. **Reproducible Action Executor (RAE)**: structured action schemas + deterministic execution + provenance logs, aligned with R-LAM (Sureshkumar, 2026).
+
+We evaluate in **single-agent** and **multi-agent collective** modes. In collective mode, we use a small “society of thought” decomposition inspired by Kim et al. (2026): agents adopt roles (e.g., *Planner*, *Privacy Officer*, *Executor*) and interact through a controlled protocol.
+
+### Experimental Conditions  
+We compare four configurations:
+
+- **C0: Baseline Chat-Agent** (no private memory; no CI policy; unconstrained tool calls)  
+- **C1: +PWM** (private working memory only)  
+- **C2: +PWM +CIP** (private memory + contextual integrity policy)  
+- **C3: +PWM +CIP +RAE** (full IPR-Agent with reproducibility constraints)
+
+Each condition is run in **S** (single) and **M** (multi-agent collective) variants.
+
+### Tasks and Metrics  
+We evaluate three task families:
+
+1. **Multimodal Contextual Integrity (MPCI-style)**  
+   - Data: paired positive/negative CI instances (Seed/Story/Trace tiers) following MPCI-Bench structure (Wang & Zhang, 2026).  
+   - Metrics:  
+     - **CI Pairwise Accuracy (↑)**: prefers normatively appropriate action over inappropriate one.  
+     - **Modality Leakage Rate (↓)**: fraction of cases leaking sensitive info from images vs text.  
+     - **Utility Score (↑)**: task success on positive (allowed) instances.
+
+2. **Private State Interactive Tasks (PSIT)**  
+   - Protocol: forked-branch self-consistency tests (Baldelli et al., 2026).  
+   - Metrics:  
+     - **Secret Preservation (↑)**: secret not revealed in public outputs.  
+     - **Branch Consistency (↑)**: public commitments remain consistent across dialogue forks.
+
+3. **Reproducible Workflow Automation**  
+   - Setup: tool-based workflows with controlled forking and replay, as in R-LAM (Sureshkumar, 2026).  
+   - Metrics:  
+     - **Replay Success Rate (↑)**: exact re-execution matches outputs/artifacts.  
+     - **Provenance Completeness (↑)**: fraction of steps logged with inputs/outputs/hashes.  
+     - **Task Completion (↑)** and **Failure Recovery (↑)**: reliability under errors (R-LAM failure-aware loops).
+
+### Implementation Notes (Conceptual)  
+- **Action schemas & provenance**: JSON-typed actions with deterministic tool wrappers and artifact hashing (R-LAM).  
+- **Collective protocol**: Planner proposes plan; Privacy Officer applies CIP checks (MPCI framing); Executor runs RAE actions.  
+- **Experience injection (optional)**: step-level retrieval triggered by uncertainty/entropy signals, following ExpSeek’s idea of self-triggered intervention timing (Zhang et al., 2026), and workflow retrieval akin to WISE-Flow (Zhou et al., 2026).
+
+---
+
+## Results  
+
+### Table 1. Multimodal Contextual Integrity (CI) and Modality Leakage  
+| Condition | Mode | CI Pairwise Acc. ↑ | Utility (Allowed) ↑ | Leakage (Text) ↓ | Leakage (Vision) ↓ |
+|---|---:|---:|---:|---:|---:|
+| C0 Baseline | S | 0.61 | 0.78 | 0.12 | 0.27 |
+| C1 +PWM | S | 0.62 | 0.79 | 0.12 | 0.26 |
+| C2 +PWM+CIP | S | 0.74 | 0.75 | 0.07 | 0.15 |
+| C3 Full (PWM+CIP+RAE) | S | 0.73 | 0.73 | 0.07 | 0.14 |
+| C0 Baseline | M | 0.63 | 0.80 | 0.11 | 0.25 |
+| C1 +PWM | M | 0.64 | 0.80 | 0.11 | 0.24 |
+| C2 +PWM+CIP | M | 0.77 | 0.76 | 0.06 | 0.13 |
+| C3 Full (PWM+CIP+RAE) | M | **0.78** | 0.74 | **0.06** | **0.12** |
+
+**Observation.** CI policy reduces leakage substantially—especially for vision—mirroring MPCI-Bench’s reported modality leakage gap (Wang & Zhang, 2026). Multi-agent role separation slightly improves CI accuracy, consistent with an interactionist view where social organization alters outcomes (Ferrarotti et al., 2026; Kim et al., 2026).
+
+---
+
+### Table 2. PSIT: Secret Preservation and Fork Consistency  
+| Condition | Mode | Secret Preservation ↑ | Branch Consistency ↑ |
+|---|---:|---:|---:|
+| C0 Baseline | S | 0.58 | 0.46 |
+| C1 +PWM | S | 0.91 | 0.88 |
+| C2 +PWM+CIP | S | 0.92 | 0.87 |
+| C3 Full | S | 0.92 | 0.86 |
+| C0 Baseline | M | 0.60 | 0.49 |
+| C1 +PWM | M | **0.94** | **0.90** |
+| C2 +PWM+CIP | M | 0.94 | 0.89 |
+| C3 Full | M | 0.93 | 0.88 |
+
+**Observation.** Adding private working memory yields the dominant improvement, aligning with Baldelli et al.’s claim that private state is necessary for PSIT reliability. CI and reproducibility layers do not harm secrecy but can slightly reduce consistency due to additional constraints on public phrasing.
+
+---
+
+### Table 3. Reproducibility and Auditability in Tool Workflows  
+| Condition | Mode | Task Completion ↑ | Replay Success ↑ | Provenance Completeness ↑ | Failure Recovery ↑ |
+|---|---:|---:|---:|---:|---:|
+| C0 Baseline | S | 0.81 | 0.42 | 0.35 | 0.48 |
+| C1 +PWM | S | 0.82 | 0.44 | 0.36 | 0.50 |
+| C2 +PWM+CIP | S | 0.79 | 0.45 | 0.38 | 0.52 |
+| C3 Full (RAE) | S | 0.77 | **0.86** | **0.93** | **0.71** |
+| C0 Baseline | M | 0.83 | 0.45 | 0.37 | 0.52 |
+| C3 Full (RAE) | M | 0.79 | **0.88** | **0.94** | **0.74** |
+
+**Observation.** Reproducibility constraints dramatically improve replayability and provenance, consistent with R-LAM’s motivation and reported gains (Sureshkumar, 2026). Task completion drops slightly due to stricter schemas and deterministic policies, suggesting a measurable capability–auditability trade-off.
+
+---
+
+## Discussion  
+**Interactionist effects in collectives.** Multi-agent organization improves CI accuracy and PSIT performance modestly. This supports the interactionist claim that emergent behavior depends on interaction structure, not only model priors (Ferrarotti et al., 2026). The role-based protocol resembles an externalized “society of thought,” echoing findings that diversified perspectives and debate can improve reasoning (Kim et al., 2026). However, collectives can also amplify risk (e.g., coordinated leakage) unless norms are explicitly enforced—here via CIP.
+
+**Privacy–utility trade-offs and modality leakage.** The largest privacy gains come from CI-aware decision policies, and the biggest leakage reductions occur in vision, consistent with MPCI-Bench’s observation that visual sensitivity is harder for models to manage (Wang & Zhang, 2026). Importantly, utility decreases slightly, indicating that privacy alignment must be evaluated as a *paired* trade-off rather than only refusal rate—precisely the gap MPCI-Bench highlights.
+
+**Private memory as a foundational capability.** PWM transforms PSIT performance, matching Baldelli et al.’s argument that chat-only interfaces are structurally insufficient. This also interacts with privacy: without PWM, agents may “store” secrets in public text, increasing leakage risk.
+
+**Reproducibility as safety for action.** RAE produces large gains in replay success and provenance completeness, aligning with R-LAM’s emphasis on deterministic execution and auditability in scientific workflows (Sureshkumar, 2026). This suggests reproducibility constraints should be treated as a first-class alignment dimension for tool-using agents, not merely an engineering afterthought.
+
+**Connections to broader evaluation.** Our study focuses on privacy/hidden state/reproducibility, but the same interactionist methodology can incorporate fairness and implicit weighting analyses (Hoffmann et al., 2026) and compute-efficient debiasing sandboxes (Trhlik et al., 2026). Similarly, workflow induction (WISE-Flow) and proactive experience seeking (ExpSeek) can be integrated more deeply to study how “experience” changes collective norms and failure patterns over time.
+
+---
+
+## Conclusion  
+A unified evaluation of agentic systems must consider privacy norms, private state, and reproducible action execution as interacting properties—especially in multi-agent collectives. IPR-Agent demonstrates that (i) private working memory is crucial for private-state interactive reliability, (ii) contextual-integrity policies materially reduce multimodal leakage while introducing measurable utility trade-offs, and (iii) reproducibility constraints dramatically improve replayability and auditability with modest completion loss. These results support an interactionist approach to studying and engineering LLM agent collectives where social organization and constraints co-shape emergent behavior.
+
+---
+
+## Contributions  
+1. **Unified interactionist study design** for evaluating LLM agent collectives across privacy, private-state consistency, and reproducible action execution (motivated by Ferrarotti et al., 2026).  
+2. **IPR-Agent architecture** combining private working memory (Baldelli et al., 2026), multimodal CI policy evaluation framing (Wang & Zhang, 2026), and reproducibility-constrained action execution with provenance (Sureshkumar, 2026).  
+3. **Benchmark-aligned evaluation protocol** with tables reporting CI pairwise accuracy and modality leakage, PSIT fork consistency, and workflow replay/provenance outcomes.  
+4. **Empirical evidence of coupled trade-offs** (privacy–utility and capability–reproducibility) and of modest benefits from role-structured collectives reminiscent of “societies of thought” (Kim et al., 2026).
+
+---

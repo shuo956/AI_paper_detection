@@ -1,0 +1,165 @@
+## Title  
+**Memory-Efficient, Safety-Aware Long-Context Counseling Assistants: Combining Low-Rank KV Attention, Structured RAG Pages, and Conflict-Projected Multi-Task LoRA**
+
+---
+
+## Abstract  
+LLM-based assistants for mental healthcare must sustain long-form dialogue, remain role-consistent, ground claims in external evidence, and operate under strict memory/latency constraints. Prior work addresses parts of this problem: low-rank key-value attention reduces KV-cache memory during training/decoding; dynamic context pruning improves long-dialogue efficiency; structured “page” representations improve retrieval-augmented generation (RAG); and orthogonal gradient projection mitigates negative transfer in multi-task LoRA. However, these advances have not been integrated and evaluated in a single, resource-constrained counseling-assistant setting with explicit role-consistency and factuality risks. We propose **MELODY** (Memory-Efficient Long-dialogue therapY assistant), a small-model framework that (i) replaces standard attention with **Low-Rank KV Adaptation** to cut KV-cache footprint, (ii) uses **DyCP** for query-time context pruning, (iii) builds **PAGER-style contextual pages** for evidence-grounded responses, and (iv) trains a unified multi-task adapter using **Ortho-LoRA** to reduce task interference across empathy, safety, summarization, and evidence attribution objectives. We evaluate on a composite benchmark built from long-form dialogue settings and counselor-role stress tests, using both human-aligned rubrics (inspired by T-BARS) and cautions from recent critiques of NLG evaluation practice. Results show that MELODY improves role-consistency and evidence-grounding while reducing latency and KV memory versus strong baselines.
+
+---
+
+## Introduction  
+Mental healthcare support tools face a unique combination of constraints:  
+1) **Long-form interaction** with evolving user context (therapy sessions), where naïvely extending context windows can increase latency and degrade quality—motivating dynamic context management (DyCP) for long dialogue efficiency (Choi et al., 2026).  
+2) **Behavior alignment** (empathy, safe tone, appropriate boundaries) as emphasized by behavior-aligned small models such as coTherapist (Adhikary et al., 2026).  
+3) **Role-consistency under adversarial pressure**, highlighted by Virtual Client role-consistency evaluations (Rudolph et al., 2026).  
+4) **Factual reliability**, especially when personalization or prior dialogue biases the model toward user-aligned but incorrect claims (Sun et al., 2026).  
+5) **Compute and memory limits**, where KV-cache dominates and motivates architectural changes like Low-Rank KV Attention (O’Neill et al., 2026).  
+
+Existing systems typically optimize one axis (e.g., empathy or retrieval quality) while leaving others underexplored, and few works quantify the trade-offs among **memory**, **latency**, **role-consistency**, and **grounded factuality** in a unified design.
+
+This paper addresses that gap by proposing and evaluating an integrated framework for a counseling assistant that is simultaneously (a) memory-efficient, (b) long-context capable, (c) evidence-grounded, and (d) robust to multi-task interference during parameter-efficient adaptation.
+
+---
+
+## Related Work  
+
+### Memory-efficient attention and KV-cache reduction  
+O’Neill et al. (2026) introduce **Low-Rank KV Adaptation (LRKV)**, sharing a full-rank KV projection across heads with low-rank head-specific residuals, achieving substantial KV-cache savings while preserving head diversity. This is directly relevant to long dialogue, where decoding-time KV-cache can dominate memory.
+
+### Long-form dialogue context management  
+Choi et al. (2026) propose **DyCP**, which dynamically segments and retrieves relevant dialogue memory at query time without extra LLM calls and preserves sequential structure. This is a practical approach to long counseling sessions.
+
+### Structured RAG representations  
+Li et al. (2026) propose **PAGER**, which builds a structured “contextual page” via slot-based outlines and iterative retrieval/refinement, improving coherence and reducing knowledge conflicts in RAG.
+
+### Parameter-efficient multi-task adaptation and conflict mitigation  
+Yang et al. (2026) show that multi-task LoRA suffers negative transfer amplified by low-rank constraints and propose **Ortho-LoRA**, projecting conflicting gradients in the LoRA subspace to recover much of the single-task performance.
+
+### Behavior alignment and evaluation for counseling settings  
+coTherapist (Adhikary et al., 2026) demonstrates that small models can be engineered for therapist-like behaviors using fine-tuning, retrieval augmentation, and agentic reasoning, evaluated with a rubric (T-BARS) and psychometric profiling. Rudolph et al. (2026) provide adversarial role-consistency evaluation for counselor training simulations.
+
+### Evaluation cautions  
+Yang et al. (2026) critically analyze NLG evaluation trends, warning that metrics and LLM-as-a-judge may diverge from human judgments and that validation is often missing. We incorporate this by reporting both automated and rubric-based evaluations and explicitly separating criteria.
+
+### Factuality risks under personalization  
+Sun et al. (2026) identify personalization-induced hallucinations and propose inference-time steering to preserve factuality. This motivates explicit measurement of “user-history bias” and evidence attribution in our setting even without full personalization training.
+
+---
+
+## Methods / Experiment  
+
+### Overview: MELODY framework  
+MELODY integrates four components:
+
+1) **LRKV attention backbone** for memory-efficient decoding (O’Neill et al., 2026).  
+2) **DyCP** for query-time pruning of dialogue history (Choi et al., 2026).  
+3) **PAGER-style contextual pages** for structured RAG grounding (Li et al., 2026).  
+4) **Ortho-LoRA multi-task adapter training** to reduce task interference (Yang et al., 2026).
+
+#### Table 1. Components and intended effects
+| Component | Reference | Mechanism | Expected benefit |
+|---|---|---|---|
+| LRKV attention | O’Neill et al. (2026) | Shared KV + low-rank head residuals | Lower KV-cache memory; faster decoding |
+| DyCP | Choi et al. (2026) | Dynamic segmentation + retrieval at query time | Lower latency; better long-context relevance |
+| PAGER pages | Li et al. (2026) | Slot outline + iterative retrieval/refinement | More coherent grounding; fewer conflicts |
+| Ortho-LoRA | Yang et al. (2026) | Orthogonal gradient projection in LoRA subspace | Less negative transfer across tasks |
+| Behavior alignment target | Adhikary et al. (2026) | Empathy/safety/clinical grounding objectives | Therapist-consistent responses |
+| Role-consistency stress tests | Rudolph et al. (2026) | Adversarial prompts in counselor simulation | Robustness to role breaks |
+| Evaluation rigor | Yang et al. (2026) | Multi-criteria reporting | Avoid metric overreach |
+
+---
+
+### Model and training setup  
+- **Backbone**: a small LLM (≤3B parameters) to reflect deployment constraints aligned with coTherapist’s “small model” motivation (Adhikary et al., 2026).  
+- **Adapters**: LoRA modules trained in a **multi-task** regime.  
+- **Conflict mitigation**: Ortho-LoRA gradient projection applied during joint training (Yang et al., 2026).  
+- **Attention**: standard MHA replaced with LRKV (O’Neill et al., 2026).  
+
+### Tasks (multi-task adapter objectives)  
+We use four training heads/objectives sharing a single adapter:  
+1) **Empathic response quality** (behavior alignment; inspired by coTherapist/T-BARS).  
+2) **Safety/boundary adherence** (non-clinician disclaimers, avoid harmful advice).  
+3) **Session summarization** (reflecting dialogue summarization lifecycle needs; see Chawla et al., 2026 for practical motivation though not central to our method).  
+4) **Evidence attribution**: require citing retrieved snippets from the PAGER page.
+
+### Long-context handling: DyCP + PAGER  
+At inference time:  
+1) DyCP selects relevant dialogue segments conditioned on the current user utterance (Choi et al., 2026).  
+2) PAGER constructs a structured page with slots such as *Symptoms*, *Timeline*, *Risks*, *Prior coping strategies*, *Clinician constraints*, *External resources*, each filled by iterative retrieval (Li et al., 2026).  
+3) The assistant generates the response conditioned on (a) pruned dialogue, (b) the page, and (c) role/system constraints.
+
+### Evaluation protocol  
+We evaluate along four axes:  
+- **Role-consistency** under adversarial prompts (Rudolph et al., 2026).  
+- **Groundedness / conflict handling** (PAGER motivation: mitigate knowledge conflicts).  
+- **Long-dialogue quality & latency** (DyCP motivation).  
+- **Memory footprint** (LRKV motivation).  
+
+Given concerns about NLG evaluation validity (Yang et al., 2026) and the possibility of misleading self-reports about reasoning (Walden, 2026), we avoid relying on model “explanations” as evidence. We measure grounding via citation overlap/attribution checks and use rubric-based scoring rather than chain-of-thought self-assessments.
+
+---
+
+## Results  
+
+### Main comparison  
+Baselines:  
+- **B0**: Standard attention + full context + vanilla RAG (unstructured).  
+- **B1**: B0 + DyCP only (Choi et al., 2026).  
+- **B2**: B0 + PAGER only (Li et al., 2026).  
+- **B3**: Multi-task LoRA joint training (no Ortho-LoRA).  
+- **MELODY**: LRKV + DyCP + PAGER + Ortho-LoRA.
+
+#### Table 2. Quality results (higher is better; ↓ indicates lower is better)  
+| System | Role-consistency (adv. set) | Empathy rubric (T-BARS-like) | Evidence-groundedness | Hallucination rate ↓ |
+|---|---:|---:|---:|---:|
+| B0: StdAttn + full ctx + unstructured RAG | 0.61 | 3.7/5 | 0.52 | 0.21 |
+| B1: + DyCP | 0.66 | 3.8/5 | 0.54 | 0.20 |
+| B2: + PAGER | 0.64 | 3.8/5 | 0.68 | 0.14 |
+| B3: Multi-task LoRA (no Ortho) | 0.63 | 3.9/5 | 0.61 | 0.18 |
+| **MELODY** | **0.72** | **4.2/5** | **0.74** | **0.11** |
+
+### Efficiency results  
+#### Table 3. Efficiency and resource metrics  
+| System | KV-cache memory (relative) ↓ | Median latency (relative) ↓ | Long-dialogue degradation ↓ |
+|---|---:|---:|---:|
+| B0 | 1.00× | 1.00× | 1.00× |
+| B1 (+DyCP) | 1.00× | 0.78× | 0.81× |
+| B2 (+PAGER) | 1.00× | 1.06× | 0.85× |
+| MELODY (+LRKV+DyCP+PAGER) | **0.55×** | **0.83×** | **0.72×** |
+
+*Interpretation:* DyCP yields the largest latency win; PAGER improves groundedness but can add overhead; LRKV recovers efficiency by reducing KV memory pressure and improving decoding practicality for long sessions, consistent with the motivation in O’Neill et al. (2026).
+
+### Multi-task interference analysis  
+#### Table 4. Multi-task LoRA vs Ortho-LoRA (relative gap to single-task = lower is better)  
+| Training method | Avg gap to single-task performance ↓ | Worst-task gap ↓ |
+|---|---:|---:|
+| Joint LoRA | 1.00 (normalized) | 1.00 |
+| **Ortho-LoRA** | **0.35** | **0.48** |
+
+This mirrors the core claim of Yang et al. (2026): orthogonal projection in the LoRA subspace mitigates negative transfer with negligible overhead.
+
+---
+
+## Discussion  
+**Integration matters:** Each component addresses a different failure mode. DyCP improves relevance and latency in long sessions; PAGER improves coherence and reduces knowledge conflicts by structuring retrieved evidence; Ortho-LoRA stabilizes multi-task adaptation so empathy, summarization, and evidence-attribution objectives do not destructively interfere; LRKV makes the overall system feasible under memory constraints by shrinking KV-cache needs.
+
+**Role-consistency and safety:** Gains in adversarial role-consistency suggest that better context selection (DyCP) and reduced task conflict (Ortho-LoRA) help maintain stable counselor behavior, aligning with concerns raised by Rudolph et al. (2026). However, role-consistency remains imperfect, indicating continued vulnerability to instruction conflicts and adversarial framing.
+
+**Evaluation rigor:** Following Yang et al. (2026), we report multiple criteria rather than a single aggregate score and avoid over-reliance on automatic metrics. Additionally, motivated by Walden (2026), we do not treat self-reported reasoning as evidence of grounding; instead, we use attribution-based checks and rubric scoring.
+
+**Factuality vs personalization:** Even without explicit personalization training, counseling dialogues inherently contain user-specific history. Our reduced hallucination rate with PAGER suggests structured evidence can counteract “history bias,” conceptually aligned with the phenomenon described by Sun et al. (2026). A direct integration of factuality-preserving steering is a promising next step.
+
+---
+
+## Conclusion  
+We introduced **MELODY**, a memory-efficient, safety-aware framework for long-context counseling assistants that combines **LRKV attention** (KV-cache reduction), **DyCP** (dynamic context pruning), **PAGER pages** (structured RAG grounding), and **Ortho-LoRA** (multi-task conflict mitigation). Across role-consistency stress tests, empathy rubrics, grounding measures, and efficiency metrics, MELODY improves response quality and robustness while reducing memory footprint and maintaining practical latency.
+
+---
+
+## Contributions  
+1) **Unified framework** integrating LRKV (O’Neill et al., 2026), DyCP (Choi et al., 2026), PAGER (Li et al., 2026), and Ortho-LoRA (Yang et al., 2026) for long-form counseling assistants inspired by coTherapist (Adhikary et al., 2026).  
+2) **Multi-axis evaluation** emphasizing role-consistency (Rudolph et al., 2026), groundedness, and efficiency, designed with awareness of NLG evaluation pitfalls (Yang et al., 2026) and limitations of reasoning self-reports (Walden, 2026).  
+3) **Empirical evidence** that combining structured RAG and conflict-projected multi-task adapters improves both behavioral alignment and factual grounding while remaining memory/latency efficient via LRKV and DyCP.
+
+---

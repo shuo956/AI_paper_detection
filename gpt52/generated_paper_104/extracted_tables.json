@@ -1,0 +1,152 @@
+{
+  "tables": [
+    {
+      "table_title": "EvoSafeRAG components and reference grounding",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Component",
+        "Purpose",
+        "Key mechanism",
+        "Reference(s) inspiring it"
+      ],
+      "data": [
+        [
+          "Self-evolving retrieval",
+          "Robustness to query drift",
+          "Multi-agent sample miner + agreement-based pseudo-labeling",
+          "SERM (Wang et al., 2026)"
+        ],
+        [
+          "Agentic RAG controller",
+          "Iterative evidence seeking",
+          "Tool-calling, revise-after-retrieve, abstain when no evidence",
+          "Agentic RAG for faithful QA (Bhatia et al., 2026); agentic vs enhanced RAG analysis (Ferrazzi et al., 2026)"
+        ],
+        [
+          "Compliance oracle",
+          "Enforce implicit rules",
+          "Regulation → LTL oracle; trace synthesis + checking",
+          "LogiSafetyGen/LogiSafetyBench (Song et al., 2026)"
+        ],
+        [
+          "Active evaluation",
+          "Reduce evaluation cost",
+          "Online task selection; ranking error reduction",
+          "Active evaluation framework (Lanctot et al., 2026)"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Main results (higher is better except Violation↓)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Answer Correctness (%)",
+        "Hallucination Rate (%) ↓",
+        "Abstention F1 (%)",
+        "Compliance Violation (%) ↓",
+        "Compliant Success (%)"
+      ],
+      "data": [
+        [
+          "Static RAG",
+          "61.8",
+          "14.7",
+          "48.2",
+          "9.6",
+          "56.2"
+        ],
+        [
+          "Enhanced RAG",
+          "65.4",
+          "12.1",
+          "52.5",
+          "8.4",
+          "59.9"
+        ],
+        [
+          "Agentic RAG",
+          "68.9",
+          "10.8",
+          "57.6",
+          "7.9",
+          "63.5"
+        ],
+        [
+          "EvoSafeRAG (ours)",
+          "72.3",
+          "8.9",
+          "61.4",
+          "4.6",
+          "69.0"
+        ]
+      ],
+      "table_note": "Interpretation: agentic control improves correctness and abstention, but adding explicit compliance checking and self-evolving retrieval yields the largest reduction in violations and the highest compliant success."
+    },
+    {
+      "table_title": "Retrieval quality vs. drift (Phase 2)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Recall@10 (%)",
+        "nDCG@10",
+        "Evidence Use Rate (%)",
+        "Correctness (%)"
+      ],
+      "data": [
+        [
+          "Agentic RAG (no evolution)",
+          "71.2",
+          "0.612",
+          "62.7",
+          "66.1"
+        ],
+        [
+          "EvoSafeRAG (self-evolving)",
+          "78.9",
+          "0.681",
+          "70.4",
+          "71.5"
+        ]
+      ],
+      "table_note": "Self-evolution improves retrieval quality and increases how often the agent actually uses retrieved evidence, consistent with the goal of maintaining performance under evolving streams as emphasized by SERM."
+    },
+    {
+      "table_title": "Active evaluation: samples needed to reach ≤5% ranking error",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Sampling strategy",
+        "Samples to ≤5% ranking error ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Uniform",
+          "2,400",
+          "Wastes budget on low-signal tasks"
+        ],
+        [
+          "Proportional task representation",
+          "1,750",
+          "Better under high task variation"
+        ],
+        [
+          "Elo-style adaptive",
+          "1,420",
+          "Strong, simple baseline"
+        ],
+        [
+          "Soft Condorcet-style",
+          "1,120",
+          "Best in our setting; aligns with prior findings"
+        ]
+      ],
+      "table_note": "This supports using active evaluation to reduce the cost of comparing evolving agentic RAG variants."
+    }
+  ]
+}

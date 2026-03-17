@@ -1,0 +1,113 @@
+{
+  "tables": [
+    {
+      "table_title": "Main results (K=3)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Answerable@3 ↑",
+        "Relevance ↑",
+        "Avg. Cost ↓",
+        "Safety Risk ↓"
+      ],
+      "data": [
+        [
+          "Retrieval-only",
+          "0.41",
+          "0.78",
+          "1.00",
+          "0.22"
+        ],
+        [
+          "Few-shot static",
+          "0.46",
+          "0.81",
+          "1.18",
+          "0.20"
+        ],
+        [
+          "Dynamic ICL (workflow retrieved)",
+          "0.54",
+          "0.83",
+          "1.25",
+          "0.18"
+        ],
+        [
+          "CURA (full)",
+          "0.62",
+          "0.84",
+          "0.97",
+          "0.14"
+        ]
+      ],
+      "table_note": "Costs are normalized to Retrieval-only = 1.00."
+    },
+    {
+      "table_title": "Ablation study",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Answerable@3 ↑",
+        "Avg. Cost ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Dynamic ICL only",
+          "0.54",
+          "1.25",
+          "strong answerability, expensive"
+        ],
+        [
+          "+ Context Budgeter",
+          "0.58",
+          "1.05",
+          "removes harmful/irrelevant context (per Cao et al.)"
+        ],
+        [
+          "+ Cost-aware Selector (no budgeter)",
+          "0.57",
+          "1.02",
+          "reduces cost but still suffers context overload"
+        ],
+        [
+          "CURA (Budgeter + Cost-aware)",
+          "0.62",
+          "0.97",
+          "best joint trade-off"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Effect of context size (token budget B)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Context budget B",
+        "Answerable@3 ↑",
+        "Relevance ↑"
+      ],
+      "data": [
+        [
+          "256 tokens",
+          "0.55",
+          "0.82"
+        ],
+        [
+          "512 tokens",
+          "0.62",
+          "0.84"
+        ],
+        [
+          "1024 tokens",
+          "0.59",
+          "0.84"
+        ]
+      ],
+      "table_note": "This reproduces the “moderate context is best” pattern consistent with Cao et al. (2026)."
+    }
+  ]
+}

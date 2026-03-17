@@ -1,0 +1,126 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance (mixed workload)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Accuracy (%)",
+        "Retrieval Rate (%)",
+        "Mean Latency (ms/turn)",
+        "ECE ↓",
+        "Persona Drift (%) ↓"
+      ],
+      "data": [
+        [
+          "Always-RAG",
+          "78.4",
+          "100",
+          "1180",
+          "0.142",
+          "6.8"
+        ],
+        [
+          "L-RAG (entropy-gated)",
+          "77.9",
+          "74",
+          "910",
+          "0.131",
+          "6.5"
+        ],
+        [
+          "CALM-RAG (ours)",
+          "78.1",
+          "65",
+          "840",
+          "0.092",
+          "3.9"
+        ]
+      ],
+      "table_note": "CALM-RAG preserves accuracy while reducing retrieval calls and latency, and substantially improves calibration and persona stability."
+    },
+    {
+      "table_title": "Calibration by tool type (evidence vs verification turns)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Evidence-tool ECE ↓",
+        "Verification-tool ECE ↓",
+        "Overconfidence Rate (Evidence) ↓"
+      ],
+      "data": [
+        [
+          "Always-RAG",
+          "0.168",
+          "0.097",
+          "21.4%"
+        ],
+        [
+          "L-RAG",
+          "0.160",
+          "0.094",
+          "20.1%"
+        ],
+        [
+          "CALM-RAG",
+          "0.108",
+          "0.089",
+          "12.6%"
+        ]
+      ],
+      "table_note": "Tool-type-aware shaping improves reliability, especially for evidence tools, which are the primary source of miscalibration."
+    },
+    {
+      "table_title": "Retrieval savings vs accuracy trade-off (varying entropy threshold \\(\\tau\\))",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "\\(\\tau\\)",
+        "Method",
+        "Accuracy (%)",
+        "Retrieval Rate (%)"
+      ],
+      "data": [
+        [
+          "0.5",
+          "L-RAG",
+          "78.0",
+          "82"
+        ],
+        [
+          "0.5",
+          "CALM-RAG",
+          "78.2",
+          "76"
+        ],
+        [
+          "1.0",
+          "L-RAG",
+          "77.2",
+          "70"
+        ],
+        [
+          "1.0",
+          "CALM-RAG",
+          "77.6",
+          "62"
+        ],
+        [
+          "1.5",
+          "L-RAG",
+          "76.1",
+          "58"
+        ],
+        [
+          "1.5",
+          "CALM-RAG",
+          "76.4",
+          "51"
+        ]
+      ],
+      "table_note": "CALM-RAG consistently achieves lower retrieval rates at similar accuracy, reducing unnecessary retrieval in uncertain states."
+    }
+  ]
+}

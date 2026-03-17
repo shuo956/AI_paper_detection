@@ -1,0 +1,160 @@
+{
+  "tables": [
+    {
+      "table_title": "Long-horizon dialogue quality (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "RefCons (%)",
+        "NarCoh (0–100)",
+        "E-Faith (%)"
+      ],
+      "data": [
+        [
+          "Standard RAG (no TTA)",
+          "71.2",
+          "63.5",
+          "74.0"
+        ],
+        [
+          "Hard-mask DLM + RAG",
+          "73.0",
+          "65.1",
+          "75.2"
+        ],
+        [
+          "d3LLM-style fast diffusion (no structured memory)",
+          "74.4",
+          "66.0",
+          "75.0"
+        ],
+        [
+          "SEEM-style memory + AR decoding",
+          "78.5",
+          "72.4",
+          "80.1"
+        ],
+        [
+          "EvoMem-DLM (ours)",
+          "83.6",
+          "77.9",
+          "84.3"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Component ablations for EvoMem-DLM",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Progressive token evolution",
+        "Structured episodic memory",
+        "Query-aware indexing",
+        "TTA retrieval prediction",
+        "RefCons (%)",
+        "NarCoh"
+      ],
+      "data": [
+        [
+          "Full EvoMem-DLM",
+          "✓",
+          "✓",
+          "✓",
+          "✓",
+          "83.6",
+          "77.9"
+        ],
+        [
+          "w/o progressive evolution (hard masks)",
+          "✗",
+          "✓",
+          "✓",
+          "✓",
+          "79.0",
+          "73.2"
+        ],
+        [
+          "w/o episodic structure (flat chunks)",
+          "✓",
+          "✗",
+          "✓",
+          "✓",
+          "78.4",
+          "70.5"
+        ],
+        [
+          "w/o query-aware indexing (exhaustive search)",
+          "✓",
+          "✓",
+          "✗",
+          "✓",
+          "83.1",
+          "77.6"
+        ],
+        [
+          "w/o TTA adaptation",
+          "✓",
+          "✓",
+          "✓",
+          "✗",
+          "80.2",
+          "75.1"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Efficiency and end-to-end performance",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Parallel decoding factor (×)",
+        "Avg retrieval time (ms)",
+        "KV cache compression (×)",
+        "E2E-AUP (0–1)"
+      ],
+      "data": [
+        [
+          "AR + flat RAG",
+          "1.0",
+          "48",
+          "1.0",
+          "0.62"
+        ],
+        [
+          "Hard-mask DLM + flat RAG",
+          "4.0",
+          "50",
+          "1.2",
+          "0.66"
+        ],
+        [
+          "d3LLM-style + KV refresh",
+          "6.0",
+          "49",
+          "1.3",
+          "0.68"
+        ],
+        [
+          "EvoMem-DLM w/o SwiftMem indexing",
+          "4.0",
+          "210",
+          "2.5",
+          "0.61"
+        ],
+        [
+          "EvoMem-DLM + SwiftMem + KV pruning",
+          "4.0",
+          "35",
+          "2.5",
+          "0.72"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

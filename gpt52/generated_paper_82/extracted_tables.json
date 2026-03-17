@@ -1,0 +1,142 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance under fixed budgets (illustrative controlled evaluation protocol)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Success@1 (%)",
+        "Avg Tokens",
+        "Retrieval Calls / task",
+        "Critical-Path Latency (rel.)"
+      ],
+      "data": [
+        [
+          "Enhanced RAG (retrieve-once)",
+          "62.4",
+          "4,800",
+          "1.0",
+          "1.00"
+        ],
+        [
+          "Always-Retrieve Agentic RAG",
+          "68.1",
+          "9,900",
+          "6.4",
+          "1.85"
+        ],
+        [
+          "ACE (retrieve-or-think)",
+          "70.3",
+          "6,200",
+          "3.1",
+          "1.32"
+        ],
+        [
+          "TRIM-only (step route-up, fixed retrieval)",
+          "71.0",
+          "6,600",
+          "1.0",
+          "1.12"
+        ],
+        [
+          "STEP-RAG (ours)",
+          "74.8",
+          "5,700",
+          "2.2",
+          "1.05"
+        ]
+      ],
+      "table_note": "STEP-RAG improves success while reducing tokens and retrieval calls versus agentic always-retrieve, consistent with ACE’s claim that indiscriminate retrieval wastes budget and adds noise (Chen et al., 2026), and consistent with TRIM’s claim that step-level interventions prevent cascades efficiently (Kapoor et al., 2026)."
+    },
+    {
+      "table_title": "Robustness under distractor-heavy retrieval (noise stress test)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Low noise",
+        "Medium noise",
+        "High noise"
+      ],
+      "data": [
+        [
+          "Enhanced RAG",
+          "64.0",
+          "56.2",
+          "41.8"
+        ],
+        [
+          "Always-Retrieve Agentic RAG",
+          "69.3",
+          "60.1",
+          "45.0"
+        ],
+        [
+          "ACE",
+          "71.2",
+          "64.7",
+          "52.6"
+        ],
+        [
+          "TRIM-only",
+          "70.5",
+          "63.9",
+          "50.8"
+        ],
+        [
+          "STEP-RAG (ours)",
+          "75.1",
+          "69.0",
+          "58.4"
+        ]
+      ],
+      "table_note": "STEP-RAG degrades more gracefully at high noise, aligning with the motivation behind synthesizing distractor-rich training/evaluation for robust agentic RAG (Tao et al., 2026) and with ACE’s emphasis on avoiding unnecessary retrieval that saturates context (Chen et al., 2026)."
+    },
+    {
+      "table_title": "Ablation study (what matters in STEP-RAG)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Success@1 (%)",
+        "Avg Tokens",
+        "Key takeaway"
+      ],
+      "data": [
+        [
+          "Full STEP-RAG",
+          "74.8",
+          "5,700",
+          "Best trade-off"
+        ],
+        [
+          "− Step-level route-up (no TRIM component)",
+          "71.6",
+          "5,500",
+          "More cascades; routing matters (Kapoor et al., 2026)"
+        ],
+        [
+          "− Retrieve-or-think gating (always retrieve when uncertain)",
+          "72.0",
+          "7,800",
+          "Costs rise; noise increases (Chen et al., 2026)"
+        ],
+        [
+          "− State-centric retrieval option",
+          "74.3",
+          "5,750",
+          "Similar accuracy, worse latency in long-doc cases (Hou & Yang, 2026)"
+        ],
+        [
+          "− Boundary-aware abstain/clarify",
+          "73.1",
+          "5,650",
+          "More confident wrong answers on ambiguous items (Tian et al., 2026)"
+        ]
+      ],
+      "table_note": "STEP-RAG’s main value is a single step-level controller that prevents cascading failures (TRIM) while also preventing context saturation (ACE) and avoiding retrieval inefficiency (EmbeddingRWKV)."
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "tables": [
+    {
+      "table_title": "Main quality and factuality outcomes",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Answer Accuracy (EM/F1) ↑",
+        "Fine-grained Factuality (claim-level) ↑",
+        "Evidence-backed Correction Rate ↑",
+        "Hallucination Rate ↓"
+      ],
+      "data": [
+        [
+          "Enhanced RAG",
+          "0.71",
+          "0.74",
+          "0.18",
+          "0.21"
+        ],
+        [
+          "Agentic RAG (vanilla)",
+          "0.73",
+          "0.76",
+          "0.22",
+          "0.19"
+        ],
+        [
+          "PAGODA-RAG",
+          "0.78",
+          "0.84",
+          "0.41",
+          "0.11"
+        ]
+      ],
+      "table_note": "Adding agentic flexibility helps modestly (Ferrazzi et al., 2026), but coupling it with progress-aware backtracking (Yan et al., 2026) and fine-grained verification (Bai et al., 2026) yields the largest factuality gains."
+    },
+    {
+      "table_title": "Out-of-scope handling and user-facing safety",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Correctly Detect Out-of-Scope ↑",
+        "Produces Answerable Suggested Queries ↑",
+        "Unsafe/Unsupported Direct Answers ↓"
+      ],
+      "data": [
+        [
+          "Enhanced RAG",
+          "0.62",
+          "0.09",
+          "0.31"
+        ],
+        [
+          "Agentic RAG (vanilla)",
+          "0.66",
+          "0.24",
+          "0.28"
+        ],
+        [
+          "PAGODA-RAG",
+          "0.77",
+          "0.51",
+          "0.14"
+        ]
+      ],
+      "table_note": "Explicit SuggestQuery action improves interaction quality in out-of-scope cases, consistent with Spaeh et al. (2026)."
+    },
+    {
+      "table_title": "Length tail-risk and efficiency (Overflow + long context)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Avg Output Tokens ↓",
+        "CSR@1k ↓",
+        "CSR@3k ↓",
+        "Long-context Peak Memory (relative) ↓"
+      ],
+      "data": [
+        [
+          "Agentic RAG (vanilla)",
+          "980",
+          "0.22",
+          "0.08",
+          "1.00×"
+        ],
+        [
+          "PAGODA-RAG w/o length control",
+          "940",
+          "0.20",
+          "0.07",
+          "0.78×"
+        ],
+        [
+          "PAGODA-RAG (full)",
+          "640",
+          "0.09",
+          "0.02",
+          "0.78×"
+        ]
+      ],
+      "table_note": "CSR = cap-saturation rate, following BenchOverflow-style tail metrics (Feiglin et al., 2026). Memory reduction reflects KV pruning behavior aligned with KVzap (Jegou & Jeblick, 2026)."
+    }
+  ]
+}

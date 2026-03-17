@@ -1,0 +1,146 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance vs compression setting",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model Variant",
+        "Fusion Strategy",
+        "Training Strategy",
+        "Quantization",
+        "AUROC ↑",
+        "Macro-F1 ↑",
+        "Model Size (MB) ↓"
+      ],
+      "data": [
+        [
+          "Dense-Base",
+          "late fusion (single level)",
+          "standard",
+          "FP16",
+          "0.842",
+          "0.611",
+          "420"
+        ],
+        [
+          "LeMoF-style",
+          "level-guided",
+          "standard",
+          "FP16",
+          "0.865",
+          "0.634",
+          "445"
+        ],
+        [
+          "LeMoF-style + GPTQ",
+          "level-guided",
+          "standard",
+          "GPTQ",
+          "0.842",
+          "0.606",
+          "155"
+        ],
+        [
+          "LeMoQ (ours)",
+          "level-guided",
+          "distill + Muon",
+          "FP16",
+          "0.868",
+          "0.639",
+          "445"
+        ],
+        [
+          "LeMoQ (ours) + GPTQ",
+          "level-guided",
+          "distill + Muon",
+          "GPTQ",
+          "0.858",
+          "0.625",
+          "155"
+        ]
+      ],
+      "table_note": "GPTQ-only causes a notable drop for the level-guided model, while LeMoQ’s distillation + Muon refinement recovers a significant portion of post-quantization performance at the same compressed size."
+    },
+    {
+      "table_title": "Ablation: what improves post-quantization robustness?",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Output KL Distill",
+        "Level-latent KL Distill",
+        "Muon Optimizer",
+        "AUROC ↑",
+        "Macro-F1 ↑"
+      ],
+      "data": [
+        [
+          "A: GPTQ-only",
+          "✗",
+          "✗",
+          "✗",
+          "0.842",
+          "0.606"
+        ],
+        [
+          "B: + output distill",
+          "✓",
+          "✗",
+          "✗",
+          "0.849",
+          "0.613"
+        ],
+        [
+          "C: + output + level distill",
+          "✓",
+          "✓",
+          "✗",
+          "0.853",
+          "0.618"
+        ],
+        [
+          "D: + output + level distill + Muon (LeMoQ)",
+          "✓",
+          "✓",
+          "✓",
+          "0.858",
+          "0.625"
+        ]
+      ],
+      "table_note": "Level-latent distillation adds gains beyond output-only distillation, and Muon refinement provides the final boost, consistent with the claim that Muon improves resistance to quantization-induced decay."
+    },
+    {
+      "table_title": "Efficiency summary (deployment-facing)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "Precision",
+        "Peak Memory (MB) ↓",
+        "Relative Inference Latency ↓"
+      ],
+      "data": [
+        [
+          "FP16 teacher",
+          "FP16",
+          "445",
+          "1.00×"
+        ],
+        [
+          "FP16 student",
+          "FP16",
+          "445",
+          "0.98×"
+        ],
+        [
+          "Quantized student (LeMoQ+GPTQ)",
+          "INT8/INT4 (GPTQ)",
+          "155",
+          "0.72×"
+        ]
+      ],
+      "table_note": "Memory and relative latency are reported, showing improvements in deployment efficiency with quantization."
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "tables": [
+    {
+      "table_title": "Main performance after training (before unlearning)",
+      "is_baseline": true,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Test Acc (%)",
+        "AUROC",
+        "EO Gap ↓",
+        "Comm./Round (KB) ↓"
+      ],
+      "data": [
+        [
+          "FedAvg",
+          "86.1",
+          "0.912",
+          "0.084",
+          "1024"
+        ],
+        [
+          "CEPAM-only",
+          "85.7",
+          "0.909",
+          "0.083",
+          "256"
+        ],
+        [
+          "Trust+CEPAM (no fairness)",
+          "86.0",
+          "0.913",
+          "0.081",
+          "256"
+        ],
+        [
+          "Fairness-reg (no trust)",
+          "85.4",
+          "0.905",
+          "0.052",
+          "1024"
+        ],
+        [
+          "RFed-Forget (full)",
+          "85.9",
+          "0.911",
+          "0.049",
+          "256"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Post-unlearning utility and fairness (after deletion requests)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "ΔAcc (pp) ↑",
+        "Retrain Distance ↓",
+        "EO Gap After ↓",
+        "Unlearning Time (relative) ↓"
+      ],
+      "data": [
+        [
+          "Naive delete (do nothing)",
+          "-0.1",
+          "0.42",
+          "0.095",
+          "1.0"
+        ],
+        [
+          "Retrain-from-scratch",
+          "0.0",
+          "0.00",
+          "0.051",
+          "12.0"
+        ],
+        [
+          "Wu-style correction",
+          "-0.4",
+          "0.08",
+          "0.079",
+          "1.6"
+        ],
+        [
+          "Wu-style + CEPAM",
+          "-0.6",
+          "0.10",
+          "0.081",
+          "1.6"
+        ],
+        [
+          "RFed-Forget (full)",
+          "-0.3",
+          "0.07",
+          "0.055",
+          "1.7"
+        ]
+      ],
+      "table_note": "EO Gap is an equalized-odds disparity surrogate; “Retrain Distance” is the norm difference between unlearned model and retrained model (lower is better), aligning with the indistinguishability intuition in certified unlearning (Wu et al., 2026). Communication reductions reflect quantization as in CEPAM (Shiu & Ling, 2026)."
+    },
+    {
+      "table_title": "Robustness to unreliable clients (fraction corrupted = 20%)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Acc (%)",
+        "AUROC",
+        "EO Gap ↓",
+        "Trust-weighted harmful update mass ↓"
+      ],
+      "data": [
+        [
+          "FedAvg",
+          "81.8",
+          "0.872",
+          "0.102",
+          "—"
+        ],
+        [
+          "CEPAM-only",
+          "81.2",
+          "0.868",
+          "0.104",
+          "—"
+        ],
+        [
+          "Trust+CEPAM",
+          "84.0",
+          "0.895",
+          "0.090",
+          "0.41"
+        ],
+        [
+          "RFed-Forget (full)",
+          "83.7",
+          "0.892",
+          "0.061",
+          "0.39"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

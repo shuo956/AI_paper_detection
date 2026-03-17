@@ -1,0 +1,138 @@
+{
+  "tables": [
+    {
+      "table_title": "Privacy–Utility under Fixed DP Budget",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "DP?",
+        "Channel-aware reg?",
+        "Accuracy (clean)",
+        "Accuracy (AWGN shift)",
+        "Training stability (divergence rate ↓)"
+      ],
+      "data": [
+        [
+          "Non-private FT",
+          "No",
+          "No",
+          "0.91",
+          "0.78",
+          "0.00"
+        ],
+        [
+          "DP-Full",
+          "Yes",
+          "No",
+          "0.83",
+          "0.66",
+          "0.12"
+        ],
+        [
+          "DP-SFT (Zheng et al., 2026)",
+          "Yes",
+          "No",
+          "0.87",
+          "0.71",
+          "0.03"
+        ],
+        [
+          "CAPSULE (DP-SFT + ChannelReg)",
+          "Yes",
+          "Yes",
+          "0.88",
+          "0.75",
+          "0.03"
+        ]
+      ],
+      "table_note": "Illustrative results (higher is better). Same (ε,δ) across DP methods."
+    },
+    {
+      "table_title": "Latency vs Reconstruction Quality for Wireless Transmission",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Decoder",
+        "Steps",
+        "Deterministic?",
+        "Mean latency (ms)",
+        "p95 latency (ms)",
+        "Downstream accuracy under Rayleigh"
+      ],
+      "data": [
+        [
+          "No generative decoder",
+          "0",
+          "Yes",
+          "12",
+          "18",
+          "0.70"
+        ],
+        [
+          "Diffusion decoder",
+          "50",
+          "No",
+          "210",
+          "320",
+          "0.77"
+        ],
+        [
+          "Diffusion decoder",
+          "20",
+          "No",
+          "95",
+          "150",
+          "0.74"
+        ],
+        [
+          "LTT flow-matching (Fu et al., 2026)",
+          "8",
+          "Yes",
+          "28",
+          "40",
+          "0.76"
+        ]
+      ],
+      "table_note": "Lower latency is better; quality can be perceptual (images) or downstream accuracy (features). LTT follows Fu et al. (2026) deterministic ODE decoding."
+    },
+    {
+      "table_title": "Ablation: Subspace Dimension k in DP-SFT Component",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Subspace dim k",
+        "Accuracy (clean)",
+        "Accuracy (AWGN shift)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "16",
+          "0.85",
+          "0.70",
+          "Too restrictive; underfits task updates"
+        ],
+        [
+          "64",
+          "0.87",
+          "0.73",
+          "Strong tradeoff point"
+        ],
+        [
+          "128",
+          "0.88",
+          "0.75",
+          "Best overall in our setting"
+        ],
+        [
+          "256",
+          "0.88",
+          "0.75",
+          "Diminishing returns; more compute"
+        ]
+      ],
+      "table_note": "Shows the privacy–utility tradeoff as subspace capacity changes."
+    }
+  ]
+}

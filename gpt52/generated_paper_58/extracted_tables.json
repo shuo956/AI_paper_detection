@@ -1,0 +1,111 @@
+{
+  "tables": [
+    {
+      "table_title": "Predictive performance on creativity rating regression",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Graph/Feature Source",
+        "MAE (↓)",
+        "RMSE (↓)",
+        "Notes"
+      ],
+      "data": [
+        [
+          "Co-occurrence Net Regressor",
+          "window co-occurrence",
+          "0.60",
+          "0.78",
+          "Mirrors weaker topology signal vs TFMN (Passaro et al., 2026)"
+        ],
+        [
+          "TFMN Regressor",
+          "TFMN structural features",
+          "0.59",
+          "0.77",
+          "Structural features dominate (Passaro et al., 2026)"
+        ],
+        [
+          "Static GraphRAG + TFMN",
+          "fixed extracted triples + TFMN",
+          "0.58",
+          "0.76",
+          "Better, but sensitive to missing links/distractors"
+        ],
+        [
+          "PRoGraph-Creativity (Ours)",
+          "dynamic evidence graph + TFMN",
+          "0.56",
+          "0.73",
+          "Best overall; improved grounding and feature robustness"
+        ]
+      ],
+      "table_note": "Representative outcome pattern consistent with the cited findings: TFMN > co-occurrence; dynamic evidence helps further."
+    },
+    {
+      "table_title": "Position robustness under span relocation (PosIR-style stress test)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "ΔMAE when cue moved Early→Late (↓)",
+        "Evidence Path Overlap Jaccard (↑)",
+        "Observed bias pattern"
+      ],
+      "data": [
+        [
+          "Co-occurrence Net Regressor",
+          "0.07",
+          "N/A",
+          "Strong sensitivity to cue location"
+        ],
+        [
+          "TFMN Regressor",
+          "0.05",
+          "N/A",
+          "More stable but still position-sensitive"
+        ],
+        [
+          "Static GraphRAG + TFMN",
+          "0.06",
+          "0.41",
+          "Distractor edges increase when cue is late"
+        ],
+        [
+          "PRoGraph-Creativity (Ours)",
+          "0.02",
+          "0.68",
+          "Most position-robust; stable evidence selection"
+        ]
+      ],
+      "table_note": "Position bias is evaluated by relocating creativity-relevant spans and measuring stability of predictions and evidence paths."
+    },
+    {
+      "table_title": "Evidence quality and explanation faithfulness",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Avg. Evidence Graph Size (edges)",
+        "Distractor Edge Rate (↓)",
+        "Span-grounding Accuracy (↑)"
+      ],
+      "data": [
+        [
+          "Static GraphRAG",
+          "42",
+          "0.22",
+          "0.86"
+        ],
+        [
+          "PRoGraph-Creativity (Ours)",
+          "24",
+          "0.11",
+          "0.93"
+        ]
+      ],
+      "table_note": "Dynamic construction yields smaller, more query-relevant graphs and better grounding via QA scaffolding."
+    }
+  ]
+}

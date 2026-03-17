@@ -1,0 +1,138 @@
+{
+  "tables": [
+    {
+      "table_title": "Continual learning performance under Pac-Man attacks (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Pac-Man p=0.0",
+        "Pac-Man p=0.2",
+        "Pac-Man p=0.5"
+      ],
+      "data": [
+        [
+          "FedAvg-CL",
+          "0.81",
+          "0.80",
+          "0.79"
+        ],
+        [
+          "DP-FedEPC (Sinhal et al., 2026)",
+          "0.79",
+          "0.78",
+          "0.77"
+        ],
+        [
+          "RW-SGD (no self-creation)",
+          "0.80",
+          "0.62",
+          "0.41"
+        ],
+        [
+          "CIL-RW (Chen et al., 2026-inspired)",
+          "0.80",
+          "0.76",
+          "0.70"
+        ],
+        [
+          "RAPID-TTA (ours, w/o TTA)",
+          "0.79",
+          "0.75",
+          "0.69"
+        ],
+        [
+          "RAPID-TTA (ours, +TTA)",
+          "0.83",
+          "0.80",
+          "0.75"
+        ]
+      ],
+      "table_note": "Metric: average accuracy over time blocks; reported as mean across clients."
+    },
+    {
+      "table_title": "Availability / progress metrics under RW extinction (lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Stall time (p=0.2)",
+        "Stall time (p=0.5)"
+      ],
+      "data": [
+        [
+          "RW-SGD (no self-creation)",
+          "0.31",
+          "0.58"
+        ],
+        [
+          "CIL-RW",
+          "0.07",
+          "0.15"
+        ],
+        [
+          "RAPID-TTA",
+          "0.08",
+          "0.17"
+        ]
+      ],
+      "table_note": "“Stall time” = fraction of wall-clock where no global progress (no effective aggregation) is observed."
+    },
+    {
+      "table_title": "Test-time adaptation gains under distribution shift (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "No TTA",
+        "With TTA"
+      ],
+      "data": [
+        [
+          "FedAvg-CL",
+          "0.77",
+          "0.78"
+        ],
+        [
+          "DP-FedEPC",
+          "0.75",
+          "0.76"
+        ],
+        [
+          "RAPID-TTA",
+          "0.72",
+          "0.78"
+        ]
+      ],
+      "table_note": "Metric: post-shift accuracy on last time block."
+    },
+    {
+      "table_title": "Membership inference risk (PromptMIA advantage; lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Training scheme",
+        "DP?",
+        "PromptMIA advantage"
+      ],
+      "data": [
+        [
+          "Prompt-Tune (Fed) (Nguyen et al., 2026 setting)",
+          "No",
+          "0.42"
+        ],
+        [
+          "Prompt-Tune (Fed)",
+          "Yes (DP-SGD)",
+          "0.18"
+        ],
+        [
+          "RAPID-TTA (no prompt tuning; adapter TTA)",
+          "Yes (DP-SGD)",
+          "0.05"
+        ]
+      ],
+      "table_note": "Evaluated on federated prompt tuning baseline and DP variants."
+    }
+  ]
+}

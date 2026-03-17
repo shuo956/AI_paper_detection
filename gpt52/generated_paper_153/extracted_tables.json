@@ -1,0 +1,108 @@
+{
+  "tables": [
+    {
+      "table_title": "Impact of ratio features and XGBoost subsampling on quishing detection",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Features",
+        "colsample_bylevel / colsample_bynode",
+        "PR-AUC (↑)",
+        "FNR % (↓)"
+      ],
+      "data": [
+        [
+          "XGB-Prim-Sub",
+          "Primitive only",
+          "0.6 / 0.6",
+          "0.932",
+          "0.38"
+        ],
+        [
+          "XGB-Prim-Full",
+          "Primitive only",
+          "1.0 / 1.0",
+          "0.961",
+          "0.21"
+        ],
+        [
+          "XGB-Ratio-Sub",
+          "Primitive + ratio",
+          "0.6 / 0.6",
+          "0.967",
+          "0.18"
+        ],
+        [
+          "SAFE-QR (XGB)",
+          "Primitive + ratio",
+          "1.0 / 1.0",
+          "0.982",
+          "0.11"
+        ]
+      ],
+      "table_note": "Consistent with Pinchuk (2026), intra-tree subsampling harms performance when the model must synthesize interactions from primitives. Adding ratio features mitigates this, and the best results occur when subsampling is disabled and ratios are included."
+    },
+    {
+      "table_title": "Early-exit inference: speed/accuracy and attention consistency",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "Attention consistency (EGT-style)",
+        "Avg. exit depth (↓)",
+        "Accuracy % (↑)",
+        "Attention consistency % (↑)",
+        "Speedup (↑)"
+      ],
+      "data": [
+        [
+          "EarlyExit-Base",
+          "No",
+          "3.4",
+          "97.8",
+          "71.2",
+          "1.55×"
+        ],
+        [
+          "SAFE-QR EarlyExit",
+          "Yes",
+          "2.6",
+          "97.9",
+          "83.5",
+          "1.82×"
+        ]
+      ],
+      "table_note": "Attention consistency regularization improves explanation alignment across exits (Zhao, 2026) and enables earlier confident exits, increasing speedup without degrading accuracy."
+    },
+    {
+      "table_title": "End-to-end comparison (safe-by-design pipeline retained)",
+      "is_baseline": true,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Safe-by-design pre-scan blocking",
+        "PR-AUC (↑)",
+        "FNR % (↓)",
+        "Mobile-feasible adaptive inference"
+      ],
+      "data": [
+        [
+          "ALFA-style baseline (Akram et al., 2026)",
+          "Yes",
+          "0.975",
+          "0.16",
+          "Partial"
+        ],
+        [
+          "SAFE-QR (proposed)",
+          "Yes",
+          "0.984",
+          "0.10",
+          "Yes"
+        ]
+      ],
+      "table_note": "SAFE-QR retains ALFA’s pre-scan safety principle (Akram et al., 2026) while improving robustness and deployability."
+    }
+  ]
+}

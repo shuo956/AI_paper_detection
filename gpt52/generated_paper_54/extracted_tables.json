@@ -1,0 +1,148 @@
+{
+  "tables": [
+    {
+      "table_title": "Accuracy (%) on multi-hop QA under language manipulation (clean retrieval)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "EN→EN",
+        "EN→ZH",
+        "ZH→EN",
+        "ZH→ZH",
+        "Avg"
+      ],
+      "data": [
+        [
+          "Base (no retrieval)",
+          "54.2",
+          "52.8",
+          "50.9",
+          "51.6",
+          "52.4"
+        ],
+        [
+          "RAG",
+          "67.5",
+          "64.1",
+          "62.7",
+          "63.4",
+          "64.4"
+        ],
+        [
+          "RAG + LangControl",
+          "68.1",
+          "66.8",
+          "65.9",
+          "66.2",
+          "66.8"
+        ],
+        [
+          "ReaL-RAG",
+          "68.4",
+          "67.2",
+          "66.1",
+          "66.5",
+          "67.1"
+        ]
+      ],
+      "table_note": "RAG drives the main gain (consistent with Yang et al., 2026). Explicit reasoning-language control further improves cross-lingual conditions, suggesting reasoning language is a meaningful factor (aligned with Li et al., 2026’s broader claim)."
+    },
+    {
+      "table_title": "Accuracy (%) under noisy retrieval (irrelevant + contradictory passages injected)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "EN→EN",
+        "EN→ZH",
+        "ZH→EN",
+        "ZH→ZH",
+        "Avg"
+      ],
+      "data": [
+        [
+          "RAG",
+          "58.9",
+          "55.7",
+          "54.8",
+          "55.2",
+          "56.2"
+        ],
+        [
+          "RAG + LangControl",
+          "60.1",
+          "58.3",
+          "57.2",
+          "57.6",
+          "58.3"
+        ],
+        [
+          "ReaL-RAG",
+          "60.0",
+          "58.5",
+          "57.4",
+          "57.9",
+          "58.5"
+        ]
+      ],
+      "table_note": "Noise hurts all RAG variants; language control modestly helps robustness, but calibration-focused training is not primarily an accuracy booster."
+    },
+    {
+      "table_title": "Calibration (ECE ↓) under clean vs noisy retrieval",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Clean ECE",
+        "Noisy ECE",
+        "ΔECE (noise impact)"
+      ],
+      "data": [
+        [
+          "RAG",
+          "0.142",
+          "0.231",
+          "+0.089"
+        ],
+        [
+          "RAG + LangControl",
+          "0.138",
+          "0.219",
+          "+0.081"
+        ],
+        [
+          "ReaL-RAG",
+          "0.091",
+          "0.137",
+          "+0.046"
+        ]
+      ],
+      "table_note": "Consistent with Liu et al. (2026), retrieval noise inflates miscalibration. NAACL-style noise-aware calibration substantially reduces ECE and halves the noise-induced calibration degradation."
+    },
+    {
+      "table_title": "Overconfidence on incorrect answers under contradictory retrieval (lower is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Mean confidence (incorrect, contradictory)"
+      ],
+      "data": [
+        [
+          "RAG",
+          "0.71"
+        ],
+        [
+          "RAG + LangControl",
+          "0.68"
+        ],
+        [
+          "ReaL-RAG",
+          "0.52"
+        ]
+      ],
+      "table_note": "The key safety improvement of ReaL-RAG is reducing false certainty in contradiction-heavy contexts (Liu et al., 2026)."
+    }
+  ]
+}

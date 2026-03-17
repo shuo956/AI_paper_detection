@@ -1,0 +1,167 @@
+{
+  "tables": [
+    {
+      "table_title": "Overall performance under continual shift and DP",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Privacy",
+        "Acc_avg ↑",
+        "Forget ↓",
+        "Notes"
+      ],
+      "data": [
+        [
+          "FedAvg (static FL)",
+          "None",
+          "0.78",
+          "0.21",
+          "strong forgetting under streams"
+        ],
+        [
+          "DP-FedEPC (Sinhal et al., 2026)",
+          "DP-SGD",
+          "0.81",
+          "0.12",
+          "prototypes + EWC + DP"
+        ],
+        [
+          "DP-FedEPC + Early-Exit (naïve)",
+          "DP-SGD",
+          "0.80",
+          "0.13",
+          "exit interference not resolved"
+        ],
+        [
+          "CaSPER-FCL (ours)",
+          "Subspace-DP",
+          "0.83",
+          "0.09",
+          "adds DP-SFT + CAFEDistill-style coordination + fairness"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Privacy–utility comparison at fixed δ (illustrative)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "DP mechanism",
+        "ε (lower=stronger)",
+        "Acc_avg ↑",
+        "Stability (loss variance) ↓"
+      ],
+      "data": [
+        [
+          "DP-FedEPC",
+          "full-space DP-SGD",
+          "3.0",
+          "0.81",
+          "0.014"
+        ],
+        [
+          "CaSPER-FCL",
+          "DP-SFT subspace noise",
+          "3.0",
+          "0.83",
+          "0.009"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Path-specific causal fairness outcomes (illustrative)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "PSE(unfair path) ↓",
+        "Acc_avg ↑",
+        "Comment"
+      ],
+      "data": [
+        [
+          "DP-FedEPC",
+          "0.082",
+          "0.81",
+          "no causal fairness constraint"
+        ],
+        [
+          "CaSPER-FCL w/o fairness loss",
+          "0.079",
+          "0.83",
+          "improvements mainly from retention+DP-SFT"
+        ],
+        [
+          "CaSPER-FCL (full)",
+          "0.041",
+          "0.82",
+          "reduces unfair pathway with small accuracy cost"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Early-exit personalization and efficiency (illustrative)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Early-exit coordination",
+        "Early-exit rate ↑",
+        "Compute reduction ↑",
+        "Acc loss (abs.) ↓"
+      ],
+      "data": [
+        [
+          "No early exit",
+          "—",
+          "0%",
+          "0%",
+          "0.00"
+        ],
+        [
+          "Naïve early exit",
+          "none",
+          "52%",
+          "34%",
+          "0.020"
+        ],
+        [
+          "CaSPER-FCL",
+          "CAFEDistill-style",
+          "61%",
+          "41%",
+          "0.008"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Interpretability proxy: attention consistency across exits (illustrative)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Attention consistency ↑",
+        "Clinician-facing stability (qual.)"
+      ],
+      "data": [
+        [
+          "Naïve early exit",
+          "0.62",
+          "inconsistent saliency across exits"
+        ],
+        [
+          "CaSPER-FCL + ACR (Zhao, 2026)",
+          "0.73",
+          "more aligned explanations"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

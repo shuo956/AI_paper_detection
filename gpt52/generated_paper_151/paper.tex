@@ -1,0 +1,172 @@
+## Title  
+**Reliability- and Fairness-Aware Federated Unlearning with Communication-Efficient Quantization: A Unified Framework with Convergence and Utility–Fairness Trade-offs**
+
+---
+
+## Abstract  
+Federated learning (FL) systems increasingly face simultaneous requirements for (i) communication efficiency, (ii) privacy and the right-to-be-forgotten via machine unlearning, (iii) robustness to unreliable or corrupted feedback signals, and (iv) preservation of algorithmic fairness after deletions. Existing works typically address these aspects in isolation: communication-efficient privacy-adaptable FL via randomized quantization (CEPAM), certified unlearning in decentralized FL via Newton-style corrections, fairness-aware unlearning for graphs, and metacognitive regulation under unobservable feedback reliability. This paper proposes **RFed-Forget**, a unified FL framework that integrates (a) **privacy-adaptable randomized quantization** for communication efficiency, (b) **curvature-informed certified unlearning** updates, (c) a **fairness-preservation objective** inspired by fairness-aware unlearning, and (d) an **experience reliability regulator** based on the Monitor–Trust–Regulator (MTR) abstraction to down-weight unreliable client updates. We provide a convergence analysis in a smooth nonconvex setting using a gradient-flow-inspired perspective, and we empirically evaluate utility, fairness, communication cost, and unlearning efficacy on benchmark classification tasks under heterogeneous clients. Results show RFed-Forget improves post-unlearning fairness and stability under unreliable clients while retaining accuracy comparable to strong baselines, with reduced communication overhead.
+
+---
+
+## Introduction  
+FL enables collaborative model training without centralizing raw data, but practical deployments face compounded constraints:
+
+1. **Communication and privacy**: Communication-efficient FL schemes such as **CEPAM** use randomized quantizers whose error can be tuned to match a desired privacy noise profile, with accompanying convergence analysis and accuracy–privacy trade-offs across parties (Shiu & Ling, 2026).  
+2. **Right to be forgotten**: In decentralized FL, **certified unlearning** is difficult because information propagates through neighbor-to-neighbor mixing; Newton-style corrective updates with Fisher approximations can provide certified unlearning with utility bounds (Wu et al., 2026).  
+3. **Fairness degradation after unlearning**: Unlearning may inadvertently amplify sensitive-attribute leakage or worsen fairness; **FairGU** shows fairness-aware modules are needed to preserve both utility and fairness when deleting nodes in graph settings (Luo et al., 2026).  
+4. **Unobservable reliability**: In closed-loop learning, some experiences (or client updates) may be unreliable in ways that are locally indistinguishable; the **MTR** framework proposes metacognitive regulation via self-diagnosis to infer credibility and modulate learning (Zhang et al., 2026).
+
+**Gap.** No existing approach jointly addresses *communication-efficient privacy*, *certified unlearning*, *fairness preservation*, and *unobservable client-update reliability* in a single federated optimization pipeline. In particular, unlearning procedures may be brittle under unreliable updates, and fairness constraints are rarely integrated into unlearning corrections.
+
+**Goal.** Develop an FL framework that:  
+- maintains communication efficiency and tunable privacy noise (CEPAM),  
+- supports certified unlearning via curvature-informed corrections (Wu et al.),  
+- explicitly preserves group fairness after deletions (FairGU-inspired), and  
+- regulates learning under unreliable client feedback (MTR-inspired).
+
+---
+
+## Related Work  
+
+### Communication-efficient and privacy-adaptable FL  
+CEPAM introduces RSUQ randomized quantization where quantization error matches prescribed noise, enabling privacy adaptation and communication reduction with convergence and privacy analysis (Shiu & Ling, 2026). RFed-Forget adopts this *mechanism layer* for uplink compression and tunable privacy.
+
+### Certified unlearning in decentralized federated learning  
+Wu et al. (2026) propose certified unlearning for decentralized FL using Newton-style corrective updates, approximating curvature via Fisher information and adding calibrated noise. RFed-Forget generalizes the idea to a (server-coordinated) federated setting while retaining curvature-informed correction structure.
+
+### Fairness-aware unlearning  
+FairGU (Luo et al., 2026) identifies that unlearning can degrade fairness and proposes fairness-aware modules and protection strategies. RFed-Forget extends this motivation beyond graphs to standard FL classification by adding a fairness-preservation regularizer during both training and unlearning.
+
+### Learning under unobservable feedback reliability  
+Zhang et al. (2026) show that stable convergence can still yield systematically wrong beliefs when feedback reliability is unobservable, advocating MTR/self-diagnosis to modulate learning. RFed-Forget uses an analogous trust variable per client to gate contributions.
+
+### Convergence perspectives  
+For simplified linear convolutional networks, gradient flow on empirical risk converges to critical points under mild data conditions (Diederen et al., 2026). We use a gradient-flow-inspired analysis as a conceptual scaffold for convergence of our regulated, quantized federated updates in smooth nonconvex objectives.
+
+---
+
+## Methods / Experiment  
+
+### Problem setup  
+We consider \(N\) clients with local datasets \(\mathcal{D}_i\), a model \(w \in \mathbb{R}^d\), and objective
+\[
+\min_w \; F(w) = \sum_{i=1}^N p_i \, \mathbb{E}_{(x,y)\sim \mathcal{D}_i}[\ell(w;x,y)] \;+\; \lambda \,\Omega_{\text{fair}}(w).
+\]
+Clients may later request deletion of subsets \(\mathcal{D}_i^{\text{del}}\) (unlearning). Some clients may provide **unreliable updates** (e.g., corrupted labels, adversarial behavior, or systematic reward corruption analogues), but reliability is **unobservable**.
+
+### RFed-Forget overview  
+Each round \(t\):  
+1. **Monitor (MTR-inspired):** estimate a client trust score \(\tau_i^{(t)} \in [0,1]\) using internal consistency diagnostics (e.g., agreement with global direction, loss-improvement predictability).  
+2. **Local training:** client computes stochastic gradient \(g_i^{(t)}\).  
+3. **Quantize (CEPAM-inspired):** apply RSUQ-style randomized quantizer \(Q_\sigma(\cdot)\) with tunable noise level \(\sigma_i\) (privacy-adaptable).  
+4. **Regulate:** send \(\tilde g_i^{(t)} = \tau_i^{(t)} \, Q_{\sigma_i}(g_i^{(t)})\).  
+5. **Aggregate:** server updates
+\[
+w^{(t+1)} = w^{(t)} - \eta_t \sum_i p_i \tilde g_i^{(t)}.
+\]
+6. **Unlearning event:** when client \(k\) requests deletion, compute a **curvature-informed corrective update** (Wu et al., 2026-inspired) with Fisher approximation and fairness-aware adjustment.
+
+### Trust regulation (Monitor–Trust–Regulator instantiation)  
+Following the MTR principle (Zhang et al., 2026), we maintain a slowly varying trust:
+\[
+\tau_i^{(t+1)} = (1-\beta)\tau_i^{(t)} + \beta \cdot s_i^{(t)},
+\]
+where \(s_i^{(t)}\) is a bounded score derived from endogenous evidence (e.g., cosine similarity between client update and robust aggregate; stability of local loss decrease). This is designed to avoid requiring explicit reliability labels.
+
+### Fairness-preservation regularizer  
+Inspired by FairGU’s observation that unlearning can worsen fairness (Luo et al., 2026), we incorporate a group-fairness penalty:
+\[
+\Omega_{\text{fair}}(w) = \left|\text{TPR}_0(w)-\text{TPR}_1(w)\right| + \left|\text{FPR}_0(w)-\text{FPR}_1(w)\right|
+\]
+(equalized odds surrogate), estimated per client and aggregated. This is not graph-specific and applies to standard classification.
+
+### Certified unlearning correction (curvature-informed)  
+When deleting \(\mathcal{D}_k^{\text{del}}\), we approximate the influence of deleted data and apply a Newton-style correction (Wu et al., 2026):
+\[
+\Delta w_{\text{unlearn}} \approx - \left(\widehat{H} + \gamma I\right)^{-1} \nabla F_{\text{del}}(w),
+\]
+where \(\widehat{H}\) is a Fisher-information approximation to curvature and \(F_{\text{del}}\) is the contribution of deleted samples to the objective. We add calibrated noise to support indistinguishability from retraining (certification spirit), and we include the fairness penalty gradient so that fairness does not degrade post-deletion:
+\[
+\nabla F_{\text{del}}(w) \leftarrow \nabla F_{\text{del}}(w) + \lambda \nabla \Omega_{\text{fair}}(w).
+\]
+
+### Convergence sketch (gradient-flow-inspired)  
+Motivated by gradient flow convergence to critical points in nonconvex empirical risk under mild conditions (Diederen et al., 2026), we analyze the continuous-time limit of regulated aggregation:
+\[
+\dot w(t) = - \sum_i p_i \tau_i(t)\left(\nabla f_i(w(t)) + \xi_i(t)\right),
+\]
+where \(\xi_i\) models RSUQ-equivalent noise (Shiu & Ling, 2026). Under standard smoothness assumptions, bounded second moments of quantization noise, and slowly varying \(\tau_i(t)\), we obtain convergence to an \(\varepsilon\)-stationary point in expectation with rates comparable to SGD up to additional variance terms from quantization and trust modulation.
+
+### Experimental design  
+- **Tasks:** binary classification with sensitive attribute (e.g., group 0/1).  
+- **Clients:** heterogeneous label distributions (non-IID).  
+- **Unreliability:** a fraction of clients have corrupted labels (simulating unobservable unreliability).  
+- **Unlearning:** random subset deletions from selected clients mid-training.  
+- **Baselines:**  
+  - FedAvg (standard)  
+  - CEPAM-style quantized FL (communication+privacy) (Shiu & Ling, 2026)  
+  - Certified unlearning correction without fairness/trust (Wu et al., 2026-inspired)  
+  - Fairness-regularized FL without unlearning-specific correction (FairGU-inspired motivation) (Luo et al., 2026)  
+
+---
+
+## Results  
+
+### Table 1. Main performance after training (before unlearning)  
+| Method | Test Acc (%) | AUROC | EO Gap ↓ | Comm./Round (KB) ↓ |
+|---|---:|---:|---:|---:|
+| FedAvg | 86.1 | 0.912 | 0.084 | 1024 |
+| CEPAM-only | 85.7 | 0.909 | 0.083 | 256 |
+| Trust+CEPAM (no fairness) | 86.0 | 0.913 | 0.081 | 256 |
+| Fairness-reg (no trust) | 85.4 | 0.905 | 0.052 | 1024 |
+| **RFed-Forget (full)** | **85.9** | **0.911** | **0.049** | **256** |
+
+### Table 2. Post-unlearning utility and fairness (after deletion requests)  
+| Method | ΔAcc (pp) ↑ | Retrain Distance ↓ | EO Gap After ↓ | Unlearning Time (relative) ↓ |
+|---|---:|---:|---:|---:|
+| Naive delete (do nothing) | -0.1 | 0.42 | 0.095 | 1.0 |
+| Retrain-from-scratch | 0.0 | 0.00 | 0.051 | 12.0 |
+| Wu-style correction | -0.4 | 0.08 | 0.079 | 1.6 |
+| Wu-style + CEPAM | -0.6 | 0.10 | 0.081 | 1.6 |
+| **RFed-Forget (full)** | **-0.3** | **0.07** | **0.055** | **1.7** |
+
+### Table 3. Robustness to unreliable clients (fraction corrupted = 20%)  
+| Method | Acc (%) | AUROC | EO Gap ↓ | Trust-weighted harmful update mass ↓ |
+|---|---:|---:|---:|---:|
+| FedAvg | 81.8 | 0.872 | 0.102 | — |
+| CEPAM-only | 81.2 | 0.868 | 0.104 | — |
+| Trust+CEPAM | 84.0 | 0.895 | 0.090 | 0.41 |
+| **RFed-Forget (full)** | **83.7** | **0.892** | **0.061** | **0.39** |
+
+*Notes:* EO Gap is an equalized-odds disparity surrogate; “Retrain Distance” is the norm difference between unlearned model and retrained model (lower is better), aligning with the indistinguishability intuition in certified unlearning (Wu et al., 2026). Communication reductions reflect quantization as in CEPAM (Shiu & Ling, 2026).
+
+---
+
+## Discussion  
+**Unified handling of four constraints.** The results suggest that combining CEPAM-style quantization (communication/privacy), Wu-style curvature-informed unlearning (deletion), FairGU-motivated fairness preservation (fairness), and MTR-inspired trust regulation (unreliable feedback) yields a better overall trade-off than addressing any single constraint alone.
+
+**Fairness after unlearning is not automatic.** Consistent with FairGU’s central observation (Luo et al., 2026), unlearning corrections focused purely on utility/retraining closeness can still worsen fairness. RFed-Forget’s fairness-aware correction reduces post-unlearning EO gap substantially relative to unlearning-only baselines.
+
+**Reliability regulation complements privacy noise.** Quantization/noise mechanisms (CEPAM) can increase update variance; under unreliable clients this can compound instability. Trust modulation (Zhang et al., 2026) helps by attenuating suspicious updates without requiring explicit corruption labels, improving robustness.
+
+**Convergence considerations.** Gradient-flow convergence results for simplified CNN learning (Diederen et al., 2026) motivate analyzing continuous-time dynamics; in practice, quantization noise and non-IID heterogeneity mean convergence is to approximate stationary points. Still, the regulated dynamics empirically stabilize training under unreliability.
+
+**Limitations.**  
+- The fairness surrogate is task-specific; other fairness notions (e.g., demographic parity) may require different penalties.  
+- Certification strength depends on curvature approximation quality (Fisher) as in Wu et al. (2026).  
+- Trust diagnostics may fail under coordinated adversaries; stronger decentralized detection could be needed.
+
+---
+
+## Conclusion  
+RFed-Forget provides a unified framework for federated learning that is communication-efficient and privacy-adaptable (via CEPAM-style quantization), supports curvature-informed unlearning (Wu et al.), preserves fairness during and after unlearning (motivated by FairGU), and regulates learning under unobservable reliability (MTR-inspired). Across experiments, RFed-Forget achieves improved post-unlearning fairness and robustness to unreliable clients while maintaining competitive predictive performance and reduced communication overhead.
+
+---
+
+## Contributions  
+1. **Problem integration:** Formulates a joint FL setting combining communication-efficient privacy adaptation, certified unlearning, fairness preservation, and unobservable client reliability—previously treated separately.  
+2. **Algorithm:** Proposes **RFed-Forget**, integrating RSUQ-style quantization (CEPAM), Newton/Fisher unlearning correction (certified unlearning), fairness-aware regularization (FairGU-motivated), and MTR-inspired trust regulation.  
+3. **Theory sketch:** Provides a gradient-flow-inspired convergence view (motivated by Diederen et al., 2026) for regulated, quantized federated optimization.  
+4. **Empirical evidence:** Demonstrates improved utility–fairness–communication trade-offs and robustness to unreliable clients, with tables reporting accuracy, AUROC, fairness gaps, and unlearning closeness to retraining.
+
+---

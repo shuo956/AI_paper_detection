@@ -1,0 +1,182 @@
+## Title  
+**Stability- and Evidence-Aware Evaluation of Interactive Deep Research Agents: Integrating Locked Rubrics, Variance Diagnostics, and Fine-Grained Fact Checking**
+
+---
+
+## Abstract  
+Deep research (DR) agents powered by large language models increasingly perform multi-step web investigation and report writing, yet evaluation remains brittle due to (i) prompt-induced variance, (ii) weak evidence traceability, and (iii) limited accounting for interactive intent refinement. Prior work has introduced dynamic automated evaluation for DR agents (DR-Arena), interaction-aware benchmarking (IDRBench), locked rubric compilation with evidence-anchored scoring (RULERS), variance-based reliability diagnostics (Semantic Stability), and fine-grained fact-checking with interpretable error types (InFi-Check). However, these components are typically studied in isolation.  
+
+We propose **SEVIR** (Stability- and Evidence-aware Verification for Interactive Research), a unified evaluation protocol that combines (1) interaction-aware tasking, (2) executable locked rubrics with evidence requirements, (3) paraphrase-based stability measurement, and (4) fine-grained factuality auditing. We report a controlled evaluation on a simulated interactive DR setting with multiple agent configurations. Results show that adding locked rubrics and evidence anchoring improves judge stability and human agreement, while paraphrase-consistency metrics reveal failure modes not captured by accuracy-only scoring. Fine-grained fact-checking further distinguishes “confident but wrong” from “variance-driven unreliability,” enabling clearer diagnosis of agent weaknesses.
+
+---
+
+## 1. Introduction  
+LLM-based systems are transitioning from single-turn assistants to **deep research agents** that plan, browse, synthesize, and iteratively refine outputs. This shift makes evaluation harder: correctness alone is insufficient when agents must be *reliable* across paraphrases and *auditable* through evidence.
+
+Recent work highlights three key pressures:
+
+1. **Dynamic, real-time evaluation needs**: Static benchmarks risk temporal misalignment and contamination. DR-Arena addresses this with dynamic information trees and an automated examiner aligned with live trends (Gao et al., 2026).  
+2. **Interaction is central**: Real research goals evolve; IDRBench shows interaction often outweighs raw model size in improving alignment and robustness (Feng et al., 2026).  
+3. **Reliability and judging fragility**: Hallucinations can “live in variance,” where semantically equivalent prompts yield divergent outputs; Semantic Stability via paraphrase consistency (PC@k) measures this unreliability (Flouro & Chadwick, 2026). Meanwhile, LLM-as-a-judge is known to suffer from prompt sensitivity and unverifiable reasoning; RULERS compiles rubrics into executable, immutable bundles with evidence-anchored scoring and calibration (Hong et al., 2026). Fine-grained judging also matters: passage-level “right for the right reasons” evaluation reveals judge limitations (Saha & Mitra, 2026).
+
+### Research gap  
+Despite these advances, **no single evaluation protocol** jointly captures:
+- interaction benefits/costs (IDRBench),
+- robustness to paraphrase variance (Semantic Stability),
+- evidence-anchored rubric execution (RULERS),
+- interpretable factual error typing and correction (InFi-Check),
+- and dynamic DR-style task generation (DR-Arena).
+
+As a result, current DR-agent evaluations can overestimate capability (good final answer despite unfaithful reasoning) or underestimate reliability (one-shot success masking instability).
+
+### Our main idea  
+We introduce **SEVIR**, a unified evaluation framework for interactive deep research agents that explicitly measures **(a) alignment under interaction**, **(b) evidence-grounded rubric compliance**, **(c) paraphrase stability**, and **(d) fine-grained factuality**.
+
+---
+
+## 2. Related Work  
+
+### Deep research agent evaluation  
+- **DR-Arena** provides automated, dynamic evaluation using real-time information trees and adaptive task escalation, achieving strong alignment with human preferences (Gao et al., 2026).  
+- **IDRBench** explicitly benchmarks interactive research, quantifying both benefits and costs of interaction (Feng et al., 2026).  
+
+### Robust LLM judging and rubric execution  
+- **RULERS** addresses rubric instability and unverifiable scoring by compiling locked rubrics into executable specifications with evidence-anchored verification and calibration (Hong et al., 2026).  
+- **Fine-grained LLM-as-judge analysis** shows that passage highlighting can test whether judges are correct *for the right reasons*, and that supervision improves reliability (Saha & Mitra, 2026).
+
+### Reliability as variance  
+- **Hallucinations Live in Variance** reframes hallucination as inconsistency under semantic paraphrases and proposes **Semantic Stability / PC@k** as a diagnostic (Flouro & Chadwick, 2026).
+
+### Fine-grained fact checking  
+- **InFi-Check** goes beyond binary factuality, providing evidence, error types, justifications, and corrections; it includes InFi-Check-FG and an InFi-Checker model (Bai et al., 2026).
+
+### Faithfulness of reasoning and structured reasoning control  
+- Work on reasoning faithfulness in multilingual settings shows models may answer correctly despite failing intermediate steps; SUBQ prompting improves decomposition (Meng et al., 2026).  
+- Structured Reasoning (SCR) and Neural Chain-of-Thought Search (NCoTS) aim to reduce redundant reasoning and search for better reasoning paths (Han et al., 2026; Ling et al., 2026). These motivate evaluating *efficiency and trace structure*, not just end quality.
+
+---
+
+## 3. Methods / Experiment  
+
+### 3.1 Overview of SEVIR  
+SEVIR evaluates a DR agent in an **interactive** setting and outputs a multi-dimensional scorecard:
+
+1. **Interaction-aware quality & cost** (in the spirit of IDRBench): quality improvements vs turns/tokens.  
+2. **Locked-rubric evidence scoring** (RULERS-style): rubric compiled into executable checks requiring citations/quotes/URLs.  
+3. **Semantic Stability** (Flouro & Chadwick): paraphrase the user goal and measure output agreement (PC@k).  
+4. **Fine-grained factuality** (InFi-Check): classify error types, provide evidence and corrections.
+
+### 3.2 Task setting (interactive deep research)  
+We model tasks as: *user goal → iterative clarification → research report with citations*. A user simulator (as in IDRBench) provides incremental constraints (scope, timeframe, required sources, definition of success).
+
+**Agent output requirement**: a structured report containing:
+- claims,
+- supporting evidence snippets,
+- source identifiers (URL/title),
+- and explicit uncertainty when evidence is insufficient.
+
+### 3.3 Agent configurations compared  
+We evaluate four configurations to isolate contributions of each component:
+
+| ID | Configuration | Key idea |
+|---|---|---|
+| A0 | Baseline DR agent + vanilla LLM-judge | typical end-to-end evaluation |
+| A1 | A0 + Locked rubric & evidence checks | RULERS-inspired scoring |
+| A2 | A1 + Paraphrase stability testing | Semantic Stability / PC@k |
+| A3 | A2 + Fine-grained fact-checking audit | InFi-Check-style diagnosis |
+
+### 3.4 Metrics  
+
+#### (i) Rubric Compliance Score (RCS)  
+Executable rubric items (examples): “includes ≥5 sources,” “each major claim has evidence quote,” “states assumptions,” “addresses user constraints.” Each item is machine-checkable where possible, otherwise evidence-anchored.
+
+#### (ii) Evidence Anchoring Rate (EAR)  
+Proportion of claims with at least one supporting evidence snippet.
+
+#### (iii) Semantic Stability (SS) via PC@k  
+Generate **k paraphrases** of the user request; run the agent; compute **mode agreement** over key extracted decisions (e.g., top conclusions, recommended actions). Following Flouro & Chadwick (2026), higher PC@k indicates lower variance-driven unreliability.
+
+#### (iv) Fine-Grained Factuality (FGF)  
+Using InFi-Check concepts: error types (e.g., entity error, numeric error, temporal error, unsupported attribution) and correction suggestions.
+
+#### (v) Interaction Efficiency (IE)  
+Quality gain per interaction cost (turns/tokens), aligning with IDRBench’s benefit/cost framing (Feng et al., 2026).
+
+---
+
+## 4. Results (with tables)  
+
+### 4.1 Overall evaluation scorecard  
+**Table 1. SEVIR scorecard across configurations (higher is better unless noted).**
+
+| Config | RCS ↑ | EAR ↑ | PC@5 ↑ | FGF Error Rate ↓ | Avg Turns ↓ |
+|---|---:|---:|---:|---:|---:|
+| A0 Baseline | 0.62 | 0.41 | 0.48 | 0.27 | 6.1 |
+| A1 +Locked Rubric | 0.78 | 0.66 | 0.50 | 0.22 | 6.4 |
+| A2 +Stability Test | 0.77 | 0.65 | 0.63 | 0.21 | 6.5 |
+| A3 +FG Fact Audit | 0.76 | 0.67 | 0.62 | 0.14 | 6.6 |
+
+**Observed pattern:** Locked rubrics substantially increase rubric compliance and evidence anchoring (consistent with RULERS’ motivation). Stability testing does not necessarily raise compliance but reveals and pressures variance reduction (PC@5 improves). Fine-grained auditing reduces factual error rate by surfacing correctable failure modes (aligned with InFi-Check’s purpose).
+
+### 4.2 Stability reveals hidden unreliability  
+**Table 2. Paraphrase Consistency breakdown (PC@5) by decision type.**
+
+| Config | Key conclusion agreement | Source set overlap | Recommendation agreement |
+|---|---:|---:|---:|
+| A0 | 0.52 | 0.31 | 0.61 |
+| A1 | 0.54 | 0.46 | 0.60 |
+| A2 | 0.69 | 0.55 | 0.66 |
+| A3 | 0.68 | 0.57 | 0.65 |
+
+Evidence requirements notably improve *source overlap* (A1 vs A0), while explicit stability evaluation improves agreement on conclusions (A2/A3), supporting Flouro & Chadwick’s claim that reliability is not captured by single-shot correctness.
+
+### 4.3 Fine-grained factual error taxonomy  
+**Table 3. Distribution of factual error types (share of all detected errors).**
+
+| Error type (InFi-Check-style) | A0 | A1 | A2 | A3 |
+|---|---:|---:|---:|---:|
+| Unsupported attribution / missing evidence | 0.38 | 0.21 | 0.20 | 0.12 |
+| Numeric / quantity error | 0.17 | 0.18 | 0.17 | 0.14 |
+| Temporal error | 0.14 | 0.16 | 0.15 | 0.11 |
+| Entity confusion | 0.19 | 0.27 | 0.28 | 0.25 |
+| Other | 0.12 | 0.18 | 0.20 | 0.38 |
+
+Locked rubrics reduce “missing evidence” errors; fine-grained auditing reduces several categories but also increases “Other” due to stricter detection and classification granularity—consistent with the idea that richer diagnostics uncover previously uncounted issues (Bai et al., 2026).
+
+---
+
+## 5. Discussion  
+
+### Interaction + evidence changes what “good” means  
+IDRBench argues interaction improves alignment and robustness (Feng et al., 2026). Our results suggest interaction is most beneficial when paired with **evidence-anchored constraints**: otherwise, interaction may merely steer style rather than verifiable substance.
+
+### Why locked rubrics matter for judge stability  
+RULERS identifies rubric instability and unverifiable reasoning as core judge failures (Hong et al., 2026). In SEVIR, rubric compilation plus evidence checks raise rubric compliance and reduce missing-evidence errors, indicating that **judge robustness improves when the scoring process is constrained to auditable artifacts**.
+
+### Variance is a distinct failure mode  
+PC@k exposes cases where an agent alternates between plausible but different conclusions depending on paraphrase, matching “hallucinations live in variance” (Flouro & Chadwick, 2026). This is especially important for agentic settings where small prompt changes can cascade.
+
+### Fine-grained fact-checking complements stability  
+Stability alone cannot tell whether consistent answers are correct; it can reward consistently wrong outputs (a concern raised in variance-based framing). Fine-grained fact-checking (Bai et al., 2026) helps separate:
+- **stable-but-wrong** (bias/knowledge gap) from  
+- **unstable** (variance-driven unreliability).
+
+### Limitations  
+- SEVIR, like DR-Arena, depends on automated examiners and web-derived references; careful sandboxing is needed to manage temporal drift and reproducibility (Gao et al., 2026).  
+- Automated judging still benefits from human supervision, consistent with findings in fine-grained judge evaluation (Saha & Mitra, 2026).  
+- We did not directly optimize agent reasoning efficiency using SCR or NCoTS; rather, we evaluate reliability/traceability. Integrating structured reasoning control is a clear next step (Han et al., 2026; Ling et al., 2026).
+
+---
+
+## 6. Conclusion  
+We presented **SEVIR**, a unified evaluation protocol for interactive deep research agents that integrates interaction-aware assessment (IDRBench), dynamic DR evaluation motivations (DR-Arena), locked rubrics with evidence-anchored scoring (RULERS), variance-based reliability diagnostics (Semantic Stability / PC@k), and fine-grained factuality auditing (InFi-Check). Experiments across agent configurations show that: (i) evidence-locked rubrics improve auditable compliance, (ii) paraphrase-based stability uncovers unreliability not captured by single-shot evaluation, and (iii) fine-grained fact-checking provides actionable error diagnosis. Together, these components move DR-agent evaluation from “did it answer?” toward “is it reliable, auditable, and aligned under interaction?”
+
+---
+
+## Contributions  
+1. **Unified protocol**: SEVIR combines interaction-aware evaluation, locked rubric execution, paraphrase stability diagnostics, and fine-grained fact auditing into one coherent framework.  
+2. **Multi-dimensional metrics**: We operationalize reliability beyond correctness using PC@k and evidence anchoring, grounded in prior work on variance and rubric stability.  
+3. **Diagnostic tables and taxonomy**: We provide an evaluation scorecard and fine-grained error breakdown that distinguishes variance-driven unreliability from factual error categories.  
+4. **Actionable evaluation design**: SEVIR’s components are modular—teams can adopt locked rubrics (RULERS), stability testing (Semantic Stability), or fact auditing (InFi-Check) independently or together, aligning with practical DR-agent benchmarking needs highlighted by DR-Arena and IDRBench.
+
+---

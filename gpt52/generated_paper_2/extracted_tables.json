@@ -1,0 +1,198 @@
+{
+  "tables": [
+    {
+      "table_title": "Research Gaps (Motivation)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Gap",
+        "Why it matters operationally",
+        "What the references don’t yet solve"
+      ],
+      "data": [
+        [
+          "Safe cross-domain transfer for data-scarce basins",
+          "Unverified transfer can degrade reliability and trust",
+          "Tlhomole et al. (2026) note scarcity but do not provide a verification criterion for transfer"
+        ],
+        [
+          "Unified handling of missing + inconsistent observations",
+          "Gauges and drivers can be intermittent; naive imputation biases models",
+          "Limpopo LSTM studies explore input choices but not latent-space reconstruction under inconsistency"
+        ],
+        [
+          "Continuous drift lifecycle with selective remediation",
+          "Scheduled retraining wastes compute; rapid drift causes failures",
+          "DriftGuard (Alam et al., 2026) is not applied to hydrology nor combined with deep sequence models"
+        ],
+        [
+          "Human influence as structured drift",
+          "Operations can cause regime changes distinct from climate drift",
+          "Human influence is highlighted (Tlhomole et al., 2026) but not operationalized into drift diagnosis/remediation"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Table 1 — Experimental conditions",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Setting",
+        "Missingness in drivers",
+        "Drift type",
+        "Notes"
+      ],
+      "data": [
+        [
+          "S1",
+          "0%",
+          "none",
+          "Upper-bound performance"
+        ],
+        [
+          "S2",
+          "20% MCAR",
+          "none",
+          "Random sensor outages"
+        ],
+        [
+          "S3",
+          "40% block missing",
+          "none",
+          "Extended station downtime"
+        ],
+        [
+          "S4",
+          "20%",
+          "gradual drift",
+          "Climate/seasonal regime shift"
+        ],
+        [
+          "S5",
+          "20%",
+          "abrupt drift",
+          "Operational change / regulation event"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Table 2 — Forecast accuracy (example reporting table; fill with measured values in implementation)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Model",
+        "S1 NSE",
+        "S2 NSE",
+        "S3 NSE",
+        "S4 NSE",
+        "S5 NSE",
+        "Drift detection delay (days, ↓)"
+      ],
+      "data": [
+        [
+          "B1 Limpopo-LSTM (Tlhomole-style)",
+          "—",
+          "—",
+          "—",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "B2 Transfer-LSTM (unverified)",
+          "—",
+          "—",
+          "—",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "B3 Drift-unaware operational LSTM",
+          "—",
+          "—",
+          "—",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "HVD-Flow (proposed)",
+          "—",
+          "—",
+          "—",
+          "—",
+          "—",
+          "—"
+        ]
+      ],
+      "table_note": "Metrics: NSE (↑), RMSE (↓). Horizons: 1-day and 7-day."
+    },
+    {
+      "table_title": "Table 3 — Transfer safety outcomes (homeomorphism verification)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Source dataset candidate",
+        "ULHM trust (↑)",
+        "continuity error (↓)",
+        "Wasserstein distance (↓)",
+        "Verdict",
+        "Action"
+      ],
+      "data": [
+        [
+          "Source A (similar hydroclimate)",
+          "—",
+          "—",
+          "—",
+          "Accept",
+          "Transfer encoder + latent priors"
+        ],
+        [
+          "Source B (mismatched regime)",
+          "—",
+          "—",
+          "—",
+          "Reject",
+          "No transfer; train Limpopo-only"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Table 4 — Operational cost / remediation efficiency",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Approach",
+        "Avg. retrains / year (↓)",
+        "% gauges retrained (↓)",
+        "Mean post-drift recovery time (days, ↓)"
+      ],
+      "data": [
+        [
+          "Scheduled retraining (3–6 months)",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "Drift-unaware trigger on error only",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "HVD-Flow selective remediation",
+          "—",
+          "—",
+          "—"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

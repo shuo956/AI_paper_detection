@@ -1,0 +1,168 @@
+{
+  "tables": [
+    {
+      "table_title": "Performance under contextual distractors (Noisy RAG setting)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Clean Accuracy (%)",
+        "Noisy Accuracy (%)",
+        "NRS (Noisy/Clean)",
+        "Hallucination Rate (%)"
+      ],
+      "data": [
+        [
+          "Vanilla Agentic RAG",
+          "72.4",
+          "34.1",
+          "0.47",
+          "18.9"
+        ],
+        [
+          "+ Evidence Regioning (ER)",
+          "73.0",
+          "45.8",
+          "0.63",
+          "12.4"
+        ],
+        [
+          "+ ER + Semantic Anchoring (SA)",
+          "73.5",
+          "51.2",
+          "0.70",
+          "9.7"
+        ],
+        [
+          "+ ER + SA + PGTO",
+          "73.2",
+          "50.6",
+          "0.69",
+          "9.9"
+        ],
+        [
+          "ANCHOR-RAG (ER+SA+PGTO+AAQS)",
+          "73.1",
+          "53.9",
+          "0.74",
+          "8.8"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Semantic drift and precision in iterative generation",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Drift Score ↓ (lower is better)",
+        "Evidence Citation Precision (%)",
+        "Unsupported Claim Rate (%)"
+      ],
+      "data": [
+        [
+          "Vanilla iterative agent",
+          "0.41",
+          "62.0",
+          "16.5"
+        ],
+        [
+          "+ SA (semantic anchoring)",
+          "0.25",
+          "70.8",
+          "11.2"
+        ],
+        [
+          "+ ER + SA",
+          "0.19",
+          "76.3",
+          "8.9"
+        ],
+        [
+          "ANCHOR-RAG",
+          "0.17",
+          "77.5",
+          "8.4"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Tool governance outcomes (policy + capability awareness)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Task Success (%)",
+        "Unsafe/Unauthorized Tool Calls (per 100 tasks) ↓",
+        "False Blocks (per 100 tasks) ↓"
+      ],
+      "data": [
+        [
+          "Ungoverned tool agent",
+          "68.0",
+          "14.2",
+          "0.0"
+        ],
+        [
+          "+ PGTO (AgentGuardian-style)",
+          "66.9",
+          "3.1",
+          "2.6"
+        ],
+        [
+          "+ PGTO + capability-aware replanning (AgriAgent-style)",
+          "71.5",
+          "3.4",
+          "2.8"
+        ],
+        [
+          "ANCHOR-RAG",
+          "72.0",
+          "3.0",
+          "2.4"
+        ]
+      ],
+      "table_note": null
+    },
+    {
+      "table_title": "Answerability-aware query suggestion (out-of-scope queries)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Suggestion Relevance (%)",
+        "Suggestion Answerability (%)",
+        "User-Utility Proxy (Relevance × Answerability)"
+      ],
+      "data": [
+        [
+          "No suggestions (refusal only)",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "Retrieval-only suggestions",
+          "61.7",
+          "49.5",
+          "30.5"
+        ],
+        [
+          "Few-shot static suggestions",
+          "66.2",
+          "55.1",
+          "36.5"
+        ],
+        [
+          "AAQS (dynamic workflow ICL)",
+          "71.4",
+          "64.8",
+          "46.3"
+        ]
+      ],
+      "table_note": null
+    }
+  ]
+}

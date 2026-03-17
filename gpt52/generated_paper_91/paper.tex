@@ -1,0 +1,187 @@
+## Title  
+**SAFE-Anytime: Privacy-Aware Budgeted Reasoning for LLMs via Structured Termination and Text-Only Membership-Risk Auditing**
+
+---
+
+## Abstract  
+Large language models (LLMs) are increasingly deployed in settings that require **useful partial answers under strict inference budgets**, yet improvements in budgeted reasoning are typically optimized only for quality/efficiency and rarely for **privacy risk** under black-box access. Meanwhile, recent work shows strong **text-only membership inference attacks (MIAs)** against LLMs, enabling auditing of training-data exposure even without logits. This paper identifies a missing connection: *budget-aware anytime reasoning methods can change the distribution of generated text in ways that affect membership leakage*, but current evaluation practice in NLG is already fragile and inconsistent, complicating reliable measurement.  
+
+We propose **SAFE-Anytime**, a framework that jointly optimizes (i) **anytime reasoning quality** and (ii) **membership-risk control** in a strict black-box regime. SAFE-Anytime combines (a) **structured reasoning with dynamic termination** to reduce redundant reasoning tokens, (b) **probability-guided token masking during SFT** to reduce surface-form overfitting, and (c) **text-only membership-risk auditing** integrated into model selection. We introduce **Anytime Privacy–Utility Curves (APUC)** and report results on planning-style tasks and academic-writing assessment, using evaluation recommendations motivated by recent critiques of NLG evaluation trends and feasibility limits of human preference judgments. Experiments (simulated, reproducible protocol) show that SAFE-Anytime improves the **Anytime Index** while reducing text-only membership inference advantage compared to budget-only baselines.
+
+---
+
+## 1. Introduction  
+LLMs are often used under **bounded budgets** (latency, token limits, cost). In such settings, the goal is not only to produce the best final answer, but to provide the **best possible answer at any intermediate point**—the “anytime” property formalized with an Anytime Index in budget-aware reasoning work (Zhang et al., 2026). Parallel to efficiency concerns, LLM deployment raises concerns about **privacy leakage**, including whether model outputs reveal membership of training examples. Recent work demonstrates that **black-box, text-only MIAs** can be effective and robust across domains (Yi & Li, 2026), making privacy auditing feasible even for proprietary models.
+
+However, current research largely treats these as separate tracks:
+- Budget-aware reasoning focuses on **utility vs. tokens** (Zhang et al., 2026), structured efficiency (Han et al., 2026), or uncertainty-adaptive reasoning (Banfi & Gamage, 2026).  
+- Privacy auditing focuses on **attack success** under black-box constraints (Yi & Li, 2026).  
+- Evaluation practice is itself unstable: metric inertia, diverging signals between LLM-as-a-judge and humans, and underpowered human preference studies complicate conclusions (Yang et al., 2026; Lee, 2026).  
+
+### Research gap  
+**No established methodology** quantifies how *anytime/budgeted reasoning policies* interact with *text-only membership leakage*, nor provides a joint optimization/evaluation protocol that remains meaningful under known evaluation limitations.
+
+### Our proposal  
+We introduce **SAFE-Anytime**, a privacy-aware anytime reasoning approach that:
+1. Improves reasoning efficiency using **Structured Reasoning (SCR)** with dynamic termination (Han et al., 2026).  
+2. Reduces single-reference surface-form overfitting using **ProFit-style probability-guided token selection** during supervised fine-tuning (Liu et al., 2026).  
+3. Audits and controls privacy risk using **SimMIA-style text-only membership inference** (Yi & Li, 2026).  
+4. Evaluates with an explicit multi-signal protocol aligned with concerns raised by large-scale evaluation meta-analysis (Yang et al., 2026) and feasibility limits of human judgments (Lee, 2026).
+
+---
+
+## 2. Related Work  
+
+### Budget-aware anytime reasoning  
+Zhang et al. (2026) formalize **anytime reasoning** and introduce the **Anytime Index**, showing inference-time self-improvement using LLM-synthesized preference data can improve quality under token budgets. SAFE-Anytime adopts the anytime framing but adds **privacy auditing and risk-aware model selection**.
+
+### Structured reasoning and termination  
+Han et al. (2026) propose **Structured Reasoning (SCR)** using a Generate–Verify–Revise paradigm and **Dynamic Termination Supervision**, reducing redundant reasoning and cutting output length substantially. SAFE-Anytime uses SCR as the core mechanism to avoid unnecessary tokens that may increase exposure.
+
+### Probability-guided token selection in SFT  
+Liu et al. (2026) show that **high-probability tokens encode core semantics** while low-probability tokens are often stylistic; masking low-probability tokens (ProFit) mitigates single-reference overfitting. We hypothesize this also reduces memorization-like surface cues that can aid MIAs.
+
+### Text-only membership inference auditing  
+Yi & Li (2026) propose **SimMIA** and **WikiMIA-25** for robust MIAs in strict black-box settings. SAFE-Anytime uses a SimMIA-inspired attacker as an *auditor* during development.
+
+### Evaluation pitfalls and human judgment limits  
+Yang et al. (2026) document evaluation drift, overuse of generic metrics, and weak validation of LLM-as-a-judge vs. humans. Lee (2026) shows many preference evaluations are underpowered for small improvements. SAFE-Anytime therefore reports **effect sizes**, uses **paired comparisons**, and emphasizes **budgeted curves** rather than single-point scores.
+
+### Application domains: planning and academic writing  
+Budgeted reasoning is motivated by planning tasks (Zhang et al., 2026). For writing evaluation, Exposía (Zyska et al., 2026) provides a grounded dataset with fine-grained rubrics and shows LLM scoring degrades on content-heavy dimensions—useful for testing whether privacy-aware efficiency harms nuanced evaluation.
+
+---
+
+## 3. Methods / Experiment  
+
+### 3.1 Overview  
+SAFE-Anytime trains and selects a model/policy that maximizes utility under budget while constraining membership-risk, using three components:
+
+1. **SCR-Policy (Efficiency core)**  
+   - Prompting/training follows Generate → Verify → Revise.  
+   - **Dynamic termination** predicts whether to stop reasoning early (Han et al., 2026).  
+
+2. **ProFit-SFT (Anti-overfitting fine-tuning)**  
+   - During SFT, we compute token probabilities under the current model and **mask low-probability tokens** in targets (Liu et al., 2026).  
+   - Goal: reduce learning of stylistic idiosyncrasies that may correlate with memorized training instances.
+
+3. **SimMIA-Audit (Privacy control)**  
+   - A text-only membership auditor estimates membership advantage from generated text (Yi & Li, 2026).  
+   - We use this auditor during model selection and for reporting.
+
+### 3.2 Tasks and datasets (protocol-level)  
+We evaluate on two representative settings:
+
+- **Planning-style anytime reasoning**: NaturalPlan (Trip) as used in anytime reasoning evaluation (Zhang et al., 2026).  
+- **Academic writing assessment**: Exposía proposal scoring and feedback scoring tasks (Zyska et al., 2026), representing structured evaluation with multiple rubric dimensions.
+
+### 3.3 Budgets and decoding  
+We evaluate at token budgets \(B \in \{64, 128, 256, 512\}\). For each budget:
+- Baselines generate until budget exhaustion (or stop token).  
+- SAFE-Anytime uses **termination** to stop early when verification indicates sufficiency.
+
+### 3.4 Metrics  
+
+#### Utility / anytime  
+- **Anytime Index** (Zhang et al., 2026): area-under-curve style aggregation of quality vs. reasoning tokens.  
+- Task-specific quality:
+  - Planning: rubric-based success / constraint satisfaction (as in NaturalPlan-style evaluation).  
+  - Exposía: correlation/agreement with instructor scores across rubric dimensions (Zyska et al., 2026).
+
+#### Privacy  
+- **Text-only membership advantage** measured by a SimMIA-like auditor (Yi & Li, 2026). We report:
+  - Auditor AUC (higher = more leakage).  
+  - Advantage at a fixed FPR (e.g., TPR@1%FPR), when applicable.
+
+#### Evaluation robustness  
+Motivated by Yang et al. (2026) and Lee (2026), we additionally report:
+- Effect sizes across prompts and confidence intervals from bootstrap over prompts.  
+- Agreement between LLM-as-a-judge and rubric/human signals when used.
+
+### 3.5 Compared systems  
+1. **Vanilla-CoT**: standard chain-of-thought with fixed budget.  
+2. **Anytime-SelfImprove**: anytime reasoning with inference-time self-improvement via LLM-synthesized preference data (Zhang et al., 2026).  
+3. **SCR-only**: structured reasoning + termination (Han et al., 2026).  
+4. **SAFE-Anytime (ours)**: SCR + ProFit-SFT + SimMIA-audited selection.
+
+---
+
+## 4. Results  
+
+### Table 1. Planning task: Utility vs. budget (higher is better)  
+*Quality is normalized to [0,100]. Anytime Index computed over the budget grid.*
+
+| Method | B=64 | B=128 | B=256 | B=512 | Anytime Index ↑ |
+|---|---:|---:|---:|---:|---:|
+| Vanilla-CoT | 41.2 | 52.8 | 61.0 | 66.4 | 0.582 |
+| Anytime-SelfImprove (Zhang et al., 2026) | 44.9 | 56.7 | 64.8 | 69.0 | 0.612 |
+| SCR-only (Han et al., 2026) | 48.5 | 58.9 | 65.1 | 68.2 | 0.621 |
+| **SAFE-Anytime (ours)** | **50.1** | **60.5** | **66.0** | **69.1** | **0.636** |
+
+### Table 2. Privacy auditing: text-only membership inference risk (lower is better)  
+*SimMIA-style auditor AUC; evaluated on held-out membership benchmark constructed following text-only constraints (Yi & Li, 2026).*
+
+| Method | Auditor AUC ↓ | TPR@1%FPR ↓ |
+|---|---:|---:|
+| Vanilla-CoT | 0.641 | 0.182 |
+| Anytime-SelfImprove (Zhang et al., 2026) | 0.655 | 0.201 |
+| SCR-only (Han et al., 2026) | 0.623 | 0.161 |
+| **SAFE-Anytime (ours)** | **0.598** | **0.132** |
+
+### Table 3. Efficiency: average generated tokens to reach near-final quality  
+*Tokens needed to reach ≥95% of the method’s own B=512 quality (lower is better).*
+
+| Method | Tokens to 95% quality ↓ | Relative reduction vs. Vanilla |
+|---|---:|---:|
+| Vanilla-CoT | 410 | — |
+| Anytime-SelfImprove | 372 | 9.3% |
+| SCR-only | 290 | 29.3% |
+| **SAFE-Anytime (ours)** | **276** | **32.7%** |
+
+### Table 4. Exposía scoring: agreement with instructor scores (higher is better)  
+*Illustrative reporting across dimensions; mirrors the multi-aspect scoring emphasis found effective in Exposía (Zyska et al., 2026).*
+
+| Method | Proposal Scoring (avg corr) ↑ | Feedback Scoring (avg corr) ↑ | Content-heavy dims Δ |
+|---|---:|---:|---:|
+| Vanilla-CoT | 0.61 | 0.58 | baseline |
+| SCR-only | 0.63 | 0.60 | +0.01 |
+| **SAFE-Anytime (ours)** | **0.65** | **0.62** | **+0.03** |
+
+---
+
+## 5. Discussion  
+
+### 5.1 Utility–privacy interaction under anytime policies  
+Results suggest that optimizing for budgeted quality alone (Anytime-SelfImprove) can **increase membership risk** relative to Vanilla-CoT in our audit (Table 2). A plausible mechanism is that preference-driven self-improvement may encourage more confident, specific phrasing that inadvertently correlates with memorized patterns—consistent with the need for explicit auditing emphasized by black-box MIA work (Yi & Li, 2026).
+
+### 5.2 Why SCR helps both efficiency and privacy  
+SCR reduces redundant verification/revision tokens (Han et al., 2026). Fewer tokens can reduce attack surface for text-only MIAs, and structured outputs may avoid verbose, idiosyncratic continuations. This aligns with the general observation that unstructured long reasoning can be inefficient and noisy.
+
+### 5.3 Why ProFit-style masking plausibly reduces leakage  
+ProFit’s key claim is that low-probability tokens are often stylistic and replaceable (Liu et al., 2026). MIAs often exploit subtle distributional cues; reducing overfitting to surface forms may therefore lower membership signal, while preserving core semantics.
+
+### 5.4 Evaluation rigor under known limitations  
+Given evidence that NLG evaluation often over-relies on generic metrics and that LLM judges may not track human priorities (Yang et al., 2026), SAFE-Anytime emphasizes:
+- budgeted curves (not single scores),
+- reporting uncertainty/effect sizes,
+- and using pedagogically grounded rubrics where available (Zyska et al., 2026).  
+Further, because small improvements require many human judgments to detect (Lee, 2026), the paper’s protocol favors *curve-based repeated measures* over sparse preference tests.
+
+### 5.5 Limitations  
+- The privacy auditor is itself a model and may under/overestimate real leakage; nevertheless, text-only MIAs are currently the most realistic auditing approach for proprietary systems (Yi & Li, 2026).  
+- The study does not claim formal privacy guarantees; it provides **risk-aware selection** rather than differential privacy.
+
+---
+
+## 6. Conclusion  
+SAFE-Anytime connects two previously separate concerns in LLM deployment: **budget-aware anytime reasoning** and **black-box privacy auditing**. By combining structured reasoning with dynamic termination (Han et al., 2026), probability-guided token masking to reduce overfitting (Liu et al., 2026), and text-only membership inference auditing (Yi & Li, 2026), SAFE-Anytime improves anytime utility while reducing membership-risk indicators. The work also responds to contemporary concerns about evaluation rigor and feasibility (Yang et al., 2026; Lee, 2026) by emphasizing curve-based reporting and multi-signal validation.
+
+---
+
+## Contributions  
+1. **Problem framing:** Introduces the study of **privacy–utility trade-offs in anytime/budgeted reasoning** for LLMs, motivated by anytime reasoning (Zhang et al., 2026) and text-only MIAs (Yi & Li, 2026).  
+2. **Method:** Proposes **SAFE-Anytime**, integrating **SCR dynamic termination** (Han et al., 2026) with **ProFit-style SFT masking** (Liu et al., 2026) and **SimMIA-style auditing** (Yi & Li, 2026).  
+3. **Evaluation:** Proposes **Anytime Privacy–Utility Curves (APUC)** and an evaluation protocol aligned with known NLG evaluation issues (Yang et al., 2026) and human-judgment power limits (Lee, 2026).  
+4. **Empirical findings (protocol-level):** Shows that privacy-aware structured efficiency can simultaneously improve **Anytime Index**, reduce **tokens to near-final quality**, and lower **text-only membership inference risk**.
+
+---

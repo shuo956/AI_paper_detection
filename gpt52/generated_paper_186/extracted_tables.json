@@ -1,0 +1,103 @@
+{
+  "tables": [
+    {
+      "table_title": "Main task performance (macro-F1) across prompting and CAPE",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "T1: Clarity/Evasion (Macro-F1)",
+        "T2: Empathy Applicability (Macro-F1)",
+        "T3: Role-Consistency (Macro-F1)"
+      ],
+      "data": [
+        [
+          "Simple Prompt",
+          "0.58",
+          "0.66",
+          "0.54"
+        ],
+        [
+          "CoT Prompt",
+          "0.61",
+          "0.69",
+          "0.57"
+        ],
+        [
+          "CoT + Few-shot",
+          "0.64",
+          "0.71",
+          "0.59"
+        ],
+        [
+          "CAPE (Prompt + Value + Counterfactual Cal.)",
+          "0.67",
+          "0.74",
+          "0.64"
+        ]
+      ],
+      "table_note": "Values are reported as mean over evaluation splits; presented to illustrate comparative effects of prompting + calibration."
+    },
+    {
+      "table_title": "Calibration and robustness improvements from CAPE",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "ECE ↓",
+        "Brier ↓",
+        "Counterfactual Instability ↓",
+        "Adversarial Drop (T3) ↓"
+      ],
+      "data": [
+        [
+          "CoT + Few-shot",
+          "0.091",
+          "0.182",
+          "0.27",
+          "0.18"
+        ],
+        [
+          "CAPE",
+          "0.052",
+          "0.141",
+          "0.14",
+          "0.09"
+        ]
+      ],
+      "table_note": "Lower is better for ECE/Brier; higher is better for stability."
+    },
+    {
+      "table_title": "Value-cluster effects (disagreement-aware evaluation)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Task",
+        "# Value Clusters",
+        "Worst-Cluster ECE (No V-Cal)",
+        "Worst-Cluster ECE (CAPE)"
+      ],
+      "data": [
+        [
+          "T1: Political clarity/evasion",
+          "3",
+          "0.143",
+          "0.081"
+        ],
+        [
+          "T2: Empathy applicability",
+          "4",
+          "0.128",
+          "0.073"
+        ],
+        [
+          "T3: Role-consistency",
+          "3",
+          "0.151",
+          "0.092"
+        ]
+      ],
+      "table_note": "Cluster-conditional calibration error to show why value-aware modeling matters."
+    }
+  ]
+}

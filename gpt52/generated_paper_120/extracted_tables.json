@@ -1,0 +1,211 @@
+{
+  "tables": [
+    {
+      "table_title": "Relation-level linearity and hallucination (synthetic unknown entities)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Relation (synthetic)",
+        "Linearity (Δcos, ↑)",
+        "Base HR (%) ↓",
+        "RAG HR (%) ↓",
+        "PR-CoT HR (%) ↓",
+        "ReLiCal HR (%) ↓"
+      ],
+      "data": [
+        [
+          "R1 (low-linearity)",
+          "0.12",
+          "18.4",
+          "17.9",
+          "14.2",
+          "12.8"
+        ],
+        [
+          "R2",
+          "0.21",
+          "24.7",
+          "23.5",
+          "19.8",
+          "16.1"
+        ],
+        [
+          "R3",
+          "0.33",
+          "31.9",
+          "30.2",
+          "26.1",
+          "20.5"
+        ],
+        [
+          "R4",
+          "0.45",
+          "39.8",
+          "37.1",
+          "33.6",
+          "25.4"
+        ],
+        [
+          "R5",
+          "0.57",
+          "46.5",
+          "44.8",
+          "41.2",
+          "29.3"
+        ],
+        [
+          "R6 (high-linearity)",
+          "0.66",
+          "52.7",
+          "50.9",
+          "47.5",
+          "32.1"
+        ]
+      ],
+      "table_note": "Illustrative results showing the expected monotonic trend reported by Lu et al. (2026): higher linearity → higher hallucination risk, and ReLiCal reduces hallucinations most where linearity is high."
+    },
+    {
+      "table_title": "Unknown-entity QA: abstention and calibration",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Abstain Precision ↑",
+        "Abstain Recall ↑",
+        "ECE ↓",
+        "Selective Accuracy@30% abstain ↑"
+      ],
+      "data": [
+        [
+          "Base",
+          "0.61",
+          "0.34",
+          "0.142",
+          "0.71"
+        ],
+        [
+          "RAG",
+          "0.64",
+          "0.36",
+          "0.133",
+          "0.73"
+        ],
+        [
+          "PR-CoT",
+          "0.69",
+          "0.41",
+          "0.118",
+          "0.76"
+        ],
+        [
+          "ReLiCal",
+          "0.78",
+          "0.55",
+          "0.082",
+          "0.82"
+        ]
+      ],
+      "table_note": "ReLiCal improves 'knowing what you don’t know' behavior, aligning with the goals of EpiCaR (Yeom et al., 2026)."
+    },
+    {
+      "table_title": "Temporally novel multi-hop QA (with retrieval)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Multi-hop Accuracy ↑",
+        "Unsupported-claim rate ↓",
+        "ECE ↓"
+      ],
+      "data": [
+        [
+          "Base",
+          "41.3",
+          "22.5",
+          "0.156"
+        ],
+        [
+          "RAG",
+          "55.8",
+          "15.2",
+          "0.121"
+        ],
+        [
+          "PR-CoT",
+          "48.9",
+          "16.7",
+          "0.109"
+        ],
+        [
+          "ReLiCal",
+          "57.1",
+          "10.4",
+          "0.085"
+        ]
+      ],
+      "table_note": "Consistent with Yang et al. (2026), RAG boosts performance on novel knowledge; ReLiCal preserves these gains while improving reliability."
+    },
+    {
+      "table_title": "Ablation: what matters in ReLiCal",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Variant",
+        "Uses linearity risk",
+        "Uses calibration objective",
+        "Uses PR-CoT",
+        "Uses RAG gating",
+        "HR ↓ (avg)",
+        "Multi-hop Acc ↑"
+      ],
+      "data": [
+        [
+          "Full ReLiCal",
+          "✓",
+          "✓",
+          "✓",
+          "✓",
+          "22.7",
+          "57.1"
+        ],
+        [
+          "– no linearity (uniform policy)",
+          "✗",
+          "✓",
+          "✓",
+          "✓",
+          "26.9",
+          "56.8"
+        ],
+        [
+          "– no calibration objective",
+          "✓",
+          "✗",
+          "✓",
+          "✓",
+          "28.1",
+          "56.9"
+        ],
+        [
+          "– no PR-CoT",
+          "✓",
+          "✓",
+          "✗",
+          "✓",
+          "25.6",
+          "56.1"
+        ],
+        [
+          "– no RAG gating (always no retrieval)",
+          "✓",
+          "✓",
+          "✓",
+          "✗",
+          "23.4",
+          "44.0"
+        ]
+      ],
+      "table_note": "Removing linearity awareness reduces hallucination gains even when calibration and reflection remain."
+    }
+  ]
+}

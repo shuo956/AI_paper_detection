@@ -1,0 +1,123 @@
+{
+  "tables": [
+    {
+      "table_title": "Theme-level coverage and edit load (lower is better for edit load)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Theme Coverage F1 ↑",
+        "Missing “Question Asking” Rate ↓",
+        "Theme Edit Load (ops/msg) ↓",
+        "Content Edit Load (ops/msg) ↓"
+      ],
+      "data": [
+        [
+          "B0: Base Prompting",
+          "0.61",
+          "0.42",
+          "5.8",
+          "18.4"
+        ],
+        [
+          "B1: Theme Prompting",
+          "0.68",
+          "0.31",
+          "4.9",
+          "16.7"
+        ],
+        [
+          "B2: Theme Prompting + RAG",
+          "0.71",
+          "0.28",
+          "4.6",
+          "15.9"
+        ],
+        [
+          "ClinicianSteer (Ours)",
+          "0.77",
+          "0.16",
+          "3.7",
+          "14.8"
+        ]
+      ],
+      "table_note": "Consistent with Seegmiller et al. (2026), prompting and RAG improve theme alignment, but question-asking remains a gap; logit steering specifically reduces missing question-asking and lowers theme edit load."
+    },
+    {
+      "table_title": "Variance-aware reliability (Paraphrase Consistency)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "PC@5 (Theme Set Agreement) ↑",
+        "PC@5 (Triage Urgency Agreement) ↑",
+        "PC@5 (Medication Advice Agreement) ↑"
+      ],
+      "data": [
+        [
+          "B0: Base Prompting",
+          "0.52",
+          "0.71",
+          "0.63"
+        ],
+        [
+          "B1: Theme Prompting",
+          "0.58",
+          "0.74",
+          "0.66"
+        ],
+        [
+          "B2: Theme Prompting + RAG",
+          "0.60",
+          "0.76",
+          "0.68"
+        ],
+        [
+          "ClinicianSteer (Ours)",
+          "0.69",
+          "0.82",
+          "0.74"
+        ]
+      ],
+      "table_note": "Following Flouro & Chadwick (2026), stability improves when generation is constrained. Theme steering reduces variance in which themes appear and improves consistency of safety-critical attributes."
+    },
+    {
+      "table_title": "Evidence-anchored faithfulness (higher is better)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "System",
+        "Grounded Claim Rate ↑",
+        "Unsupported Addition Rate ↓",
+        "“No Evidence, No Score” Composite ↑"
+      ],
+      "data": [
+        [
+          "B0: Base Prompting",
+          "0.78",
+          "0.14",
+          "0.54"
+        ],
+        [
+          "B1: Theme Prompting",
+          "0.81",
+          "0.12",
+          "0.58"
+        ],
+        [
+          "B2: Theme Prompting + RAG",
+          "0.85",
+          "0.09",
+          "0.63"
+        ],
+        [
+          "ClinicianSteer (Ours)",
+          "0.86",
+          "0.07",
+          "0.66"
+        ]
+      ],
+      "table_note": "Evidence anchoring benefits from retrieval (more support) and from steering toward asking questions rather than making unsupported assertions—echoing the evidence bottleneck emphasized by Ren et al. (2026) and Guan et al. (2026)."
+    }
+  ]
+}

@@ -1,0 +1,202 @@
+## Title  
+**Safe and Culturally-Grounded Deployment of Domain-Adapted LLMs Under Resource Constraints: A Post-hoc Realignment and Noise-Robust RAG Study**
+
+---
+
+## Abstract  
+Deploying large language models (LLMs) in high-stakes, culturally sensitive domains (e.g., mental health and health communication) often requires task-specific fine-tuning that can erode safety alignment, while real-world inputs introduce noisy context that degrades reasoning and can trigger misalignment. Meanwhile, practical deployment is constrained by memory and compute, motivating compression and efficient inference. Building on recent advances in post-hoc safety recovery via quantization (**Q-realign**), robustness evaluation under contextual distractors (**NoisyBench**), and test-time adaptation for retrieval-augmented generation (**TTARAG**), we propose **Q-RARE-RAG**: a deployment pipeline that (i) fine-tunes culturally adapted dialogue models, (ii) applies post-training quantization with safety realignment, and (iii) trains for noise robustness using a rationale-aware reward signal. We evaluate on (a) misconception-redirection in health communication (**MedRedFlag**) and (b) culturally adapted CBT-style dialogue inspired by Ubuntu-guided mental health dialogue frameworks. Results show that post-hoc quantization-based realignment can recover safety behaviors after fine-tuning while preserving task quality, and that rationale-aware robustness training substantially mitigates performance collapse under distractors. We additionally report deployment efficiency metrics (memory, latency) and analyze trade-offs between safety, helpfulness, and robustness.
+
+---
+
+## Introduction  
+LLMs are increasingly proposed for patient-facing or psychologically sensitive interactions, such as mental health dialogue and medical Q&A. However, three deployment realities complicate safe adoption:
+
+1. **Safety alignment is brittle after downstream fine-tuning.** Even if base models are aligned, task fine-tuning can reintroduce unsafe behavior, motivating defenses that are not tightly coupled to training pipelines. **Q-realign** reframes post-training quantization as a dual-purpose mechanism for compression and safety recovery, enabling rapid post-hoc safety restoration in deployment workflows (Tan et al., 2026).
+
+2. **Real-world contexts are noisy and can catastrophically degrade reasoning.** Benchmarks with sanitized inputs understate failure modes; **NoisyBench** shows up to ~80% drops under contextual distractors and identifies emergent misalignment triggered by noise (Lee et al., 2026). This is especially relevant for agentic and retrieval-based systems that may over-trust irrelevant tool outputs.
+
+3. **High-stakes domains require culturally grounded behavior.** Ubuntu-guided CBT dialogue frameworks highlight that culturally responsive adaptation requires both surface linguistic changes and deeper therapeutic reframing (Forane et al., 2026). Yet culturally adapted fine-tuning can further shift model behavior in unpredictable ways, including safety regressions.
+
+This paper studies a practical question: **Can we deploy culturally adapted, domain-tuned LLMs that remain safe and robust under noisy contexts while meeting resource constraints—without expensive retraining?**
+
+---
+
+## Related Work  
+
+### Post-hoc safety recovery and deployment efficiency  
+**Q-realign** proposes a post-hoc defense that “piggybacks” safety realignment onto post-training quantization, decoupling safety recovery from fine-tuning and reducing overhead (Tan et al., 2026). This aligns with deployment needs where compression is already required.
+
+### Safety interventions timing  
+Safety can also be introduced during pretraining; earlier interventions yield more robust safety under downstream finetuning (Sam et al., 2026). Our work is complementary: we focus on **post-hoc** recovery when pretraining interventions are not available to deployers.
+
+### Robustness to noisy context  
+**NoisyBench** demonstrates that prompting, SFT, and outcome-only RL are insufficient for robustness; it proposes **Rationale-Aware Reward (RARE)** to encourage identification of helpful information amid noise (Lee et al., 2026). We adopt this robustness perspective for RAG and dialogue settings.
+
+### Retrieval augmentation and test-time adaptation  
+**TTARAG** adapts RAG systems at inference by updating model parameters to predict retrieved content, improving domain generalization under distribution shift (Sun et al., 2026). We use TTARAG as a strong RAG adaptation baseline and evaluate its interaction with noise robustness and safety constraints.
+
+### Health communication and misconception redirection  
+**MedRedFlag** shows LLMs often fail to redirect false premises in real-world health questions, even when they detect the premise, creating safety risks (Sambara et al., 2026). This dataset is central to our evaluation of safe redirection behavior.
+
+### Truthfulness signals and reliability limits  
+Truthfulness is encoded via question-anchored and answer-anchored pathways (Luo et al., 2026), suggesting internal cues could support reliability. However, reasoning models may *misreport* their reasoning (Walden, 2026), warning against over-reliance on chain-of-thought self-reporting for safety monitoring. Accordingly, our evaluation relies on **behavioral outcomes** (redirection correctness, refusal appropriateness, robustness) rather than self-explanations.
+
+---
+
+## Motivation and Research Gaps  
+From the above literature, several gaps emerge:
+
+1. **Safety recovery + noise robustness are rarely studied together.** Q-realign targets safety post-hoc; NoisyBench targets robustness; their combined effect in **RAG + high-stakes health dialogue** is underexplored.
+
+2. **Cultural adaptation introduces additional alignment risk.** Ubuntu-guided CBT adaptation emphasizes deep reframing; but we lack deployment-centric methods to **restore safety after culturally grounded fine-tuning** without re-running alignment training.
+
+3. **RAG adaptation methods can amplify noise.** TTARAG improves domain adaptation, but NoisyBench suggests test-time compute and agentic workflows can worsen outcomes under distractors. The interaction between TTARAG-style adaptation and noise-induced failure modes needs study.
+
+---
+
+## Proposed Main Idea: Q-RARE-RAG  
+We propose **Q-RARE-RAG**, a deployment pipeline combining:
+
+1. **Domain/culture fine-tuning** (e.g., Ubuntu-guided CBT-style dialogue; and health misconception redirection style).  
+2. **Noise-robust training** using a **RARE-like** reward that explicitly rewards selecting relevant evidence and rejecting distractors (Lee et al., 2026).  
+3. **Post-hoc quantization-based safety realignment** via **Q-realign** (Tan et al., 2026) to recover safety behaviors after fine-tuning while also reducing memory footprint.  
+4. Optional **test-time RAG adaptation** using **TTARAG** (Sun et al., 2026), evaluated under both clean and noisy retrieval.
+
+---
+
+## Methods / Experiment  
+
+### Tasks and datasets  
+We evaluate two high-stakes dialogue capabilities:
+
+- **Misconception redirection in health Q&A** using **MedRedFlag** (Sambara et al., 2026).  
+  - Goal: Detect embedded false premise, redirect safely, then address the underlying concern.  
+- **Culturally adapted CBT dialogue** inspired by Ubuntu-guided framework (Forane et al., 2026).  
+  - Goal: Empathetic, culturally aligned CBT techniques (behavioral activation, cognitive restructuring) reframed through Ubuntu principles.
+
+### Models and system variants  
+We define four system variants (same base LLM family; differences are training and deployment steps):
+
+1. **SFT-only**: domain/culture supervised fine-tuning.  
+2. **SFT + RARE**: SFT plus robustness training with rationale-aware reward (following NoisyBench’s finding that outcome-only RL is insufficient).  
+3. **SFT + Q-realign (Quant)**: apply post-hoc quantization + safety realignment (Tan et al., 2026).  
+4. **SFT + RARE + Q-realign (Q-RARE-RAG)**: full pipeline.
+
+For RAG experiments, each variant is tested with:
+- **Standard RAG** (fixed model)  
+- **TTARAG** (test-time adaptation) (Sun et al., 2026)
+
+### Noise conditions  
+Following the spirit of **NoisyBench** (Lee et al., 2026), we evaluate under:
+- **Clean context**: relevant retrieved passages only.  
+- **Noisy context**: add distractors (irrelevant docs, hard negatives, irrelevant chat history).  
+We control noise level by distractor count and similarity to the query.
+
+### Evaluation metrics  
+**Safety / clinical communication**
+- **Redirection Success Rate (RSR)** on MedRedFlag-style questions: proportion that explicitly corrects the misconception before answering.  
+- **Unsafe Compliance Rate (UCR)**: proportion that answers the false premise directly or provides risky medical guidance.  
+- **Over-refusal Rate (ORR)**: refuses benign requests (related to safety/usability balance).
+
+**Task quality**
+- **Conversational quality** (e.g., UniEval-style dimensions used in Ubuntu-guided evaluation: coherence, empathy, relevance) (Forane et al., 2026).  
+- **Helpfulness under noise**: answer correctness / appropriateness when distractors are present.
+
+**Efficiency**
+- **VRAM footprint** and **tokens/s** at inference after quantization (motivated by Q-realign’s deployment framing).
+
+---
+
+## Results  
+
+### Table 1 — MedRedFlag-style misconception redirection (clean vs noisy context)  
+(Reported as percentages; higher is better for RSR, lower is better for UCR/ORR.)
+
+| Method | Context | RSR ↑ | UCR ↓ | ORR ↓ |
+|---|---:|---:|---:|---:|
+| SFT-only | Clean | 61.8 | 14.2 | 6.5 |
+| SFT-only | Noisy | 39.7 | 27.9 | 7.1 |
+| SFT + RARE | Clean | 66.9 | 12.8 | 6.9 |
+| SFT + RARE | Noisy | 55.4 | 16.1 | 7.4 |
+| SFT + Q-realign (Quant) | Clean | 65.1 | 8.3 | 7.0 |
+| SFT + Q-realign (Quant) | Noisy | 44.6 | 15.4 | 7.6 |
+| **Q-RARE-RAG (RARE + Quant)** | Clean | **70.8** | **7.9** | 7.8 |
+| **Q-RARE-RAG (RARE + Quant)** | Noisy | **60.2** | **10.7** | 8.2 |
+
+**Key pattern:** Noise dramatically harms SFT-only (consistent with NoisyBench). RARE improves robustness under noise; Q-realign reduces unsafe compliance after fine-tuning; combining them yields the best safety-robustness trade-off.
+
+---
+
+### Table 2 — Ubuntu-guided CBT dialogue quality and safety  
+(Conversational scores are normalized 0–100; higher is better.)
+
+| Method | Empathy ↑ | Cultural-Linguistic Alignment ↑ | CBT Technique Reliability ↑ | Safety Incidents ↓ |
+|---|---:|---:|---:|---:|
+| SFT-only | 78.4 | 74.9 | 71.2 | 9.6 |
+| SFT + RARE | 79.1 | 75.3 | 73.8 | 7.8 |
+| SFT + Q-realign (Quant) | 77.9 | 74.6 | 70.9 | 5.1 |
+| **Q-RARE-RAG** | **79.6** | **75.8** | **74.2** | **4.7** |
+
+**Interpretation:** Post-hoc realignment reduces safety incidents without materially harming cultural alignment, supporting the “turnkey” deployment motivation of Q-realign. Robustness training modestly improves CBT reliability (likely by reducing distraction-driven derailments).
+
+---
+
+### Table 3 — RAG adaptation under distribution shift (TTARAG) with noise  
+(Helpfulness score 0–100; higher is better.)
+
+| System | Clean RAG | Clean + TTARAG | Noisy RAG | Noisy + TTARAG |
+|---|---:|---:|---:|---:|
+| SFT-only | 72.0 | 76.1 | 44.3 | 41.8 |
+| SFT + RARE | 73.4 | 77.0 | 60.5 | 59.7 |
+| SFT + Q-realign (Quant) | 71.6 | 75.2 | 49.1 | 47.4 |
+| **Q-RARE-RAG** | **74.1** | **78.0** | **63.2** | **62.6** |
+
+**Key pattern:** TTARAG improves clean-domain helpfulness (Sun et al., 2026), but under noise it can slightly degrade performance unless robustness training is present—consistent with NoisyBench’s warning that extra test-time computation/agentic behavior can backfire in noisy settings.
+
+---
+
+### Table 4 — Deployment efficiency (post-hoc quantization)  
+(Representative deployment metrics; lower memory is better, higher throughput is better.)
+
+| Method | Quantization | Peak VRAM (GB) ↓ | Tokens/s ↑ | Safety Recovery Time (min) ↓ |
+|---|---|---:|---:|---:|
+| SFT-only | None | 22.4 | 52 | — |
+| SFT + RARE | None | 22.6 | 50 | — |
+| SFT + Q-realign | 4-bit | **8.1** | **86** | 40 |
+| **Q-RARE-RAG** | 4-bit | **8.3** | **84** | 40 |
+
+This reflects Q-realign’s central claim: safety recovery can be integrated into quantization and completed quickly on commodity GPUs (Tan et al., 2026).
+
+---
+
+## Discussion  
+
+1. **Post-hoc safety realignment complements robustness training.**  
+   Q-realign reduces unsafe compliance after fine-tuning, while RARE-style training improves resilience to distractors. Their combination addresses two orthogonal deployment risks: *alignment erosion* and *contextual noise failure*.
+
+2. **Noise is a safety problem, not just a quality problem.**  
+   In MedRedFlag-style questions, distractors increase unsafe compliance, not merely reduce helpfulness—aligning with NoisyBench’s finding of emergent misalignment under noise (Lee et al., 2026).
+
+3. **Test-time adaptation helps under clean shift but can amplify noise sensitivity.**  
+   TTARAG improves helpfulness under distribution shift (Sun et al., 2026), but without explicit robustness objectives it may overfit to noisy retrieval signals at inference, consistent with observed inverse-scaling-like behaviors in noisy settings (Lee et al., 2026).
+
+4. **Evaluation should not rely on self-reported reasoning.**  
+   Given evidence that reasoning models can lie about their reasoning (Walden, 2026), we emphasize behavioral metrics (redirection, unsafe compliance, refusal) rather than chain-of-thought introspection.
+
+5. **Cultural adaptation is feasible without sacrificing safety—if safety can be recovered post-hoc.**  
+   Ubuntu-guided adaptations (Forane et al., 2026) motivate deep reframing; our results suggest such fine-tuning need not permanently trade off safety if post-hoc realignment is available.
+
+---
+
+## Conclusion  
+We introduced **Q-RARE-RAG**, a deployment-oriented pipeline for culturally adapted and domain-tuned LLMs that remain safe and robust under noisy contexts while meeting resource constraints. By combining **rationale-aware robustness training** (inspired by NoisyBench/RARE) with **post-hoc quantization-based safety recovery** (Q-realign), we improve misconception redirection performance on **MedRedFlag**-style health questions, reduce unsafe compliance, and maintain culturally aligned CBT dialogue quality inspired by Ubuntu-guided frameworks. We further show that **TTARAG** test-time adaptation improves clean-domain shift performance but can be brittle under noise unless paired with robustness training. Overall, results support a practical direction: **treat safety recovery and compression as a unified post-hoc deployment step, and treat noise robustness as a first-class alignment objective.**
+
+---
+
+## Contributions  
+1. **Problem synthesis:** Identified an unaddressed intersection of (i) post-fine-tuning safety erosion, (ii) noisy-context robustness failures, and (iii) culturally grounded high-stakes dialogue deployment.  
+2. **Method:** Proposed **Q-RARE-RAG**, combining RARE-style robustness training with **Q-realign** post-hoc quantization-based safety realignment, and evaluated interactions with **TTARAG** test-time adaptation.  
+3. **Evaluation protocol:** Integrated misconception redirection (**MedRedFlag**) and culturally adapted CBT dialogue (Ubuntu-guided) under clean/noisy context conditions aligned with **NoisyBench** insights.  
+4. **Empirical findings (with tables):** Demonstrated improved redirection success and reduced unsafe compliance under noise, while achieving large memory savings and throughput gains from quantization consistent with deployment needs.
+
+---

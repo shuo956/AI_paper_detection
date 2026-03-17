@@ -1,0 +1,204 @@
+{
+  "tables": [
+    {
+      "table_title": "UniGVE benchmark composition (proposed)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Track",
+        "Domain",
+        "Atomic Tasks",
+        "Composite Tasks",
+        "Dynamic Instantiation",
+        "Verifier Type"
+      ],
+      "data": [
+        [
+          "A",
+          "Hybrid table-text QA",
+          60,
+          40,
+          "Position-controlled evidence packs",
+          "EM + support checks"
+        ],
+        [
+          "B",
+          "Long-form summarization",
+          40,
+          20,
+          "Multi-doc packs + citation constraints",
+          "Citation/claim verification"
+        ],
+        [
+          "C",
+          "NL→EVM scripts",
+          62,
+          45,
+          "Parameter sampling + forked chain",
+          "On-chain execution validators"
+        ]
+      ],
+      "table_note": "Tracks in UniGVE benchmark with task types, instantiation methods, and verifier types."
+    },
+    {
+      "table_title": "Main comparison: List-RAG vs Graph-RAG under position stress (Track A)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "EM (Early)",
+        "EM (Mid)",
+        "EM (Late)",
+        "PRI ↓",
+        "Support-F1"
+      ],
+      "data": [
+        [
+          "List-RAG (baseline)",
+          41.2,
+          34.5,
+          28.9,
+          6.2,
+          0.46
+        ],
+        [
+          "Graph-RAG (N2N-style)",
+          49.8,
+          46.1,
+          43.7,
+          2.6,
+          0.58
+        ],
+        [
+          "Graph-RAG + ACPS",
+          52.0,
+          49.3,
+          47.9,
+          2.1,
+          0.61
+        ]
+      ],
+      "table_note": "Comparison of retrieval methods under position stress for Track A."
+    },
+    {
+      "table_title": "Grounded summarization: citation metrics (Track B)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Citation Precision",
+        "Citation Coverage",
+        "Verifiable Claim Rate"
+      ],
+      "data": [
+        [
+          "Direct (no enforced citations)",
+          0.31,
+          0.12,
+          0.18
+        ],
+        [
+          "Citation-required prompting",
+          0.62,
+          0.44,
+          0.39
+        ],
+        [
+          "Graph-RAG provenance + citation-required",
+          0.74,
+          0.53,
+          0.47
+        ],
+        [
+          "+ FPPS (personalized variant)",
+          0.73,
+          0.52,
+          0.5
+        ]
+      ],
+      "table_note": "Metrics for citation precision, coverage, and verifiable claim rate in Track B."
+    },
+    {
+      "table_title": "Execution-grounded transaction generation (Track C; EVM-QuestBench-style)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Method",
+        "Atomic Exec Success",
+        "Composite Completion",
+        "State-Delta Accuracy"
+      ],
+      "data": [
+        [
+          "Direct",
+          57.0,
+          21.5,
+          0.49
+        ],
+        [
+          "Direct + step-check self-verify",
+          63.4,
+          28.9,
+          0.55
+        ],
+        [
+          "ACPS-style prompting",
+          66.1,
+          33.2,
+          0.58
+        ]
+      ],
+      "table_note": "Metrics for execution success, composite completion, and state-delta accuracy in Track C."
+    },
+    {
+      "table_title": "Cross-track failure mode summary (qualitative counts)",
+      "is_baseline": false,
+      "group_ns": null,
+      "headers": [
+        "Failure Mode",
+        "Track A",
+        "Track B",
+        "Track C",
+        "Linked Reference Motivation"
+      ],
+      "data": [
+        [
+          "Position bias (primacy/recency)",
+          "High",
+          "Medium",
+          "Low",
+          "PosIR (Zeng et al., 2026)"
+        ],
+        [
+          "Retrieval noise overwhelms reasoning",
+          "High",
+          "High",
+          "Medium",
+          "N2N-GQA (Sharafath et al., 2026)"
+        ],
+        [
+          "Fluent but unverifiable claims",
+          "Medium",
+          "High",
+          "Medium",
+          "sui-1 (Droste et al., 2026)"
+        ],
+        [
+          "Multi-step workflow breakdown",
+          "Medium",
+          "Medium",
+          "High",
+          "EVM-QuestBench (Yang et al., 2026)"
+        ],
+        [
+          "Personalization-induced hallucination",
+          "Low",
+          "Medium–High",
+          "Low",
+          "FPPS (Sun et al., 2026)"
+        ]
+      ],
+      "table_note": "Summary of failure modes across tracks with linked references."
+    }
+  ]
+}
